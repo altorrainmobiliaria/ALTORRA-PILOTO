@@ -4,7 +4,6 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <meta name="format-detection" content="telephone=no"/>
-<meta name="format-detection" content="telephone=no" />
 <title>Detalle de propiedad | Altorra</title>
 <meta name="description" content="Detalles de propiedad de Altorra Inmobiliaria" />
 <link rel="manifest" href="manifest.json" />
@@ -34,8 +33,6 @@ main.detail-container{
   display:flex; flex-wrap:wrap; gap:24px;
 }
 .gallery,.info,.form-block,.wa-row{min-width:0}
-
-/* Desktop: Galería → Formulario → Info */
 .gallery{order:1; flex:1 1 520px; max-width:760px; margin-inline:auto}
 .form-block{order:2; flex:1 1 520px; max-width:760px; margin-inline:auto}
 .info{order:3; flex:1 1 520px}
@@ -58,7 +55,6 @@ main.detail-container{
   cursor:zoom-in; transition:transform .28s ease;
 }
 .main-frame img:hover{transform:scale(1.01)}
-
 .gallery .arrow{
   position:absolute; top:50%; transform:translateY(-50%);
   width:40px;height:40px;border-radius:999px;border:0;background:#fff;color:#111;cursor:pointer;z-index:3;
@@ -67,7 +63,6 @@ main.detail-container{
 }
 .gallery .arrow:hover{transform:translateY(-50%) scale(1.05); box-shadow:0 14px 30px rgba(0,0,0,.16)}
 .gallery .arrow.prev{left:10px} .gallery .arrow.next{right:10px}
-
 .thumbnails{display:flex; gap:10px; overflow-x:auto; padding-bottom:2px; scroll-snap-type:x proximity; max-width:100%}
 .thumbnails::-webkit-scrollbar{height:8px}
 .thumbnails::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12); border-radius:999px}
@@ -105,15 +100,12 @@ main.detail-container{
 .info h1{font-weight:800; line-height:1.1; text-wrap:balance; font-size:clamp(1.4rem, 1.4rem + 1vw, 2rem)}
 .price{font-weight:800; font-size:clamp(1.2rem, 1.2rem + .6vw, 1.6rem); color:var(--gold)}
 .specs{color:var(--muted); font-size:.95rem}
-
 .status-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;font-weight:700;font-size:.85rem;background:#f7f7f8;border:1px solid rgba(17,24,39,.08);width:max-content}
 .status-dot{width:10px;height:10px;border-radius:999px;background:#16a34a}
 .status-pill.unavailable{background:#fcfcfc;opacity:.95}
 .status-pill.unavailable .status-dot{background:#dc2626}
-
 .spec-badges{display:flex; gap:8px; flex-wrap:wrap}
 .spec-badge{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:12px; background:#f7f7f8; border:1px solid rgba(17,24,39,.08); font-weight:700; font-size:.9rem}
-
 .desc{color:#1f2937; text-align:justify; line-height:1.75}
 .desc p + p{margin-top:10px}
 
@@ -127,55 +119,18 @@ nav{margin-left:auto;display:flex;align-items:center;gap:8px}
 .nav-item{position:relative}
 .nav-btn{background:transparent;border:0;padding:8px 12px;font-weight:700;cursor:pointer;border-radius:8px;color:var(--text);font-size:0.95rem}
 .nav-btn:focus{outline:3px solid rgba(212,175,55,0.18);outline-offset:3px}
-
-/* Botón menú móvil */
-.nav-toggle{
-  display:none;
-  margin-left:auto;
-  background:transparent;
-  border:1px solid rgba(0,0,0,.1);
-  border-radius:10px;
-  padding:8px 12px;
-  font-weight:800;
-  color:var(--text);
-  appearance:none; -webkit-appearance:none;
-  -webkit-text-fill-color:var(--text);
-  -webkit-tap-highlight-color:transparent;
-}
+.nav-toggle{display:none;margin-left:auto;background:transparent;border:1px solid rgba(0,0,0,.1);border-radius:10px;padding:8px 12px;font-weight:800;color:var(--text);appearance:none;-webkit-appearance:none;-webkit-text-fill-color:var(--text);-webkit-tap-highlight-color:transparent}
 .nav-toggle:focus{outline:3px solid rgba(212,175,55,0.18);outline-offset:3px}
-.nav-toggle:hover,.nav-toggle:active,.nav-toggle:focus{ color:var(--text); }
 header .nav-toggle{ color:var(--text) !important; }
-
-.menu-panel{display:none;position:fixed;z-index:150;padding:14px;border-radius:12px;background:linear-gradient(180deg,#fff,#fbfbfb);border:1px solid rgba(0,0,0,0.06);box-shadow:0 22px 48px rgba(0,0,0,0.12);max-height:calc(100vh - var(--header-h) - 20px);overflow:auto}
-.menu-visible{display:block;opacity:1;transform:none}
-.panel-compact{min-width:220px;max-width:44vw}
-.panel-mega{min-width:360px;max-width:920px;width:min(88vw,920px)}
-.mega-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.mega-col h4{margin:0 0 8px;color:var(--gold);font-weight:700}
-.menu-link{display:block;padding:6px;border-radius:8px;color:#0f1724}
-.menu-link:hover{background:rgba(0,0,0,0.03)}
-
-.drawer-backdrop{position:fixed;inset:0;background:var(--overlay);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);z-index:160;opacity:0;pointer-events:none;transition:opacity .2s ease}
-.drawer{position:fixed;left:0;right:0;top:var(--header-h);height:calc(100dvh - var(--header-h));padding-bottom:max(24px, env(safe-area-inset-bottom));background:#fff;z-index:161;transform:translateY(-8px);opacity:0;pointer-events:none;transition:transform .24s ease, opacity .2s ease;overflow:auto;border-top:1px solid rgba(0,0,0,.06);overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
-.drawer.open{transform:none;opacity:1;pointer-events:auto}
-.drawer-backdrop.open{opacity:1;pointer-events:auto}
-.drawer .block{padding:16px;border-bottom:1px solid rgba(0,0,0,.06)}
-.drawer .block:last-child{padding-bottom:max(32px, env(safe-area-inset-bottom))}
-.drawer h4{margin:0 0 8px;color:var(--gold)}
-.drawer a{display:block;padding:8px 2px}
 
 /* ===== MÓVIL ===== */
 @media (max-width:860px){
   .nav-list{display:none}
   .nav-toggle{display:inline-flex;align-items:center;gap:8px}
-  .menu-panel{display:none !important}
-
-  /* Orden móvil: Galería → WhatsApp → Info → Formulario */
   .gallery{order:1; max-width:100%}
   .wa-row{order:2; display:block; max-width:100%}
   .info{order:3}
   .form-block{order:4; max-width:100%}
-
   .btn{font-size:.95rem}
   .actions .btn{width:100%; justify-content:center}
   .contact-form .row-3{grid-template-columns:1fr}
@@ -188,42 +143,51 @@ footer{background:#0b0b0b;color:#fff;padding:36px 16px}
 .footer-grid{max-width:var(--page-max);margin:0 auto;width:100%;display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
 @media (max-width:920px){.footer-grid{grid-template-columns:1fr}}
 
-/* Forzar botones WhatsApp + Compartir en línea en escritorio */
-@media (min-width:721px){
-  .form-actions .btn{width:auto}
-  .form-actions{justify-content:flex-start}
-}
-
-/* ===== NUEVAS SECCIONES (siempre al final, ancho completo) ===== */
+/* ===== SECCIONES EXTRA (siempre al final, antes del footer) ===== */
 .extra-sections{
-  order:99;
-  width:100%;
-  flex:1 0 100%;
+  order:99; width:100%; flex:1 0 100%;
   display:flex;flex-direction:column;gap:22px;margin-top:16px;
 }
 .card-lite{border:1px solid rgba(17,24,39,.08);border-radius:14px;padding:16px;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.04)}
 .card-lite h3{margin:0 0 14px 0;font-size:1.05rem;font-weight:800;letter-spacing:.2px;color:#0f172a}
 .card-lite h3::after{content:"";display:block;width:44px;height:3px;border-radius:3px;background:var(--gold);margin-top:8px}
-.tech-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-@media(min-width:700px){.tech-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* ===== FICHA TÉCNICA (nuevo look) ===== */
+.tech-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+@media(min-width:680px){.tech-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(min-width:1024px){.tech-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
-.kv{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid rgba(17,24,39,.06);border-radius:12px;background:#fafafa;min-height:44px}
-.kv .k{color:#6b7280;flex:0 0 46%;max-width:280px}
-.kv .v{font-weight:800;color:#0b1220;word-break:break-word}
+
+.kv{
+  position:relative;
+  display:flex; flex-direction:column; gap:6px;
+  border:1px solid rgba(17,24,39,.08);
+  background:linear-gradient(180deg,#fff,#fbfbfc);
+  border-radius:12px; padding:12px 14px; min-height:64px;
+  box-shadow:0 1px 0 rgba(17,24,39,.03) inset;
+}
+.kv .k{
+  font-size:.82rem; letter-spacing:.2px;
+  color:var(--muted);
+}
+.kv .v{
+  font-weight:800; font-size:1.02rem; color:#0b1220;
+  word-break:break-word;
+}
+.kv.small .v{font-weight:700;font-size:.98rem}
+
+/* Chips de características */
 .features{display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}
 @media(min-width:700px){.features{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(min-width:1024px){.features{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .feature{display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid rgba(17,24,39,.08);border-radius:999px;background:#fff;font-weight:700}
 .feature .ico{width:20px;height:20px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #10b981;color:#10b981}
 .feature.ok .ico{background:#10b98112}
-.feature.no .ico{border-color:#ef4444;color:#ef4444;background:#ef444412}
-.agent{display:flex;gap:12px;align-items:center}
-.agent img{width:56px;height:56px;border-radius:999px;object-fit:cover;border:1px solid rgba(17,24,39,.08)}
-.agent .name{font-weight:800}
-.agent .sub{color:#6b7280;font-size:.9rem}
-.agent-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
-.btn-mini{border:1px solid rgba(17,24,39,.12);background:#fff;border-radius:10px;padding:8px 12px;cursor:pointer;font-weight:700}
-.btn-mini:hover{background:#f9fafb}
+
+/* Mapa */
 .map-wrap{height:340px;border-radius:14px;overflow:hidden;border:1px solid rgba(17,24,39,.08)}
 .leaflet-container{font:inherit}
 </style>
@@ -356,8 +320,9 @@ async function init(){
     waMobile.className='btn btn-wa';
     waMobile.href=buildWhatsAppLink(prop,{customText:waTextOverride});
     waMobile.target='_blank'; waMobile.rel='noopener';
-    waMobile.innerHTML='<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.52 3.48A11.89 11.89 0 0 0 12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 5.98L0 24l6.21-1.62A11.96 11.96 0  0 0 12 24c6.63 0 12-5.37 12-12 0-3.19-1.24-6.19-3.48-8.52ZM12 22a9.93 9.93 0 0 1-5.06-1.4l-.36-.21-3.69 .96 .99-3.59-.23-.37A9.98 9.98 0 1 1 22 12c0 5.52-4.48 10-10 10Zm5.48-7.55c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67 .15-.2 .3-.77 .97-.94 1.17-.17 .2-.35 .22-.65 .07-.3-.15-1.27-.47-2.42-1.49-.89-.79-1.49-1.76-1.66-2.06-.17-.3-.02-.46 .13-.61 .13-.13 .3-.35 .46-.52 .15-.17 .2-.3 .3-.5 .1-.2 .05-.37 -.02-.52 -.07-.15 -.67-1.62 -.92-2.22 -.24-.58 -.49-.5 -.67-.5h-.57c-.2 0 -.52 .07 -.79 .37 -.27 .3 -1.04 1.02 -1.04 2.48s1.07 2.88 1.22 3.08c.15 .2 2.1 3.2 5.08 4.49 .71 .31 1.26 .49 1.7 .63 .71 .23 1.36 .2 1.87 .12 .57 -.08 1.76 -.72 2.01 -1.41 .25 -.69 .25 -1.28 .17 -1.41-.08 -.13 -.27 -.2 -.57 -.35Z" fill="currentColor"/></svg> WhatsApp';
+    waMobile.innerHTML='<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.52 3.48A11.89 11.89 0 0 0 12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 5.98L0 24l6.21-1.62A11.96 11.96 0  0 0 12 24c6.63 0 12-5.37 12-12 0-3.19-1.24-6.19-3.48-8.52ZM12 22a9.93 9.93 0 0 1-5.06-1.4l-.36-.21-3.69 .96 .99-3.59-.23-.37A9.98 9.98 0  1 1 22 12c0 5.52-4.48 10-10 10Zm5.48-7.55c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67 .15-.2 .3-.77 .97-.94 1.17-.17 .2-.35 .22-.65 .07-.3-.15-1.27-.47-2.42-1.49-.89-.79-1.49-1.76-1.66-2.06-.17-.3-.02-.46 .13-.61 .13-.13 .3-.35 .46-.52 .15-.17 .2-.3 .3-.5 .1-.2 .05-.37 -.02-.52 -.07-.15 -.67-1.62 -.92-2.22 -.24-.58 -.49-.5 -.67-.5h-.57c-.2 0 -.52 .07 -.79 .37 -.27 .3 -1.04 1.02 -1.04 2.48s1.07 2.88 1.22 3.08c.15 .2 2.1 3.2 5.08 4.49 .71 .31 1.26 .49 1.7 .63 .71 .23 1.36 .2 1.87 .12 .57 -.08 1.76 -.72 2.01 -1.41 .25 -.69 .25 -1.28 .17 -1.41-.08 -.13 -.27 -.2 -.57 -.35Z" fill="currentColor"/></svg> WhatsApp';
     actionsMobile.appendChild(waMobile); waRow.appendChild(actionsMobile);
+
     (function(){ try{
       const btnShareMobile = document.createElement('button');
       btnShareMobile.type = 'button';
@@ -374,7 +339,7 @@ async function init(){
       actionsMobile.appendChild(btnShareMobile);
     }catch(_){}})();
 
-    /* ===== INFO ===== */
+    /* ===== INFO (texto y precio) ===== */
     const infoDiv=document.createElement('div'); infoDiv.className='info';
     const h1=document.createElement('h1'); h1.textContent=prop.title||'Propiedad';
 
@@ -385,8 +350,8 @@ async function init(){
     const badges=document.createElement('div'); badges.className='spec-badges';
     const bed=(prop.beds||0), bath=(prop.baths||0), sqm=(prop.sqm||0);
     const badge=(svg,label)=>`<span class="spec-badge">${svg}${label}</span>`;
-    const bedSvg='<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 11V7a2 2 0  0 1 2-2h6a4 4 0 0 1 4 4v2h4a2 2 0 0 1 2 2v5h-2v-2H5v2H3v-9h2zm2 4h14v-2a1 1 0 0 0-1-1h-5V9a2 2 0 0 0-2-2H5a1 1 0  0 0-1 1v7z"/></svg>';
-    const bathSvg='<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 3a3 3 0  0 1 3 3v5h8a1 1 0 1 1 0 2H5v2h14v2H5a3 3 0 0 1-3-3v-3h6V6a1 1 0 0 0-2 0v1H4V6a3 3 0 0 1 3-3z"/></svg>';
+    const bedSvg='<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 11V7a2 2 0 0 1 2-2h6a4 4 0 0 1 4 4v2h4a2 2 0 0 1 2 2v5h-2v-2H5v2H3v-9h2zm2 4h14v-2a1 1 0 0 0-1-1h-5V9a2 2 0 0 0-2-2H5a1 1 0 0 0-1 1v7z"/></svg>';
+    const bathSvg='<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 3a3 3 0 0 1 3 3v5h8a1 1 0 1 1 0 2H5v2h14v2H5a3 3 0 0 1-3-3v-3h6V6a1 1 0 0 0-2 0v1H4V6a3 3 0 0 1 3-3z"/></svg>';
     const areaSvg='<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4h16v16H4zM6 6v12h12V6z"/></svg>';
     badges.innerHTML=(bed? badge(bedSvg, `${bed} ${bed===1?'habitación':'habitaciones'}`):'')+
                      (bath? badge(bathSvg, `${bath} ${bath===1?'baño':'baños'}`):'')+
@@ -435,42 +400,15 @@ async function init(){
       <div class="form-actions">
         <button type="submit" class="btn btn-primary">${isAvailable ? 'Enviar mensaje' : 'Avisarme'}</button>
         <a class="btn btn-wa wa-in-form" href="${waInFormHref}" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.52 3.48A11.89 11.89 0 0 0 12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 5.98L0 24l6.21-1.62A11.96 11.96 0  0 0 12 24c6.63 0 12-5.37 12-12 0-3.19-1.24-6.19-3.48-8.52ZM12 22a9.93 9.93 0 0 1-5.06-1.4l-.36-.21-3.69 .96 .99-3.59-.23-.37A9.98 9.98 0 1 1 22 12c0 5.52-4.48 10-10 10Zm5.48-7.55c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67 .15-.2 .3-.77 .97-.94 1.17-.17 .2-.35 .22-.65 .07-.3-.15-1.27-.47-2.42-1.49-.89-.79-1.49-1.76-1.66-2.06-.17-.3-.02-.46 .13-.61 .13-.13 .3-.35 .46-.52 .15-.17 .2-.3 .3-.5 .1-.2 .05-.37 -.02-.52 -.07-.15 -.67-1.62 -.92-2.22 -.24-.58 -.49-.5 -.67-.5h-.57c-.2 0 -.52 .07 -.79 .37 -.27 .3 -1.04 1.02 -1.04 2.48s1.07 2.88 1.22 3.08c.15 .2 2.1 3.2 5.08 4.49 .71 .31 1.26 .49 1.7 .63 .71 .23 1.36 .2 1.87 .12 .57 -.08 1.76 -.72 2.01 -1.41 .25 -.69 .25 -1.28 .17 -1.41-.08 -.13 -.27 -.2 -.57 -.35Z" fill="currentColor"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.52 3.48A11.89 11.89 0 0 0 12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 5.98L0 24l6.21-1.62A11.96 11.96 0 0 0 12 24c6.63 0 12-5.37 12-12 0-3.19-1.24-6.19-3.48-8.52ZM12 22a9.93 9.93 0 0 1-5.06-1.4l-.36-.21-3.69 .96 .99-3.59-.23-.37A9.98 9.98 0 1 1 22 12c0 5.52-4.48 10-10 10Zm5.48-7.55c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67 .15-.2 .3-.77 .97-.94 1.17-.17 .2-.35 .22-.65 .07-.3-.15-1.27-.47-2.42-1.49-.89-.79-1.49-1.76-1.66-2.06-.17-.3-.02-.46 .13-.61 .13-.13 .3-.35 .46-.52 .15-.17 .2-.3 .3-.5 .1-.2 .05-.37 -.02-.52 -.07-.15 -.67-1.62 -.92-2.22 -.24-.58 -.49-.5 -.67-.5h-.57c-.2 0 -.52 .07 -.79 .37 -.27 .3 -1.04 1.02 -1.04 2.48s1.07 2.88 1.22 3.08c.15 .2 2.1 3.2 5.08 4.49 .71 .31 1.26 .49 1.7 .63 .71 .23 1.36 .2 1.87 .12 .57 -.08 1.76 -.72 2.01 -1.41 .25 -.69 .25 -1.28 .17 -1.41-.08 -.13 -.27 -.2 -.57 -.35Z" fill="currentColor"/></svg>
           WhatsApp
         </a>
       </div>
     `;
     formBlock.appendChild(form);
 
-    /* === Compartir en ESCRITORIO === */
-    (function(){
-      try{
-        const fa = form.querySelector('.form-actions');
-        if (fa && !fa.querySelector('.btn-share-desktop')){
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'btn btn-ghost btn-share-desktop';
-          btn.textContent = 'Compartir';
-          btn.addEventListener('click', async ()=>{
-            try{
-              const shareUrl = '/p/' + encodeURIComponent(prop.id) + '.html';
-              const shareText = prop.title ? ('Mira ' + prop.title + ' en Altorra') : 'Mira esta propiedad en Altorra';
-              if (navigator.share){
-                await navigator.share({title: prop.title||'Propiedad', text: shareText, url: shareUrl});
-              }else{
-                await navigator.clipboard.writeText(new URL(shareUrl, document.baseURI).href);
-                alert('Enlace copiado');
-              }
-            }catch(e){ console.warn('share desktop', e); }
-          });
-          fa.appendChild(btn);
-        }
-      }catch(e){}
-    })();
-
     /* ===== Montaje ===== */
     container.innerHTML='';
-    /* ✅ AQUÍ estaba el error: faltaban estas dos líneas */
     galleryDiv.appendChild(G);
     galleryDiv.appendChild(thumbs);
     container.appendChild(galleryDiv);
@@ -478,7 +416,7 @@ async function init(){
     container.appendChild(infoDiv);
     container.appendChild(waRow); /* visible solo en móvil */
 
-    /* ====== NUEVAS SECCIONES (siempre AL FINAL) ====== */
+    /* ====== SECCIONES FINALES ====== */
     (function(){
       const root = document.createElement('div');
       root.className = 'extra-sections';
@@ -486,9 +424,9 @@ async function init(){
       container.appendChild(root);
 
       const fmtCOP = n => (n||n===0) ? ('$ ' + String(n).replace(/\B(?=(\d{3})+(?!\d))/g,'.')) : '';
-      const kv = (k,v)=> v!=null && v!=='' ? `<div class="kv"><span class="k">${k}</span><span class="v">${v}</span></div>` : '';
+      const kv = (k,v,small=false)=> (v!=null && v!=='') ? `<div class="kv${small?' small':''}"><span class="k">${k}</span><span class="v">${v}</span></div>` : '';
 
-      // 1) Ficha técnica
+      /* 1) Ficha técnica (limpia) */
       (function renderTech(){
         const b = document.createElement('section'); b.className='card-lite';
         let html = '<h3>Ficha técnica</h3><div class="tech-grid">';
@@ -496,83 +434,34 @@ async function init(){
         html += kv('Ciudad', prop.city||'');
         html += kv('Tipo', prop.type ? (prop.type.charAt(0).toUpperCase()+prop.type.slice(1)) : '');
         html += kv('Área construida', prop.sqm ? (prop.sqm+' m²') : '');
-        html += kv('Área privada', prop.private_area ? (prop.private_area+' m²') : '');
-        html += kv('Área de lote', prop.lot_area ? (prop.lot_area+' m²') : '');
+        html += kv('Área privada', prop.private_area ? (prop.private_area+' m²') : '', true);
+        html += kv('Área de lote', prop.lot_area ? (prop.lot_area+' m²') : '', true);
         html += kv('Habitaciones', prop.beds!=null ? prop.beds : '');
         html += kv('Baños', prop.baths!=null ? prop.baths : '');
-        html += kv('Parqueaderos', prop.garages!=null ? prop.garages : '');
-        html += kv('Estrato', prop.strata!=null ? prop.strata : '');
-        html += kv('Administración', prop.admin_fee!=null ? fmtCOP(prop.admin_fee)+' COP' : '');
-        html += kv('Piso', prop.floor!=null ? prop.floor : '');
-        html += kv('Nivel', prop.level!=null ? prop.level : '');
-        html += kv('Año construcción', prop.year_built!=null ? prop.year_built : '');
+        html += kv('Parqueaderos', prop.garages!=null ? prop.garages : '', true);
+        html += kv('Estrato', prop.strata!=null ? prop.strata : '', true);
+        html += kv('Administración', prop.admin_fee!=null ? (fmtCOP(prop.admin_fee)+' COP') : '', true);
+        html += kv('Piso', prop.floor!=null ? prop.floor : '', true);
+        html += kv('Nivel', prop.level!=null ? prop.level : '', true);
+        html += kv('Año construcción', prop.year_built!=null ? prop.year_built : '', true);
         html += '</div>';
         b.innerHTML = html;
         if (b.querySelector('.kv .v')) root.appendChild(b);
       })();
 
-      // 2) Características
+      /* 2) Características (chips) */
       (function renderFeatures(){
         const list = Array.isArray(prop.features) ? prop.features : [];
         if(!list.length) return;
-        const pill = (txt)=>`<div class="feature ok"><span class="ico">✓</span><span>${txt}</span></div>`;
+        const ok = (txt)=>`<div class="feature ok"><span class="ico">✓</span><span>${txt}</span></div>`;
         const box = document.createElement('section'); box.className='card-lite';
-        box.innerHTML = '<h3>Características</h3><div class="features">'+ list.map(pill).join('') +'</div>';
+        box.innerHTML = '<h3>Características</h3><div class="features">'+ list.map(ok).join('') +'</div>';
         root.appendChild(box);
       })();
 
-      // 3) Contacto
-      (function renderAgent(){
-        const info = prop.advisor || null;
-        const agency = prop.agency || null;
-        if(!info && !agency) return;
+      /* 3) (Contacto del asesor) — ELIMINADO a solicitud */
 
-        const box = document.createElement('section'); box.className='card-lite';
-        box.innerHTML = '<h3>Contacto</h3>';
-        const wrap = document.createElement('div'); wrap.className='agent';
-
-        if(info){
-          const img = document.createElement('img');
-          img.src = (info.photo && (info.photo.startsWith('http')||info.photo.startsWith('/'))) ? info.photo : (info.photo ? '/'+info.photo.replace(/^\.?\//,'') : 'https://i.postimg.cc/0yYb8Y6r/placeholder.png');
-          img.alt = info.name || 'Asesor';
-          wrap.appendChild(img);
-
-          const col = document.createElement('div');
-          col.innerHTML = `<div class="name">${info.name||'Asesor'}</div>
-                           <div class="sub">${info.phone ? info.phone : ''} ${info.email ? ' · '+info.email : ''}</div>`;
-          wrap.appendChild(col);
-          box.appendChild(wrap);
-
-          const actions = document.createElement('div'); actions.className='agent-actions';
-          const wa = document.createElement('a'); wa.className='btn-mini'; wa.textContent='WhatsApp';
-          const waNum = info.whatsapp || '573235016747';
-          wa.href = 'https://wa.me/'+waNum+'?text='+encodeURIComponent(`Hola, me interesa la propiedad ${prop.id} (${prop.title}). ¿Podemos coordinar visita?`);
-          wa.target='_blank'; wa.rel='noopener';
-          actions.appendChild(wa);
-
-          if(info.phone){
-            const call = document.createElement('a'); call.className='btn-mini'; call.textContent='Llamar';
-            call.href = 'tel:'+info.phone.replace(/[^+\d]/g,'');
-            actions.appendChild(call);
-          }
-          if(info.email){
-            const mail = document.createElement('a'); mail.className='btn-mini'; mail.textContent='Escribir correo';
-            mail.href = 'mailto:'+info.email+'?subject='+encodeURIComponent('Interés en propiedad '+(prop.id||'')); 
-            actions.appendChild(mail);
-          }
-          box.appendChild(actions);
-        }
-
-        if(agency){
-          const ag = document.createElement('div');
-          ag.style.marginTop='10px';
-          ag.innerHTML = `<div class="sub">Inmobiliaria: <strong>${agency.name||'ALTORRA Inmobiliaria'}</strong>${agency.phone?' · '+agency.phone:''}${agency.website?' · <a href="'+agency.website+'" target="_blank" rel="noopener">Sitio Web</a>':''}</div>`;
-          box.appendChild(ag);
-        }
-        root.appendChild(box);
-      })();
-
-      // 4) Mapa (Leaflet + OSM)
+      /* 4) Mapa (Leaflet + OSM) */
       (function renderMap(){
         if(!prop.coords || prop.coords.lat==null || prop.coords.lng==null) return;
         const sec = document.createElement('section'); sec.className='card-lite';
@@ -609,7 +498,7 @@ async function init(){
       const ld=document.createElement('script'); ld.type='application/ld+json'; ld.textContent=JSON.stringify(schema); document.head.appendChild(ld);
     }catch(e){console.warn('Schema injection error',e);}
 
-  }catch(err){ console.error(err); container.innerHTML='<p>Error al cargar la propiedad.</p>'; }
+  }catch(err){ console.error(err); document.getElementById('propertyDetail').innerHTML='<p>Error al cargar la propiedad.</p>'; }
 }
 document.addEventListener('DOMContentLoaded', init);
   </script>
