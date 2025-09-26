@@ -68,7 +68,7 @@
     "available": 1,
     "description": "Este espectacular apartamento amoblado en el Conjunto Residencial Milán combina comodidad, diseño moderno y una excelente ubicación.\n\n• 2 habitaciones modernas (principal con baño privado y clóset)\n• 2 baños con acabados elegantes\n• Sala y comedor con diseño acogedor\n• Cocina integral con barra en granito\n• Balcón con vista panorámica\n• Zona de labores independiente\n• Aire acondicionado y mobiliario de primera\n\nUn espacio ideal para vivir con confort o invertir en una de las zonas con mayor proyección de Cartagena."
   },
-   {
+  {
     "title": "Apartamento amoblado en venta - Conjunto Residencial Trevi",
     "city": "Cartagena",
     "type": "apartamento",
@@ -124,7 +124,7 @@
     "available": 1,
     "description": "Se vende casa de 3 habitaciones y 3 baños en Cartagena. Amplios 153 m² de construcción, sala auxiliar, sala principal (living - comedor), sala de entretenimiento, terraza amplia, balcón en segundo piso, patio con zona de labores, cocina amplia y moderna y ubicación privilegiada para la comodidad de tu familia."
   },
-   {
+  {
     "title": "Apartamento moderno en venta - Conjunto Residencial Milán",
     "city": "Cartagena",
     "type": "apartamento",
@@ -163,18 +163,37 @@
     "description": "Apartamento de 72,3 m² ubicado en el cuarto piso del conjunto residencial Milán en Parque Heredia, un proyecto diseñado para ofrecer comodidad y buena distribución. Cuenta con 3 habitaciones con closets, 2 baños (incluyendo baño privado en la alcoba principal), sala-comedor con balcón que aporta iluminación natural y ventilación, cocina integral con mesón en granito y estufa empotrada, zona de labores independiente y parqueadero privado. El conjunto dispone de piscina, gimnasio, salón social y áreas recreativas, en un entorno residencial con excelente proyección de inversión y fácil acceso a los principales corredores de Cartagena."
   },
   {
-    "title": "#",
-    "city": "#",
-    "type": "#",
-    "price": 0,
-    "beds": 0,
-    "baths": 0,
-    "sqm": 0,
-    "operation": "0",
-    "id": "0000",
-    "image": "#",
-    "images": ["#", "#", "#"],
-    "available": 0,
-    "description": "#"
+    "title": "PRUEBA",
+    "city": "PRUEBA",
+    "type": "PRUEBA",
+    "price": 100000,
+    "beds": 3,
+    "baths": 3,
+    "sqm": 54,
+    "operation": "arrendar",
+    "id": "123456",
+    "image": "prueba.webp",
+    "images": ["prueba.webp", "prueba2.webp", "prueba3.webp"],
+    "available": 1,
+    "admin_fee": 230000,
+    "strata": 4,
+    "garages": 2,
+    "floor": 17,
+    "year_built": 2018,
+    "features": ["Aire Acondicionado", "Balcón", "Ascensor", "Piscina", "Portería/Vigilancia"],
+    "coords": { "lat": 10.4359, "lng": -75.5215 },
+    "description": "Esta seccion es de prueba",
+    "advisor": {
+      "name": "Guido Rodriguez",
+      "phone": "+57 323 501 6747",
+      "email": "altorrainmobiliaria@gmail.com",
+      "whatsapp": "573235016747",
+      "photo": "img/asesores/daniel.jpg"
+    },
+    "agency": {
+      "name": "ALTORRA Inmobiliaria",
+      "phone": "+57 323 501 6747",
+      "website": "https://altorrainmobiliaria.github.io"
+    }
   }
 ]
