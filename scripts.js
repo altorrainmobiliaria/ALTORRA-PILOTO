@@ -381,23 +381,3 @@ if('serviceWorker' in navigator){
     console.warn('SW registration failed', err);
   });
 }
-
-/* === Altorra Fase2.5: Org JSON-LD (auto) === */
-(function(){
-  try{
-    if(document.querySelector('script[type="application/ld+json"].org-jsonld')) return;
-    var org = {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      "name": "ALTORRA Inmobiliaria",
-      "url": "https://altorrainmobiliaria.github.io/ALTORRA-PILOTO/",
-      "logo": "https://i.postimg.cc/SsPmBFXt/Chat-GPT-Image-9-altorra-logo-2025-10-31-20.png",
-      "sameAs": ["https://www.instagram.com/altorrainmobiliaria", "https://www.facebook.com/share/16MEXCeAB4/?mibextid=wwXIfr", "https://www.tiktok.com/@altorrainmobiliaria"]
-    };
-    var s = document.createElement('script');
-    s.type = "application/ld+json";
-    s.className = "org-jsonld";
-    s.textContent = JSON.stringify(org);
-    document.head.appendChild(s);
-  }catch(e){ console.warn("Org JSON-LD inject failed", e); }
-})();
