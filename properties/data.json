@@ -163,6 +163,77 @@
     "description": "Apartamento de 72,3 m² ubicado en el cuarto piso del conjunto residencial Milán en Parque Heredia, un proyecto diseñado para ofrecer comodidad y buena distribución. Cuenta con 3 habitaciones con closets, 2 baños (incluyendo baño privado en la alcoba principal), sala-comedor con balcón que aporta iluminación natural y ventilación, cocina integral con mesón en granito y estufa empotrada, zona de labores independiente y parqueadero privado. El conjunto dispone de piscina, gimnasio, salón social y áreas recreativas, en un entorno residencial con excelente proyección de inversión y fácil acceso a los principales corredores de Cartagena."
   },
   {
+  "id": "MILAN-723",
+  "operation": "venta", 
+  "type": "Apartamento",
+  "title": "Apartamento en Milán, Parque Heredia",
+  "city": "Cartagena",
+  "neighborhood": "Parque Heredia - Milán",
+  "price": 320000000,
+  "admin_fee": 230000,
+  "beds": 3,
+  "baths": 2,
+  "sqm": 72.3,
+  "lot_m2": 72.3,
+  "private_m2": 0,
+  "strata": 4,
+  "parking": 1,
+  "level": 4,
+  "floor": 4,
+  "built_year": 2018,
+  "featured": true,
+  "views": 25,
+  "image": "Milan/1.webp",
+  "images": ["Milan/1.webp","Milan/2.webp","Milan/3.webp"],
+  "available": 1,
+  "description": "Apartamento con balcón, cocina empotrada y zona de labores. Buena inversión.",
+  "features": {
+    "interior": [
+      "Aire Acondicionado",
+      "Balcón",
+      "Cocina semi integral",
+      "Zona de ropas",
+      "Piso en porcelanato"
+    ],
+    "exterior": [
+      "Ascensor",
+      "Piscina",
+      "Parqueadero Cubierto",
+      "Portería/Vigilancia 24/7",
+      "Zona Infantil"
+    ],
+    "nearby": [
+      "Supermercados/C.Ciales",
+      "Trans. público cercano",
+      "Sobre vía secundaria"
+    ]
+  },
+  "flags": {
+    "airbnb": true,
+    "renta_dias": true
+  },
+  "advisor": {
+    "name": "Daniel Romero",
+    "phone": "+57 323 501 6747",
+    "whatsapp": "https://wa.me/573235016747",
+    "email": "altorrainmobiliaria@gmail.com",
+    "photo": "assets/img/asesores/daniel.jpg"
+  },
+  "agency": {
+    "name": "ALTORRA Inmobiliaria",
+    "phone": "+57 323 501 6747",
+    "whatsapp": "https://wa.me/573235016747",
+    "website": "https://altorrainmobiliaria.github.io"
+  },
+  "location": {
+    "lat": 10.4095,
+    "lng": -75.4732,
+    "address": "Conjunto Residencial Milán, Parque Heredia, Cartagena",
+    "approximate": true
+  }
+},
+
+    {
     "title": "#",
     "city": "#",
     "type": "#",
