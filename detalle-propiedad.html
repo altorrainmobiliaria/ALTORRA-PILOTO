@@ -200,14 +200,14 @@ footer{background:#0b0b0b;color:#fff;padding:36px 16px}
   <!-- Header externo -->
   <div id="header-placeholder"></div>
 
-  <!-- Registrar service worker para PWA (ruta relativa para repo PILOTO) -->
+  <!-- Registrar service worker (ruta relativa para PILOTO) -->
   <script>
     if("serviceWorker" in navigator){
       navigator.serviceWorker.register("service-worker.js").catch(err=>console.warn("SW registration failed", err));
     }
   </script>
 
-  <!-- Lazy load images (respeta 'loading' si ya viene) -->
+  <!-- Lazy load images -->
   <script>
     document.addEventListener("DOMContentLoaded", ()=> {
       document.querySelectorAll("img").forEach(img => {
@@ -216,10 +216,10 @@ footer{background:#0b0b0b;color:#fff;padding:36px 16px}
     });
   </script>
 
-  <!-- Contenedor principal (lo llena init()) -->
+  <!-- Contenedor principal -->
   <main id="propertyDetail" class="detail-container"></main>
 
-  <!-- === ALTORRA: Ficha técnica extendida (no invasiva) === -->
+  <!-- === ALTORRA: Ficha técnica extendida (debajo, no invasiva) === -->
   <section id="ficha-tecnica-extendida" class="section" aria-labelledby="ficha-title" style="display:none">
     <div class="head"><h2 id="ficha-title">Ficha técnica</h2></div>
 
@@ -248,7 +248,7 @@ footer{background:#0b0b0b;color:#fff;padding:36px 16px}
       <p id="ftx-map-note" style="margin:8px 0 0;font-size:.9rem;color:#6b7280"></p>
     </div>
   </section>
-  <!-- === /ALTORRA: Ficha técnica extendida === -->
+  <!-- === /Ficha técnica === -->
 
   <!-- Footer externo -->
   <div id="footer-placeholder"></div>
@@ -258,7 +258,7 @@ footer{background:#0b0b0b;color:#fff;padding:36px 16px}
 
   <!-- Página -->
   <script>
-/* ===== Utilidades comunes ===== */
+/* ===== Utilidades ===== */
 function getParam(name){const p=new URLSearchParams(window.location.search);return p.get(name)||'';}
 function formatCOP(n){if(!n&&n!==0)return'';return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.');}
 function escapeHtml(s){return String(s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
@@ -282,7 +282,7 @@ function splitIntoParagraphs(text){
 }
 function buildDescription(el,text){ splitIntoParagraphs(text).forEach(t=>{const p=document.createElement('p'); p.textContent=t; el.appendChild(p);}); }
 
-/* === ALTORRA: Ficha técnica (JS) === */
+/* === Ficha técnica === */
 function currencyCOP(v){
   if (v == null) return null;
   try{ return new Intl.NumberFormat('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0}).format(v); }
@@ -298,11 +298,12 @@ function renderTechSheet(p){
   const $pre = document.getElementById('ftx-precios');
   const price = (p.price!=null) ? currencyCOP(p.price) : null;
   const admin = (p.admin_fee!=null) ? currencyCOP(p.admin_fee) : null;
-  const op = p.operation ? (p.operation.toLowerCase()==='arriendo' ? 'Arriendo' : 'Venta') : 'Venta';
+  const opRaw = (p.operation||'').toLowerCase();
+  const op = opRaw==='arriendo' || opRaw==='arrendar' ? 'Arriendo' : (opRaw==='dias'?'Renta por días':'Venta');
   let preciosHTML = '';
   if(price || admin || op){
     preciosHTML += `<div class="stat"><div class="k">Operación</div><div class="v">${op}</div></div>`;
-    preciosHTML += `<div class="stat"><div class="k">${op==='Arriendo'?'Canon':'Precio'}</div><div class="v">${price || '-'}</div></div>`;
+    preciosHTML += `<div class="stat"><div class="k">${op==='Arriendo'?'Canon':(op==='Renta por días'?'Tarifa':'Precio')}</div><div class="v">${price || '-'}</div></div>`;
     preciosHTML += `<div class="stat"><div class="k">Administración</div><div class="v">${admin || '-'}</div></div>`;
     $pre.innerHTML = preciosHTML;
     $pre.parentElement.style.display = '';
@@ -333,7 +334,7 @@ function renderTechSheet(p){
   const $fea = document.getElementById('ftx-features');
   let chips = [];
   if(p.features){ ['interior','exterior','nearby'].forEach(g=>{ if(Array.isArray(p.features[g])) chips = chips.concat(p.features[g]); }); }
-  if(p.flags){ if(p.flags.airbnb) chips.push('AIRBNB'); if(p.flags.renta_dias) chips.push('Renta por días'); }
+  if(p.flags){ if(p.flags.airbnb) chips.push('AIRBNB'); if(p.flags.renta_dias || p.flags.rentaPorDias) chips.push('Renta por días'); }
   $fea.innerHTML = chips.length ? chips.map(t=>`<span class="chip">${t}</span>`).join('') : '<span style="color:#6b7280">Sin características detalladas.</span>';
 
   // 4) Asesor
@@ -391,7 +392,6 @@ function renderTechSheet(p){
   // Mostrar sección
   $sec.style.display = '';
 }
-/* === /ALTORRA: Ficha técnica === */
 
 /* ===== App: init ===== */
 async function init(){
@@ -411,7 +411,7 @@ async function init(){
     const G=document.createElement('div'); G.className='gallery-inner';
 
     const imgsRaw=Array.isArray(prop.images)&&prop.images.length?prop.images:['https://i.postimg.cc/0yYb8Y6r/placeholder.png'];
-    // Rutas relativas (elimina / inicial si la hay) para que funcione en PILOTO
+    // Rutas relativas para PILOTO (elimina "/" inicial si existe)
     const imgs=imgsRaw.map(src=> (src.startsWith('http')||src.startsWith('//'))?src:src.replace(/^\/+/, '') );
 
     let currentIndex=0;
@@ -462,7 +462,7 @@ async function init(){
       setTimeout(start,100);
     })();
 
-    /* ===== WhatsApp móvil (fila sola) ===== */
+    /* ===== WhatsApp móvil ===== */
     const waRow=document.createElement('div'); waRow.className='wa-row';
     const actionsMobile=document.createElement('div'); actionsMobile.className='actions';
     const waTextOverride = isAvailable ? null : `Hola, me interesa la propiedad "${prop.title}" (ID: ${prop.id}). ¿Podrían avisarme si vuelve a estar disponible?`;
@@ -470,16 +470,16 @@ async function init(){
     waMobile.className='btn btn-wa';
     waMobile.href=buildWhatsAppLink(prop,{customText:waTextOverride});
     waMobile.target='_blank'; waMobile.rel='noopener';
-    waMobile.innerHTML='<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.52 3.48A11.89 11.89 0 0 0 12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 5.98L0 24l6.21-1.62A11.96 11.96 0  0 0 12 24c6.63 0 12-5.37 12-12 0-3.19-1.24-6.19-3.48-8.52ZM12 22a9.93 9.93 0 0 1-5.06-1.4l-.36-.21-3.69.96.99-3.59-.23-.37A9.98 9.98 0 1 1 22 12c0 5.52-4.48 10-10 10Zm5.48-7.55c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67 .15-.2 .3-.77 .97-.94 1.17-.17 .2-.35 .22-.65 .07-.3-.15-1.27-.47-2.42-1.49-.89-.79-1.49-1.76-1.66-2.06-.17-.3-.02-.46 .13-.61 .13-.13 .3-.35 .46-.52 .15-.17 .2-.3 .3-.5 .1-.2 .05-.37 -.02-.52 -.07-.15 -.67-1.62 -.92-2.22 -.24-.58 -.49-.5 -.67-.5h-.57c-.2 0 -.52 .07 -.79 .37 -.27 .3 -1.04 1.02 -1.04 2.48s1.07 2.88 1.22 3.08c.15 .2 2.1 3.2 5.08 4.49 .71 .31 1.26 .49 1.7 .63 .71 .23 1.36 .2 1.87 .12 .57 -.08 1.76 -.72 2.01 -1.41 .25 -.69 .25 -1.28 .17 -1.41-.08 -.13 -.27 -.2 -.57 -.35Z" fill="currentColor"/></svg> WhatsApp';
+    waMobile.innerHTML='<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.52 3.48A11.89 11.89 0 0 0 12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 5.98L0 24l6.21-1.62A11.96 11.96 0  0 0 12 24c6.63 0 12-5.37 12-12 0-3.19-1.24-6.19-3.48-8.52ZM12 22a9.93 9.93 0 0 1-5.06-1.4l-.36-.21-3.69 .96 .99-3.59-.23-.37A9.98 9.98 0  1 1 22 12c0 5.52-4.48 10-10 10Zm5.48-7.55c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67 .15-.2 .3-.77 .97-.94 1.17-.17 .2-.35 .22-.65 .07-.3-.15-1.27-.47-2.42-1.49-.89-.79-1.49-1.76-1.66-2.06-.17-.3-.02-.46 .13-.61 .13-.13 .3-.35 .46-.52 .15-.17 .2-.3 .3-.5 .1-.2 .05-.37 -.02-.52 -.07-.15 -.67-1.62 -.92-2.22 -.24-.58 -.49-.5 -.67-.5h-.57c-.2 0 -.52 .07 -.79 .37 -.27 .3 -1.04 1.02 -1.04 2.48s1.07 2.88 1.22 3.08c.15 .2 2.1 3.2 5.08 4.49 .71 .31 1.26 .49 1.7 .63 .71 .23 1.36 .2 1.87 .12 .57 -.08 1.76 -.72 2.01 -1.41 .25 -.69 .25 -1.28 .17 -1.41-.08 -.13 -.27 -.2 -.57 -.35Z" fill="currentColor"/></svg> WhatsApp';
     actionsMobile.appendChild(waMobile); waRow.appendChild(actionsMobile);
-    // Botón Compartir móvil junto a WhatsApp
+    // Compartir móvil
     (function(){ try{
       const btnShareMobile = document.createElement('button');
       btnShareMobile.type = 'button';
       btnShareMobile.className = 'btn btn-ghost';
       btnShareMobile.textContent = 'Compartir';
       btnShareMobile.addEventListener('click', async ()=>{
-        const shareUrl = '/p/' + encodeURIComponent(prop.id) + '.html';
+        const shareUrl = 'detalle-propiedad.html?id=' + encodeURIComponent(prop.id);
         const shareText = prop.title ? ('Mira ' + prop.title + ' en Altorra') : 'Mira esta propiedad en Altorra';
         try{
           if(navigator.share){ await navigator.share({title: prop.title||'Propiedad', text: shareText, url: shareUrl}); }
@@ -509,12 +509,14 @@ async function init(){
       (sqm? badge(areaSvg, `${sqm} m²`):'');
 
     const specs=document.createElement('div'); specs.className='specs';
-    specs.textContent=[prop.city, prop.type?(prop.type.charAt(0).toUpperCase()+prop.type.slice(1)):''].filter(Boolean).join(' · ');
+    const typeLabel = prop.type ? (prop.type.charAt(0).toUpperCase()+prop.type.slice(1)) : '';
+    specs.textContent=[prop.city, typeLabel].filter(Boolean).join(' · ');
 
     const priceRow=document.createElement('div'); priceRow.className='price';
     if(prop.price){
-      if(prop.operation==='arrendar') priceRow.textContent='$'+formatCOP(prop.price)+' COP / mes';
-      else if(prop.operation==='dias') priceRow.textContent='$'+formatCOP(prop.price)+' COP / noche';
+      const op=(prop.operation||'').toLowerCase();
+      if(op==='arrendar' || op==='arriendo') priceRow.textContent='$'+formatCOP(prop.price)+' COP / mes';
+      else if(op==='dias') priceRow.textContent='$'+formatCOP(prop.price)+' COP / noche';
       else priceRow.textContent='$'+formatCOP(prop.price)+' COP';
     }
 
@@ -551,14 +553,14 @@ async function init(){
       <div class="form-actions">
         <button type="submit" class="btn btn-primary">${isAvailable ? 'Enviar mensaje' : 'Avisarme'}</button>
         <a class="btn btn-wa wa-in-form" href="${waInFormHref}" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.52 3.48A11.89 11.89 0 0 0 12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 5.98L0 24l6.21-1.62A11.96 11.96 0  0 0 12 24c6.63 0 12-5.37 12-12 0-3.19-1.24-6.19-3.48-8.52ZM12 22a9.93 9.93 0 0 1-5.06-1.4l-.36-.21-3.69 .96 .99-3.59-.23-.37A9.98 9.98 0 1 1 22 12c0 5.52-4.48 10-10 10Zm5.48-7.55c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67 .15-.2 .3-.77 .97-.94 1.17-.17 .2-.35 .22-.65 .07-.3-.15-1.27-.47-2.42-1.49-.89-.79-1.49-1.76-1.66-2.06-.17-.3-.02-.46 .13-.61 .13-.13 .3-.35 .46-.52 .15-.17 .2-.3 .3-.5 .1-.2 .05-.37 -.02-.52 -.07-.15 -.67-1.62 -.92-2.22 -.24-.58 -.49-.5 -.67-.5h-.57c-.2 0 -.52 .07 -.79 .37 -.27 .3 -1.04 1.02 -1.04 2.48s1.07 2.88 1.22 3.08c.15 .2 2.1 3.2 5.08 4.49 .71 .31 1.26 .49 1.7 .63 .71 .23 1.36 .2 1.87 .12 .57 -.08 1.76 -.72 2.01 -1.41 .25 -.69 .25 -1.28 .17 -1.41-.08 -.13 -.27 -.2 -.57 -.35Z" fill="currentColor"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.52 3.48A11.89 11.89 0 0 0 12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 5.98L0 24l6.21-1.62A11.96 11.96 0  0 0 12 24c6.63 0 12-5.37 12-12 0-3.19-1.24-6.19-3.48-8.52ZM12 22a9.93 9.93 0 0 1-5.06-1.4l-.36-.21-3.69 .96 .99-3.59-.23-.37A9.98 9.98 0  1 1 22 12c0 5.52-4.48 10-10 10Zm5.48-7.55c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67 .15-.2 .3-.77 .97-.94 1.17-.17 .2-.35 .22-.65 .07-.3-.15-1.27-.47-2.42-1.49-.89-.79-1.49-1.76-1.66-2.06-.17-.3-.02-.46 .13-.61 .13-.13 .3-.35 .46-.52 .15-.17 .2-.3 .3-.5 .1-.2 .05-.37 -.02-.52 -.07-.15 -.67-1.62 -.92-2.22 -.24-.58 -.49-.5 -.67-.5h-.57c-.2 0 -.52 .07 -.79 .37 -.27 .3 -1.04 1.02 -1.04 2.48s1.07 2.88 1.22 3.08c.15 .2 2.1 3.2 5.08 4.49 .71 .31 1.26 .49 1.7 .63 .71 .23 1.36 .2 1.87 .12 .57 -.08 1.76 -.72 2.01 -1.41 .25 -.69 .25 -1.28 .17 -1.41-.08 -.13 -.27 -.2 -.57 -.35Z" fill="currentColor"/></svg>
           WhatsApp
         </a>
       </div>
     `;
     formBlock.appendChild(form);
 
-    /* === Compartir en ESCRITORIO dentro del formulario (no móvil) === */
+    /* === Compartir (escritorio) === */
     (function(){
       try{
         const fa = form.querySelector('.form-actions');
@@ -569,7 +571,7 @@ async function init(){
           btn.textContent = 'Compartir';
           btn.addEventListener('click', async ()=>{
             try{
-              const shareUrl = '/p/' + encodeURIComponent(prop.id) + '.html';
+              const shareUrl = 'detalle-propiedad.html?id=' + encodeURIComponent(prop.id);
               const shareText = prop.title ? ('Mira ' + prop.title + ' en Altorra') : 'Mira esta propiedad en Altorra';
               if (navigator.share){
                 await navigator.share({title: prop.title||'Propiedad', text: shareText, url: shareUrl});
@@ -593,7 +595,7 @@ async function init(){
     container.appendChild(infoDiv);
     container.appendChild(waRow); /* visible solo en móvil */
 
-    /* ===== FICHA TÉCNICA (debajo del contenido) ===== */
+    /* ===== FICHA TÉCNICA ===== */
     window.currentProperty = prop;
     renderTechSheet(prop);
 
