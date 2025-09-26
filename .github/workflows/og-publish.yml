@@ -1,0 +1,54 @@
+name: Generar páginas OG (/p) e imágenes (/og)
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "BASE para las URLs absolutas"
+        required: false
+        default: "https://altorrainmobiliaria.github.io"
+  push:
+    branches: [ main ]
+    paths:
+      - 'properties/data.json'
+      - 'tools/generate_og_pages.js'
+      - 'tools/og.config.json'
+
+permissions:
+  contents: write   # para poder commitear a este repo
+
+concurrency:
+  group: og-publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar sharp
+        run: npm i sharp
+
+      - name: Generar /p y /og
+        env:
+          OG_BASE_URL: ${{ inputs.base_url || 'https://altorrainmobiliaria.github.io' }}
+        run: node tools/generate_og_pages.js
+
+      - name: Commit & push si hubo cambios
+        run: |
+          if [[ -n "$(git status --porcelain p og)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add p og
+            git commit -m "chore(og): actualizar /p y /og"
+            git push
+          else
+            echo "No hay cambios que commitear"
+          fi
