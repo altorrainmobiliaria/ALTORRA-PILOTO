@@ -351,7 +351,10 @@ document.addEventListener('DOMContentLoaded', function(){
         root.appendChild(note);
         return;
       }
-      arr.slice(0,8).forEach(p => root.appendChild(buildCard(p, c.mode)));
+
+      /* === REEMPLAZO 1: usar orden inteligente === */
+      const ordered = smartOrder(arr);
+      ordered.slice(0,8).forEach(p => root.appendChild(buildCard(p, c.mode)));
     });
 
     // Si la revalidación en background actualiza el JSON, podemos refrescar cards (opcional)
@@ -363,7 +366,10 @@ document.addEventListener('DOMContentLoaded', function(){
         if(!root) return;
         const arr = await fetchByOperation(c.operation);
         root.innerHTML = '';
-        arr.slice(0,8).forEach(p => root.appendChild(buildCard(p, c.mode)));
+
+        /* === REEMPLAZO 2: usar orden inteligente en refresco === */
+        const ordered = smartOrder(arr);
+        ordered.slice(0,8).forEach(p => root.appendChild(buildCard(p, c.mode)));
       });
     }, { once: true });
   });
