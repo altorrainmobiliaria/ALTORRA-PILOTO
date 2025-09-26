@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>Buscar Propiedades | Altorra</title>
+<meta name="description" content="Buscador avanzado de propiedades de Altorra Inmobiliaria"/>
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#d4af37"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="style.css"/>
+<style>
+  .search-page{max-width:1100px;margin:calc(var(--header-h) + 16px) auto 40px;padding:0 16px}
+  .filters{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;align-items:end}
+  .filters .f-span-2{grid-column:span 2}
+  @media (max-width:900px){.filters{grid-template-columns:repeat(2,minmax(0,1fr))} .filters .f-span-2{grid-column:span 2}}
+  .filters label{font-size:.82rem;color:#374151;font-weight:600;margin-bottom:6px;display:block}
+  .filters input,.filters select{width:100%;border:1px solid rgba(0,0,0,.1);border-radius:10px;padding:10px 12px;font:inherit;background:#fff}
+  .filters button{padding:12px 14px;border-radius:12px;border:none;font-weight:800;cursor:pointer;background:var(--gold);color:#111}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+  .chip{padding:6px 10px;border-radius:999px;background:#f3f4f6;border:1px solid #e5e7eb;font-size:.84rem}
+  .results-head{display:flex;justify-content:space-between;align-items:center;margin:16px 0}
+  .cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+  @media (max-width:1200px){.cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
+  @media (max-width:900px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media (max-width:600px){.cards{grid-template-columns:repeat(1,minmax(0,1fr))}}
+  .card .actions{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+  .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(0,0,0,.1);border-radius:10px;padding:8px 12px;background:#fff;cursor:pointer}
+  .btn:hover{background:#fafafa}
+  .btn.whatsapp{border-color:#22c55e33}
+  .btn.share{border-color:#60a5fa33}
+</style>
+</head>
+<body>
+  <a href="#results" class="skip-link">Saltar a resultados</a>
+  <div id="header-placeholder"></div>
+
+  <main class="search-page">
+    <h1 style="margin:0 0 8px">Buscar propiedades</h1>
+    <p style="color:#6b7280;margin:0 0 16px">Filtra por operación, precio, tipo, ciudad, habitaciones, baños, o busca por código.</p>
+
+    <form id="filtersForm" class="filters" role="search">
+      <div>
+        <label for="f-op">Operación</label>
+        <select id="f-op" name="op">
+          <option value="">Todas</option>
+          <option value="comprar">Comprar</option>
+          <option value="arrendar">Arrendar</option>
+          <option value="dias">Por días</option>
+        </select>
+      </div>
+      <div>
+        <label for="f-type">Tipo</label>
+        <select id="f-type" name="type">
+          <option value="">Todos</option>
+          <option value="apartamento">Apartamento</option>
+          <option value="casa">Casa</option>
+          <option value="oficina">Oficina</option>
+          <option value="local">Local</option>
+          <option value="lote">Lote</option>
+          <option value="PRUEBA">PRUEBA</option>
+        </select>
+      </div>
+      <div>
+        <label for="f-city">Ciudad</label>
+        <select id="f-city" name="city">
+          <option value="">Todas</option>
+          <option value="Cartagena">Cartagena</option>
+          <option value="PRUEBA">PRUEBA</option>
+        </select>
+      </div>
+      <div>
+        <label for="f-beds">Habitaciones</label>
+        <select id="f-beds" name="beds">
+          <option value="">Cualquiera</option>
+          <option value="1">1+</option>
+          <option value="2">2+</option>
+          <option value="3">3+</option>
+          <option value="4">4+</option>
+          <option value="5">5+</option>
+        </select>
+      </div>
+      <div>
+        <label for="f-baths">Baños</label>
+        <select id="f-baths" name="baths">
+          <option value="">Cualquiera</option>
+          <option value="1">1+</option>
+          <option value="2">2+</option>
+          <option value="3">3+</option>
+          <option value="4">4+</option>
+          <option value="5">5+</option>
+        </select>
+      </div>
+      <div>
+        <label for="f-min">Mínimo (COP)</label>
+        <input id="f-min" name="min" type="number" inputmode="numeric" placeholder="0"/>
+      </div>
+      <div>
+        <label for="f-max">Máximo (COP)</label>
+        <input id="f-max" name="max" type="number" inputmode="numeric" placeholder="Ej. 1000000000"/>
+      </div>
+      <div class="f-span-2">
+        <label for="f-q">Palabra clave</label>
+        <input id="f-q" name="q" type="search" placeholder="Ej. Bocagrande, balcón, vista, piscina…"/>
+      </div>
+      <div>
+        <label for="f-code">Código</label>
+        <input id="f-code" name="code" type="text" placeholder="Ej. 101-27"/>
+      </div>
+      <div>
+        <button type="submit">Aplicar filtros</button>
+      </div>
+    </form>
+
+    <div class="chips" id="chips"></div>
+
+    <div class="results-head">
+      <div id="count">0 resultados</div>
+      <div>
+        <label for="order" class="visually-hidden">Orden</label>
+        <select id="order" name="order" aria-label="Orden">
+          <option value="featured">Destacados</option>
+          <option value="views">Más vistos</option>
+          <option value="random">Aleatorio (diario)</option>
+        </select>
+      </div>
+    </div>
+
+    <section id="results" class="cards" role="list"></section>
+    <p id="empty" style="display:none;color:#6b7280;margin-top:10px">No se encontraron propiedades con esos filtros.</p>
+  </main>
+
+  <div id="footer-placeholder"></div>
+  <script src="header-footer.js" defer></script>
+  <script src="scripts.js" defer></script>
+  <script src="search.js" defer></script>
+</body>
+</html>

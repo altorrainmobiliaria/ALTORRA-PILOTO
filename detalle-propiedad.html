@@ -203,7 +203,7 @@ footer{background:#0b0b0b;color:#fff;padding:36px 16px}
 
   <script>
     if("serviceWorker" in navigator){
-      navigator.serviceWorker.register("./service-worker.js").catch(err=>console.warn("SW registration failed", err));
+      navigator.serviceWorker.register("/service-worker.js").catch(err=>console.warn("SW registration failed", err));
     }
   </script>
 
@@ -258,7 +258,6 @@ async function init(){
     if(!res.ok) throw new Error('HTTP '+res.status);
     const data=await res.json();
     const prop=data.find(it=>it.id===id);
-    window.__PROP_JSON__ = prop;
     if(!prop){container.innerHTML='<p>Propiedad no encontrada.</p>';return;}
 
     const isAvailable = Number(prop.available) === 1;
@@ -534,46 +533,35 @@ async function init(){
 }
 document.addEventListener('DOMContentLoaded', init);
   </script>
-  <!-- SEO JSON-LD -->
-  <div style="display:none"><?php /* placeholder for GH Pages */ ?></div>
-  <!--#include file="snippets/inject-jsonld.html" -->
-</body>
-<script>
-/* Inject JSON-LD for SEO using loaded property 'prop' */
-(function(){
-  try{
-    if(!window.__PROP_JSON__) return;
-    const p = window.__PROP_JSON__;
-    const ld = {
-      "@context": "https://schema.org",
-      "@type": "RealEstateListing",
-      "name": p.title || "Propiedad en Cartagena",
-      "description": p.description || "",
-      "url": location.href,
-      "datePosted": new Date().toISOString(),
-      "address": {
-        "@type": "PostalAddress",
-        "addressLocality": p.city || "Cartagena",
-        "addressCountry": "CO"
-      },
-      "offers": {
-        "@type": "Offer",
-        "priceCurrency": "COP",
-        "price": String(p.price || ""),
-        "availability": (Number(p.available)===1) ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
-      },
-      "category": p.operation || "venta",
-      "numberOfRooms": p.beds || undefined,
-      "numberOfBathroomsTotal": p.baths || undefined,
-      "floorSize": p.sqm ? { "@type":"QuantitativeValue", "value": p.sqm, "unitCode": "MTK" } : undefined,
-      "image": Array.isArray(p.images) ? p.images.map(src => (src.startsWith('http')?src: (src.startsWith('/')?src:'/'+src))) : undefined
-    };
-    const el = document.createElement('script');
-    el.type = 'application/ld+json';
-    el.textContent = JSON.stringify(ld);
-    document.head.appendChild(el);
-  }catch(e){ console.warn('JSON-LD inject failed', e); }
-})();
-</script>
 
+  <!-- Leaflet (free) for optional map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script>
+  /* === Leaflet map === */
+  (function(){
+    function initMapIfCoords(prop){
+      try{
+        if(!prop || !prop.coords || typeof prop.coords.lat!=='number' || typeof prop.coords.lng!=='number') return;
+        var wrap = document.querySelector('.map-wrap'); if(!wrap){ return; }
+        var mapEl = document.createElement('div'); mapEl.id = 'map'; mapEl.style.width='100%'; mapEl.style.height='100%';
+        wrap.innerHTML=''; wrap.appendChild(mapEl);
+        var map = L.map('map', { scrollWheelZoom:false }).setView([prop.coords.lat, prop.coords.lng], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+        L.marker([prop.coords.lat, prop.coords.lng]).addTo(map);
+      }catch(e){ console.warn('Map init failed', e); }
+    }
+    document.addEventListener('DOMContentLoaded', function(){
+      if(window.__PROP_JSON__) initMapIfCoords(window.__PROP_JSON__);
+      else{
+        // Fallback: try to observe until prop is set
+        var i = setInterval(function(){
+          if(window.__PROP_JSON__){ clearInterval(i); initMapIfCoords(window.__PROP_JSON__); }
+        }, 200);
+        setTimeout(function(){ clearInterval(i); }, 4000);
+      }
+    });
+  })();
+  </script>
+</body>
 </html>
