@@ -26,7 +26,7 @@ html,body{background:var(--bg);color:var(--text);font-family:"Poppins",system-ui
 a{text-decoration:none;color:inherit}
 a[href^="tel"],a[x-apple-data-detectors]{color:inherit!important;text-decoration:none!important;font-weight:inherit!important;border-bottom:0!important}
 
-/* ===== LAYOUT ===== */
+/* ===== LAYOUT ORIGINAL (NO TOCAR ORDEN) ===== */
 main.detail-container{
   max-width:var(--page-max);
   margin:calc(var(--header-h) + 20px) auto 40px;
@@ -51,14 +51,11 @@ main.detail-container{
   margin-bottom:10px; box-shadow:0 10px 26px rgba(0,0,0,.06)
 }
 .main-frame img{
-  max-width:100%;
-  max-height:100%;
-  width:auto; height:auto;
+  max-width:100%; max-height:100%; width:auto; height:auto;
   object-fit:contain; object-position:center;
   cursor:zoom-in; transition:transform .28s ease;
 }
 .main-frame img:hover{transform:scale(1.01)}
-
 .gallery .arrow{
   position:absolute; top:50%; transform:translateY(-50%);
   width:40px;height:40px;border-radius:999px;border:0;background:#fff;color:#111;cursor:pointer;z-index:3;
@@ -67,7 +64,6 @@ main.detail-container{
 }
 .gallery .arrow:hover{transform:translateY(-50%) scale(1.05); box-shadow:0 14px 30px rgba(0,0,0,.16)}
 .gallery .arrow.prev{left:10px} .gallery .arrow.next{right:10px}
-
 .thumbnails{display:flex; gap:10px; overflow-x:auto; padding-bottom:2px; scroll-snap-type:x proximity; max-width:100%}
 .thumbnails::-webkit-scrollbar{height:8px}
 .thumbnails::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12); border-radius:999px}
@@ -105,15 +101,12 @@ main.detail-container{
 .info h1{font-weight:800; line-height:1.1; text-wrap:balance; font-size:clamp(1.4rem, 1.4rem + 1vw, 2rem)}
 .price{font-weight:800; font-size:clamp(1.2rem, 1.2rem + .6vw, 1.6rem); color:var(--gold)}
 .specs{color:var(--muted); font-size:.95rem}
-
 .status-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;font-weight:700;font-size:.85rem;background:#f7f7f8;border:1px solid rgba(17,24,39,.08);width:max-content}
 .status-dot{width:10px;height:10px;border-radius:999px;background:#16a34a}
 .status-pill.unavailable{background:#fcfcfc;opacity:.95}
 .status-pill.unavailable .status-dot{background:#dc2626}
-
 .spec-badges{display:flex; gap:8px; flex-wrap:wrap}
 .spec-badge{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:12px; background:#f7f7f8; border:1px solid rgba(17,24,39,.08); font-weight:700; font-size:.9rem}
-
 .desc{color:#1f2937; text-align:justify; line-height:1.75}
 .desc p + p{margin-top:10px}
 
@@ -187,42 +180,95 @@ header .nav-toggle{ color:var(--text) !important; }
 footer{background:#0b0b0b;color:#fff;padding:36px 16px}
 .footer-grid{max-width:var(--page-max);margin:0 auto;width:100%;display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
 @media (max-width:920px){.footer-grid{grid-template-columns:1fr}}
-footer{background:#0b0b0b;color:#fff;padding:36px 16px}
-.footer-grid{max-width:var(--page-max);margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
-@media (max-width:920px){.footer-grid{grid-template-columns:1fr}}
 
 /* Forzar botones WhatsApp + Compartir en línea en escritorio */
 @media (min-width:721px){
   .form-actions .btn{width:auto}
-}
-/* Mostrar WhatsApp y Compartir juntos en escritorio dentro del formulario */
-@media (min-width:721px){
   .form-actions{justify-content:flex-start}
-  .form-actions .btn{width:auto}
 }
 
-/* ===== NUEVOS BLOQUES DETALLE (retro-compatibles) ===== */
-.extra-sections{display:flex;flex-direction:column;gap:22px;margin-top:16px}
-.card-lite{border:1px solid rgba(17,24,39,.08);border-radius:14px;padding:16px;background:#fff}
-.card-lite h3{margin:0 0 10px 0;font-size:1.1rem;font-weight:800}
-.tech-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-@media(min-width:860px){.tech-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-.kv{display:flex;gap:8px;align-items:center;font-size:.95rem}
-.kv .k{color:#6b7280;width:150px;max-width:40%}
-.kv .v{font-weight:700}
-.features{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-@media(min-width:860px){.features{grid-template-columns:repeat(3,minmax(0,1fr))}}
-.feature{display:flex;gap:8px;align-items:center}
-.feature .ico{width:18px;height:18px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(17,24,39,.15)}
-.feature.ok .ico{background:#10b9811a;border-color:#10b981}
-.feature.no .ico{background:#ef44441a;border-color:#ef4444}
+/* ======== NUEVAS SECCIONES (refinadas, al final) ======== */
+.extra-sections{display:flex;flex-direction:column;gap:22px;margin-top:16px;width:100%}
+
+/* Card corporativa */
+.card-lite{
+  border:1px solid rgba(17,24,39,.08);
+  border-radius:14px;
+  padding:16px;
+  background:#fff;
+  box-shadow:0 8px 24px rgba(0,0,0,.04);
+}
+.card-lite h3{
+  margin:0 0 14px 0;
+  font-size:1.05rem;
+  font-weight:800;
+  letter-spacing:.2px;
+  color:#0f172a;
+}
+.card-lite h3::after{
+  content:"";
+  display:block;
+  width:44px;height:3px;border-radius:3px;
+  background:var(--gold);
+  margin-top:8px;
+}
+
+/* Grilla de ficha técnica */
+.tech-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+@media(min-width:700px){.tech-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:1024px){.tech-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+.kv{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:10px 12px;
+  border:1px solid rgba(17,24,39,.06);
+  border-radius:12px;
+  background:#fafafa;
+  min-height:44px;
+}
+.kv .k{color:#6b7280;flex:0 0 46%;max-width:280px}
+.kv .v{font-weight:800;color:#0b1220;word-break:break-word}
+
+/* Características */
+.features{
+  display:grid;gap:10px;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+}
+@media(min-width:700px){.features{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:1024px){.features{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+.feature{
+  display:flex;gap:10px;align-items:center;
+  padding:10px 12px;border:1px solid rgba(17,24,39,.08);
+  border-radius:999px;background:#fff;
+  font-weight:700;
+}
+.feature .ico{
+  width:20px;height:20px;border-radius:999px;
+  display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid #10b981;color:#10b981;font-size:.9rem;line-height:1
+}
+.feature.ok .ico{background:#10b98112}
+.feature.no .ico{border-color:#ef4444;color:#ef4444;background:#ef444412}
+
+/* Agente / Inmobiliaria */
 .agent{display:flex;gap:12px;align-items:center}
 .agent img{width:56px;height:56px;border-radius:999px;object-fit:cover;border:1px solid rgba(17,24,39,.08)}
 .agent .name{font-weight:800}
 .agent .sub{color:#6b7280;font-size:.9rem}
-.agent-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
-.btn-mini{border:1px solid rgba(17,24,39,.12);background:#fff;border-radius:10px;padding:8px 12px;cursor:pointer}
-.map-wrap{height:320px;border-radius:14px;overflow:hidden;border:1px solid rgba(17,24,39,.08)}
+.agent-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.btn-mini{
+  border:1px solid rgba(17,24,39,.12);background:#fff;border-radius:10px;
+  padding:8px 12px;cursor:pointer;font-weight:700
+}
+.btn-mini:hover{background:#f9fafb}
+
+/* Mapa */
+.map-wrap{height:340px;border-radius:14px;overflow:hidden;border:1px solid rgba(17,24,39,.08)}
 .leaflet-container{font:inherit}
 </style>
 </head>
@@ -294,7 +340,7 @@ async function init(){
 
     const isAvailable = Number(prop.available) === 1;
 
-    /* ===== Galería ===== */
+    /* ===== Galería (original) ===== */
     const galleryDiv=document.createElement('div'); galleryDiv.className='gallery';
     const G=document.createElement('div'); G.className='gallery-inner';
 
@@ -357,9 +403,8 @@ async function init(){
     waMobile.className='btn btn-wa';
     waMobile.href=buildWhatsAppLink(prop,{customText:waTextOverride});
     waMobile.target='_blank'; waMobile.rel='noopener';
-    waMobile.innerHTML='<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.52 3.48A11.89 11.89 0 0 0 12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 5.98L0 24l6.21-1.62A11.96 11.96 0 0 0 12 24c6.63 0 12-5.37 12-12 0-3.19-1.24-6.19-3.48-8.52ZM12 22a9.93 9.93 0  0 1-5.06-1.4l-.36-.21-3.69 .96 .99-3.59-.23-.37A9.98 9.98 0 1 1 22 12c0 5.52-4.48 10-10 10Zm5.48-7.55c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67 .15-.2 .3-.77 .97-.94 1.17-.17 .2-.35 .22-.65 .07-.3-.15-1.27-.47-2.42-1.49-.89-.79-1.49-1.76-1.66-2.06-.17-.3-.02-.46 .13-.61 .13-.13 .3-.35 .46-.52 .15-.17 .2-.3 .3-.5 .1-.2 .05-.37 -.02-.52 -.07-.15 -.67-1.62 -.92-2.22 -.24-.58 -.49-.5 -.67-.5h-.57c-.2 0 -.52 .07 -.79 .37 -.27 .3 -1.04 1.02 -1.04 2.48s1.07 2.88 1.22 3.08c.15 .2 2.1 3.2 5.08 4.49 .71 .31 1.26 .49 1.7 .63 .71 .23 1.36 .2 1.87 .12 .57 -.08 1.76 -.72 2.01 -1.41 .25 -.69 .25 -1.28 .17 -1.41-.08 -.13 -.27 -.2 -.57 -.35Z" fill="currentColor"/></svg> WhatsApp';
+    waMobile.innerHTML='<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.52 3.48A11.89 11.89 0 0 0 12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 5.98L0 24l6.21-1.62A11.96 11.96 0 0 0 12 24c6.63 0 12-5.37 12-12 0-3.19-1.24-6.19-3.48-8.52ZM12 22a9.93 9.93 0 0 1-5.06-1.4l-.36-.21-3.69 .96 .99-3.59-.23-.37A9.98 9.98 0 1 1 22 12c0 5.52-4.48 10-10 10Zm5.48-7.55c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67 .15-.2 .3-.77 .97-.94 1.17-.17 .2-.35 .22-.65 .07-.3-.15-1.27-.47-2.42-1.49-.89-.79-1.49-1.76-1.66-2.06-.17-.3-.02-.46 .13-.61 .13-.13 .3-.35 .46-.52 .15-.17 .2-.3 .3-.5 .1-.2 .05-.37 -.02-.52 -.07-.15 -.67-1.62 -.92-2.22 -.24-.58 -.49-.5 -.67-.5h-.57c-.2 0 -.52 .07 -.79 .37 -.27 .3 -1.04 1.02 -1.04 2.48s1.07 2.88 1.22 3.08c.15 .2 2.1 3.2 5.08 4.49 .71 .31 1.26 .49 1.7 .63 .71 .23 1.36 .2 1.87 .12 .57 -.08 1.76 -.72 2.01 -1.41 .25 -.69 .25 -1.28 .17 -1.41-.08 -.13 -.27 -.2 -.57 -.35Z" fill="currentColor"/></svg> WhatsApp';
     actionsMobile.appendChild(waMobile); waRow.appendChild(actionsMobile);
-    // Botón Compartir móvil junto a WhatsApp
     (function(){ try{
       const btnShareMobile = document.createElement('button');
       btnShareMobile.type = 'button';
@@ -376,7 +421,7 @@ async function init(){
       actionsMobile.appendChild(btnShareMobile);
     }catch(_){}})();
 
-    /* ===== INFO ===== */
+    /* ===== INFO (original) ===== */
     const infoDiv=document.createElement('div'); infoDiv.className='info';
     const h1=document.createElement('h1'); h1.textContent=prop.title||'Propiedad';
 
@@ -387,19 +432,22 @@ async function init(){
     const badges=document.createElement('div'); badges.className='spec-badges';
     const bed=(prop.beds||0), bath=(prop.baths||0), sqm=(prop.sqm||0);
     const badge=(svg,label)=>`<span class="spec-badge">${svg}${label}</span>`;
-    const bedSvg='<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 11V7a2 2 0 0 1 2-2h6a4 4 0 0 1 4 4v2h4a2 2 0 0 1 2 2v5h-2v-2H5v2H3v-9h2zm2 4h14v-2a1 1 0 0 0-1-1h-5V9a2 2 0 0 0-2-2H5a1 1 0  0 0-1 1v7z"/></svg>';
+    const bedSvg='<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 11V7a2 2 0 0 1 2-2h6a4 4 0  0 1 4 4v2h4a2 2 0 0 1 2 2v5h-2v-2H5v2H3v-9h2zm2 4h14v-2a1 1 0  0 0-1-1h-5V9a2 2 0 0 0-2-2H5a1 1 0  0 0-1 1v7z"/></svg>';
     const bathSvg='<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 3a3 3 0  0 1 3 3v5h8a1 1 0 1 1 0 2H5v2h14v2H5a3 3 0 0 1-3-3v-3h6V6a1 1 0 0 0-2 0v1H4V6a3 3 0 0 1 3-3z"/></svg>';
     const areaSvg='<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4h16v16H4zM6 6v12h12V6z"/></svg>';
-    badges.innerHTML=
-      (bed? badge(bedSvg, `${bed} ${bed===1?'habitación':'habitaciones'}`):'')+
-      (bath? badge(bathSvg, `${bath} ${bath===1?'baño':'baños'}`):'')+
-      (sqm? badge(areaSvg, `${sqm} m²`):'');
+    badges.innerHTML=(bed? badge(bedSvg, `${bed} ${bed===1?'habitación':'habitaciones'}`):'')+
+                     (bath? badge(bathSvg, `${bath} ${bath===1?'baño':'baños'}`):'')+
+                     (sqm? badge(areaSvg, `${sqm} m²`):'');
 
     const specs=document.createElement('div'); specs.className='specs';
     specs.textContent=[prop.city, prop.type?(prop.type.charAt(0).toUpperCase()+prop.type.slice(1)):''].filter(Boolean).join(' · ');
 
     const priceRow=document.createElement('div'); priceRow.className='price';
-    if(prop.price){ if(prop.operation==='arrendar') priceRow.textContent='$'+formatCOP(prop.price)+' COP / mes'; else if(prop.operation==='dias') priceRow.textContent='$'+formatCOP(prop.price)+' COP / noche'; else priceRow.textContent='$'+formatCOP(prop.price)+' COP'; }
+    if(prop.price){
+      if(prop.operation==='arrendar') priceRow.textContent='$'+formatCOP(prop.price)+' COP / mes';
+      else if(prop.operation==='dias') priceRow.textContent='$'+formatCOP(prop.price)+' COP / noche';
+      else priceRow.textContent='$'+formatCOP(prop.price)+' COP';
+    }
 
     const desc=document.createElement('div'); desc.className='desc'; buildDescription(desc, prop.description||'');
 
@@ -408,7 +456,7 @@ async function init(){
     if(priceRow.textContent) infoDiv.appendChild(priceRow);
     if(desc.childNodes.length) infoDiv.appendChild(desc);
 
-    /* ===== Formulario ===== */
+    /* ===== Formulario (original) ===== */
     const formBlock=document.createElement('div'); formBlock.className='form-block';
     const form=document.createElement('form');
     form.className='contact-form'; form.action='https://formsubmit.co/altorrainmobiliaria@gmail.com'; form.method='POST';
@@ -441,7 +489,7 @@ async function init(){
     `;
     formBlock.appendChild(form);
 
-    /* === Compartir en ESCRITORIO (no móvil) === */
+    /* Compartir en escritorio dentro del formulario */
     (function(){
       try{
         const fa = form.querySelector('.form-actions');
@@ -467,7 +515,7 @@ async function init(){
       }catch(e){}
     })();
 
-    /* ===== Montaje ===== */
+    /* ===== Montaje (original + NUEVO AL FINAL) ===== */
     container.innerHTML='';
     galleryDiv.appendChild(G);
     galleryDiv.appendChild(thumbs);
@@ -476,7 +524,7 @@ async function init(){
     container.appendChild(infoDiv);
     container.appendChild(waRow); /* visible solo en móvil */
 
-    /* ====== NUEVAS SECCIONES (JS-only, retro-compatibles) ====== */
+    /* ====== NUEVAS SECCIONES (solo al final) ====== */
     (function(){
       const root = document.createElement('div');
       root.className = 'extra-sections';
@@ -486,7 +534,7 @@ async function init(){
       const fmtCOP = n => (n||n===0) ? ('$ ' + String(n).replace(/\B(?=(\d{3})+(?!\d))/g,'.')) : '';
       const kv = (k,v)=> v!=null && v!=='' ? `<div class="kv"><span class="k">${k}</span><span class="v">${v}</span></div>` : '';
 
-      // 1) Ficha técnica
+      /* 1) Ficha técnica */
       (function renderTech(){
         const b = document.createElement('section'); b.className='card-lite';
         let html = '<h3>Ficha técnica</h3><div class="tech-grid">';
@@ -509,17 +557,17 @@ async function init(){
         if (b.querySelector('.kv .v')) root.appendChild(b);
       })();
 
-      // 2) Características
+      /* 2) Características */
       (function renderFeatures(){
         const list = Array.isArray(prop.features) ? prop.features : [];
         if(!list.length) return;
-        const ok = (txt)=>`<div class="feature ok"><span class="ico">✓</span><span>${txt}</span></div>`;
+        const pill = (txt)=>`<div class="feature ok"><span class="ico">✓</span><span>${txt}</span></div>`;
         const box = document.createElement('section'); box.className='card-lite';
-        box.innerHTML = '<h3>Características</h3><div class="features">'+ list.map(ok).join('') +'</div>';
+        box.innerHTML = '<h3>Características</h3><div class="features">'+ list.map(pill).join('') +'</div>';
         root.appendChild(box);
       })();
 
-      // 3) Asesor / Inmobiliaria
+      /* 3) Contacto (Asesor / Inmobiliaria) */
       (function renderAgent(){
         const info = prop.advisor || null;
         const agency = prop.agency || null;
@@ -567,11 +615,10 @@ async function init(){
           ag.innerHTML = `<div class="sub">Inmobiliaria: <strong>${agency.name||'ALTORRA Inmobiliaria'}</strong>${agency.phone?' · '+agency.phone:''}${agency.website?' · <a href="'+agency.website+'" target="_blank" rel="noopener">Sitio Web</a>':''}</div>`;
           box.appendChild(ag);
         }
-
         root.appendChild(box);
       })();
 
-      // 4) Mapa (Leaflet + OSM)
+      /* 4) Mapa (Leaflet + OSM) */
       (function renderMap(){
         if(!prop.coords || prop.coords.lat==null || prop.coords.lng==null) return;
         const sec = document.createElement('section'); sec.className='card-lite';
