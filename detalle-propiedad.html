@@ -351,7 +351,7 @@ async function init(){
     const bed=(prop.beds||0), bath=(prop.baths||0), sqm=(prop.sqm||0);
     const badge=(svg,label)=>`<span class="spec-badge">${svg}${label}</span>`;
     const bedSvg='<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 11V7a2 2 0 0 1 2-2h6a4 4 0 0 1 4 4v2h4a2 2 0 0 1 2 2v5h-2v-2H5v2H3v-9h2zm2 4h14v-2a1 1 0 0 0-1-1h-5V9a2 2 0 0 0-2-2H5a1 1 0 0 0-1 1v7z"/></svg>';
-    const bathSvg='<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 3a3 3 0 0 1 3 3v5h8a1 1 0 1 1 0 2H5v2h14v2H5a3 3 0 0 1-3-3v-3h6V6a1 1 0 0 0-2 0v1H4V6a3 3 0 0 1 3-3z"/></svg>';
+    const bathSvg='<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 3a3 3 0 0 1 3 3v5h8a1 1 0 1 1 0 2H5v2h14v2H5a3 3 0 0 1-3-3v-3h6V6a1 1 0 0 0-2 0v1H4V6a3 3 0  1 1 3-3z"/></svg>';
     const areaSvg='<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4h16v16H4zM6 6v12h12V6z"/></svg>';
     badges.innerHTML=(bed? badge(bedSvg, `${bed} ${bed===1?'habitación':'habitaciones'}`):'')+
                      (bath? badge(bathSvg, `${bath} ${bath===1?'baño':'baños'}`):'')+
@@ -400,7 +400,7 @@ async function init(){
       <div class="form-actions">
         <button type="submit" class="btn btn-primary">${isAvailable ? 'Enviar mensaje' : 'Avisarme'}</button>
         <a class="btn btn-wa wa-in-form" href="${waInFormHref}" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.52 3.48A11.89 11.89 0 0 0 12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 5.98L0 24l6.21-1.62A11.96 11.96 0  0 0 12 24c6.63 0 12-5.37 12-12 0-3.19-1.24-6.19-3.48-8.52ZM12 22a9.93 9.93 0 0 1-5.06-1.4l-.36-.21-3.69 .96 .99-3.59-.23-.37A9.98 9.98 0  1 1 22 12c0 5.52-4.48 10-10 10Zm5.48-7.55c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67 .15-.2 .3-.77 .97-.94 1.17-.17 .2-.35 .22-.65 .07-.3-.15-1.27-.47-2.42-1.49-.89-.79-1.49-1.76-1.66-2.06-.17-.3-.02-.46 .13-.61 .13-.13 .3-.35 .46-.52 .15-.17 .2-.3 .3-.5 .1-.2 .05-.37 -.02-.52 -.07-.15 -.67-1.62 -.92-2.22 -.24-.58 -.49-.5 -.67-.5h-.57c-.2 0 -.52 .07 -.79 .37 -.27 .3 -1.04 1.02 -1.04 2.48s1.07 2.88 1.22 3.08c.15 .2 2.1 3.2 5.08 4.49 .71 .31 1.26 .49 1.7 .63 .71 .23 1.36 .2 1.87 .12 .57 -.08 1.76 -.72 2.01 -1.41 .25 -.69 .25 -1.28 .17 -1.41-.08 -.13 -.27 -.2 -.57 -.35Z" fill="currentColor"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.52 3.48A11.89 11.89 0 0 0 12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 5.98L0 24l6.21-1.62A11.96 11.96 0  0 0 12 24c6.63 0 12-5.37 12-12 0-3.19-1.24-6.19-3.48-8.52ZM12 22a9.93 9.93 0  0 1-5.06-1.4l-.36-.21-3.69 .96 .99-3.59-.23-.37A9.98 9.98 0  1 1 22 12c0 5.52-4.48 10-10 10Zm5.48-7.55c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67 .15-.2 .3-.77 .97-.94 1.17-.17 .2-.35 .22-.65 .07-.3-.15-1.27-.47-2.42-1.49-.89-.79-1.49-1.76-1.66-2.06-.17-.3-.02-.46 .13-.61 .13-.13 .3-.35 .46-.52 .15-.17 .2-.3 .3-.5 .1-.2 .05-.37 -.02-.52 -.07-.15 -.67-1.62 -.92-2.22 -.24-.58 -.49-.5 -.67-.5h-.57c-.2 0 -.52 .07 -.79 .37 -.27 .3 -1.04 1.02 -1.04 2.48s1.07 2.88 1.22 3.08c.15 .2 2.1 3.2 5.08 4.49 .71 .31 1.26 .49 1.7 .63 .71 .23 1.36 .2 1.87 .12 .57 -.08 1.76 -.72 2.01 -1.41 .25 -.69 .25 -1.28 .17 -1.41-.08 -.13 -.27 -.2 -.57 -.35Z" fill="currentColor"/></svg>
           WhatsApp
         </a>
       </div>
@@ -432,6 +432,10 @@ async function init(){
         let html = '<h3>Ficha técnica</h3><div class="tech-grid">';
         html += kv('Operación', (prop.operation==='arrendar'?'Arriendo':(prop.operation==='dias'?'Por días':'Venta')));
         html += kv('Ciudad', prop.city||'');
+
+        /* ====== NUEVO: BARRIO ====== */
+        html += kv('Barrio', (prop.neighborhood || prop.barrio) || '', true);
+
         html += kv('Tipo', prop.type ? (prop.type.charAt(0).toUpperCase()+prop.type.slice(1)) : '');
         html += kv('Área construida', prop.sqm ? (prop.sqm+' m²') : '');
         html += kv('Área privada', prop.private_area ? (prop.private_area+' m²') : '', true);
