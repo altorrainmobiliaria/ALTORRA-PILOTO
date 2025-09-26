@@ -320,3 +320,142 @@ if('serviceWorker' in navigator){
     console.warn('SW registration failed', err);
   });
 }
+/* === ALTORRA: Ficha técnica extendida (no invasiva) === */
+function currencyCOP(v){
+  if (v == null) return null;
+  try{
+    return new Intl.NumberFormat('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0}).format(v);
+  }catch(_){ return `\$${(v+'').replace(/\B(?=(\d{3})+(?!\d))/g,'.')}`; }
+}
+
+function safeText(v){ return (v===0 || v) ? String(v) : null; }
+
+function renderTechSheet(p){
+  const $sec = document.getElementById('ficha-tecnica-extendida');
+  if(!$sec || !p) return;
+
+  // 1) Precios
+  const $pre = document.getElementById('ftx-precios');
+  const price = (p.price!=null) ? currencyCOP(p.price) : null;
+  const admin = (p.admin_fee!=null) ? currencyCOP(p.admin_fee) : null;
+  const op = p.operation ? (p.operation.toLowerCase()==='arriendo' ? 'Arriendo' : 'Venta') : null;
+
+  let preciosHTML = '';
+  if(price || admin || op){
+    preciosHTML += `<div class="stat"><div class="k">Operación</div><div class="v">${op || '-'}</div></div>`;
+    preciosHTML += `<div class="stat"><div class="k">${op==='Arriendo'?'Canon':'Precio'}</div><div class="v">${price || '-'}</div></div>`;
+    preciosHTML += `<div class="stat"><div class="k">Administración</div><div class="v">${admin || '-'}</div></div>`;
+    $pre.innerHTML = preciosHTML;
+    $pre.parentElement.style.display = '';
+  }else{
+    $pre.parentElement.style.display = 'none';
+  }
+
+  // 2) Datos técnicos
+  const $dat = document.getElementById('ftx-datos');
+  const pairs = [
+    ['Habitaciones', p.beds],
+    ['Baños', p.baths],
+    ['Área const', p.sqm ? `${p.sqm} m²` : null],
+    ['Área lote', p.lot_m2 ? `${p.lot_m2} m²` : null],
+    ['Área priv', p.private_m2 ? `${p.private_m2} m²` : null],
+    ['Estrato', p.strata],
+    ['Garajes', p.parking],
+    ['Nivel', p.level],
+    ['Piso', p.floor],
+    ['Año Construcción', p.built_year]
+  ];
+  let datosHTML = '';
+  pairs.forEach(([k,v])=>{
+    if(safeText(v)) datosHTML += `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`;
+  });
+  $dat.innerHTML = datosHTML;
+  $dat.parentElement.style.display = datosHTML ? '' : 'none';
+
+  // 3) Características (chips, agrupadas si hay)
+  const $fea = document.getElementById('ftx-features');
+  let chips = [];
+  if(p.features){
+    ['interior','exterior','nearby'].forEach(g=>{
+      if(Array.isArray(p.features[g])) chips = chips.concat(p.features[g]);
+    });
+  }
+  if(p.flags){
+    if(p.flags.airbnb) chips.push('AIRBNB');
+    if(p.flags.renta_dias) chips.push('Renta por días');
+  }
+  $fea.innerHTML = chips.length ? chips.map(t=>`<span class="chip">${t}</span>`).join('') : '<span style="color:#6b7280">Sin características detalladas.</span>';
+
+  // 4) Asesor
+  const $adv = document.getElementById('ftx-advisor');
+  if(p.advisor){
+    const a = p.advisor;
+    $adv.innerHTML = `
+      <h3 style="margin:0 0 8px">Asesor</h3>
+      <div style="display:flex;gap:12px;align-items:center">
+        ${a.photo ? `<img src="${a.photo}" alt="${a.name}" width="64" height="64" style="border-radius:50%;object-fit:cover">` : ''}
+        <div>
+          <div style="font-weight:700">${a.name||'-'}</div>
+          ${a.email?`<div><a href="mailto:${a.email}">${a.email}</a></div>`:''}
+          ${a.phone?`<div><a href="tel:${a.phone.replace(/[^+\d]/g,'')}">${a.phone}</a></div>`:''}
+          ${a.whatsapp?`<div><a class="btn btn-primary" href="${a.whatsapp}" target="_blank" rel="noopener">Contactar por WhatsApp</a></div>`:''}
+        </div>
+      </div>
+    `;
+  }else{
+    $adv.style.display='none';
+  }
+
+  // 5) Inmobiliaria (ALTORRA)
+  const $ag = document.getElementById('ftx-agency');
+  if(p.agency){
+    const g = p.agency;
+    $ag.innerHTML = `
+      <h3 style="margin:0 0 8px">Inmobiliaria</h3>
+      <div style="display:grid;gap:6px">
+        <div style="font-weight:700">${g.name||'ALTORRA Inmobiliaria'}</div>
+        ${g.website?`<div><a href="${g.website}" target="_blank" rel="noopener">${g.website}</a></div>`:''}
+        ${g.phone?`<div><a href="tel:${g.phone.replace(/[^+\d]/g,'')}">${g.phone}</a></div>`:''}
+        ${g.whatsapp?`<div><a class="btn" href="${g.whatsapp}" target="_blank" rel="noopener">Escríbenos por WhatsApp</a></div>`:''}
+      </div>
+    `;
+  }else{
+    $ag.style.display='none';
+  }
+
+  // 6) Mapa (con privacidad)
+  const $mapWrap = document.getElementById('ftx-map-wrap');
+  const $map = document.getElementById('ftx-map');
+  const $note = document.getElementById('ftx-map-note');
+
+  if(p.location && ( (p.location.lat && p.location.lng) || p.neighborhood || p.city )){
+    $mapWrap.style.display='';
+    if(p.location.lat && p.location.lng){
+      const q = `${p.location.lat},${p.location.lng}`;
+      $map.innerHTML = `<iframe title="Mapa del inmueble" width="100%" height="300" style="border:0" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+        src="https://www.google.com/maps?q=${encodeURIComponent(q)}&output=embed"></iframe>`;
+      $note.textContent = p.location.approximate ? 'Ubicación aproximada para proteger la privacidad.' : (p.location.address || '');
+    }else{
+      // Sin lat/lng: mapa por barrio/ciudad
+      const query = [p.neighborhood, p.city].filter(Boolean).join(', ');
+      $map.innerHTML = `<iframe title="Mapa de zona" width="100%" height="300" style="border:0" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+        src="https://www.google.com/maps?q=${encodeURIComponent(query)}&output=embed"></iframe>`;
+      $note.textContent = query ? `Zona: ${query}` : '';
+    }
+  }else{
+    $mapWrap.style.display='none';
+  }
+
+  // Mostrar sección si hay algo que enseñar
+  $sec.style.display = '';
+}
+
+// Hook: cuando tengas la propiedad lista en tu flujo actual, llama a renderTechSheet(currentProperty)
+document.addEventListener('DOMContentLoaded', ()=>{
+  try{
+    if(window.currentProperty) renderTechSheet(window.currentProperty);
+  }catch(_){}
+});
+
+/* === /ALTORRA: Ficha técnica extendida === */
+
