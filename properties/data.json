@@ -164,8 +164,8 @@
   },
   {
   "id": "MILAN-723",
-  "operation": "venta", 
-  "type": "Apartamento",
+  "operation": "comprar", 
+  "type": "apartamento",
   "title": "Apartamento en Milán, Parque Heredia",
   "city": "Cartagena",
   "neighborhood": "Parque Heredia - Milán",
