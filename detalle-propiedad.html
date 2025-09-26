@@ -475,6 +475,126 @@ function getParam(name){const p=new URLSearchParams(window.location.search);retu
         container.appendChild(infoDiv);
         container.appendChild(waRow); /* visible solo en móvil */
 
+            <!-- ====== NUEVAS SECCIONES (retro-compatibles) ====== -->
+<div class="extra-sections" id="extra-sections"></div>
+<script>
+(function(){
+  const root = document.getElementById('extra-sections');
+  if(!root) return;
+
+  const fmtCOP = n => (n||n===0) ? ('$ ' + String(n).replace(/\B(?=(\d{3})+(?!\d))/g,'.')) : '';
+  const kv = (k,v)=> v!=null && v!=='' ? `<div class="kv"><span class="k">${k}</span><span class="v">${v}</span></div>` : '';
+
+  // ===== 1) FICHA TÉCNICA =====
+  (function renderTech(){
+    const b = document.createElement('section'); b.className='card-lite';
+    let html = '<h3>Ficha técnica</h3><div class="tech-grid">';
+    html += kv('Operación', (prop.operation==='arrendar'?'Arriendo':(prop.operation==='dias'?'Por días':'Venta')));
+    html += kv('Ciudad', prop.city||'');
+    html += kv('Tipo', prop.type ? (prop.type.charAt(0).toUpperCase()+prop.type.slice(1)) : '');
+    html += kv('Área construida', prop.sqm ? (prop.sqm+' m²') : '');
+    html += kv('Área privada', prop.private_area ? (prop.private_area+' m²') : '');
+    html += kv('Área de lote', prop.lot_area ? (prop.lot_area+' m²') : '');
+    html += kv('Habitaciones', prop.beds!=null ? prop.beds : '');
+    html += kv('Baños', prop.baths!=null ? prop.baths : '');
+    html += kv('Parqueaderos', prop.garages!=null ? prop.garages : '');
+    html += kv('Estrato', prop.strata!=null ? prop.strata : '');
+    html += kv('Administración', prop.admin_fee!=null ? fmtCOP(prop.admin_fee)+' COP' : '');
+    html += kv('Piso', prop.floor!=null ? prop.floor : '');
+    html += kv('Nivel', prop.level!=null ? prop.level : '');
+    html += kv('Año construcción', prop.year_built!=null ? prop.year_built : '');
+    html += '</div>';
+    b.innerHTML = html;
+    if (b.querySelector('.kv .v')) root.appendChild(b);
+  })();
+
+  // ===== 2) CARACTERÍSTICAS =====
+  (function renderFeatures(){
+    const list = Array.isArray(prop.features) ? prop.features : [];
+    if(!list.length) return;
+    const ok = (txt)=>`<div class="feature ok"><span class="ico">✓</span><span>${txt}</span></div>`;
+    const box = document.createElement('section'); box.className='card-lite';
+    box.innerHTML = '<h3>Características</h3><div class="features">'+ list.map(ok).join('') +'</div>';
+    root.appendChild(box);
+  })();
+
+  // ===== 3) ASESOR / INMOBILIARIA =====
+  (function renderAgent(){
+    const info = prop.advisor || null;
+    const agency = prop.agency || null;
+    if(!info && !agency) return;
+
+    const box = document.createElement('section'); box.className='card-lite';
+    box.innerHTML = '<h3>Contacto</h3>';
+    const wrap = document.createElement('div'); wrap.className='agent';
+
+    if(info){
+      const img = document.createElement('img');
+      img.src = (info.photo && (info.photo.startsWith('http')||info.photo.startsWith('/'))) ? info.photo : (info.photo ? '/'+info.photo.replace(/^\.?\//,'') : 'https://i.postimg.cc/0yYb8Y6r/placeholder.png');
+      img.alt = info.name || 'Asesor';
+      wrap.appendChild(img);
+
+      const col = document.createElement('div');
+      col.innerHTML = `<div class="name">${info.name||'Asesor'}</div>
+                       <div class="sub">${info.phone ? info.phone : ''} ${info.email ? ' · '+info.email : ''}</div>`;
+      wrap.appendChild(col);
+      box.appendChild(wrap);
+
+      const actions = document.createElement('div'); actions.className='agent-actions';
+      const wa = document.createElement('a'); wa.className='btn-mini'; wa.textContent='WhatsApp';
+      const waNum = info.whatsapp || '573235016747';
+      wa.href = 'https://wa.me/'+waNum+'?text='+encodeURIComponent(`Hola, me interesa la propiedad ${prop.id} (${prop.title}). ¿Podemos coordinar visita?`);
+      wa.target='_blank'; wa.rel='noopener';
+      actions.appendChild(wa);
+
+      if(info.phone){
+        const call = document.createElement('a'); call.className='btn-mini'; call.textContent='Llamar';
+        call.href = 'tel:'+info.phone.replace(/[^+\d]/g,'');
+        actions.appendChild(call);
+      }
+      if(info.email){
+        const mail = document.createElement('a'); mail.className='btn-mini'; mail.textContent='Escribir correo';
+        mail.href = 'mailto:'+info.email+'?subject='+encodeURIComponent('Interés en propiedad '+(prop.id||'')); 
+        actions.appendChild(mail);
+      }
+      box.appendChild(actions);
+    }
+
+    if(agency){
+      const ag = document.createElement('div');
+      ag.style.marginTop='10px';
+      ag.innerHTML = `<div class="sub">Inmobiliaria: <strong>${agency.name||'ALTORRA Inmobiliaria'}</strong>${agency.phone?' · '+agency.phone:''}${agency.website?' · <a href="'+agency.website+'" target="_blank" rel="noopener">Sitio Web</a>':''}</div>`;
+      box.appendChild(ag);
+    }
+
+    root.appendChild(box);
+  })();
+
+  // ===== 4) MAPA (Leaflet + OSM) =====
+  (function renderMap(){
+    if(!prop.coords || prop.coords.lat==null || prop.coords.lng==null) return;
+    const sec = document.createElement('section'); sec.className='card-lite';
+    sec.innerHTML = '<h3>Ubicación</h3><div id="map" class="map-wrap" role="img" aria-label="Mapa de ubicación"></div>';
+    root.appendChild(sec);
+
+    const css = document.createElement('link');
+    css.rel='stylesheet'; css.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(css);
+    const js = document.createElement('script');
+    js.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'; js.defer=true;
+    js.onload = function(){
+      try{
+        const m = L.map('map',{scrollWheelZoom:false}).setView([prop.coords.lat, prop.coords.lng], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(m);
+        L.marker([prop.coords.lat, prop.coords.lng]).addTo(m).bindPopup(prop.title||'Propiedad').openPopup();
+      }catch(e){ console.warn('Leaflet init error', e); }
+    };
+    document.body.appendChild(js);
+  })();
+})();
+</script>
+
+
         /* ===== SEO Schema ===== */
         try{
           const schema={"@context":"https://schema.org","@type":"Offer",
