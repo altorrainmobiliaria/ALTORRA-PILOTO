@@ -183,6 +183,37 @@
       .info h1{font-size:1.6rem}
       .price{font-size:1.25rem}
     }
+      <!-- === ALTORRA: Ficha técnica extendida (no invasiva) === -->
+<section id="ficha-tecnica-extendida" class="section" aria-labelledby="ficha-title" style="display:none">
+  <div class="head"><h2 id="ficha-title">Ficha técnica</h2></div>
+
+  <!-- Resumen de precios -->
+  <div id="ftx-precios" class="card grid-2" style="gap:16px;margin-bottom:16px"></div>
+
+  <!-- Datos técnicos -->
+  <div id="ftx-datos" class="card grid-3" style="gap:16px;margin-bottom:16px"></div>
+
+  <!-- Características -->
+  <div class="card" style="margin-bottom:16px">
+    <h3 style="margin:0 0 12px">Características</h3>
+    <div id="ftx-features" class="chip-wrap" aria-live="polite"></div>
+  </div>
+
+  <!-- Contacto -->
+  <div class="grid-2" style="gap:16px;margin-bottom:16px">
+    <div id="ftx-advisor" class="card"></div>
+    <div id="ftx-agency" class="card"></div>
+  </div>
+
+  <!-- Mapa -->
+  <div id="ftx-map-wrap" class="card">
+    <h3 style="margin:0 0 12px">Ubicación</h3>
+    <div id="ftx-map" style="width:100%;height:300px;border-radius:12px;overflow:hidden"></div>
+    <p id="ftx-map-note" style="margin:8px 0 0;font-size:.9rem;color:#6b7280"></p>
+  </div>
+</section>
+<!-- === /ALTORRA: Ficha técnica extendida === -->
+
 
     /* ===== Footer ===== */
     footer{background:#0b0b0b;color:#fff;padding:36px 16px}
@@ -466,36 +497,5 @@ function getParam(name){const p=new URLSearchParams(window.location.search);retu
     }
     document.addEventListener('DOMContentLoaded', init);
   </script>
-      <!-- === ALTORRA: Ficha técnica extendida (no invasiva) === -->
-<section id="ficha-tecnica-extendida" class="section" aria-labelledby="ficha-title" style="display:none">
-  <div class="head"><h2 id="ficha-title">Ficha técnica</h2></div>
-
-  <!-- Resumen de precios -->
-  <div id="ftx-precios" class="card grid-2" style="gap:16px;margin-bottom:16px"></div>
-
-  <!-- Datos técnicos -->
-  <div id="ftx-datos" class="card grid-3" style="gap:16px;margin-bottom:16px"></div>
-
-  <!-- Características -->
-  <div class="card" style="margin-bottom:16px">
-    <h3 style="margin:0 0 12px">Características</h3>
-    <div id="ftx-features" class="chip-wrap" aria-live="polite"></div>
-  </div>
-
-  <!-- Contacto -->
-  <div class="grid-2" style="gap:16px;margin-bottom:16px">
-    <div id="ftx-advisor" class="card"></div>
-    <div id="ftx-agency" class="card"></div>
-  </div>
-
-  <!-- Mapa -->
-  <div id="ftx-map-wrap" class="card">
-    <h3 style="margin:0 0 12px">Ubicación</h3>
-    <div id="ftx-map" style="width:100%;height:300px;border-radius:12px;overflow:hidden"></div>
-    <p id="ftx-map-note" style="margin:8px 0 0;font-size:.9rem;color:#6b7280"></p>
-  </div>
-</section>
-<!-- === /ALTORRA: Ficha técnica extendida === -->
-
 </body>
 </html>
