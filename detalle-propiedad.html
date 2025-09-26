@@ -26,7 +26,7 @@ html,body{background:var(--bg);color:var(--text);font-family:"Poppins",system-ui
 a{text-decoration:none;color:inherit}
 a[href^="tel"],a[x-apple-data-detectors]{color:inherit!important;text-decoration:none!important;font-weight:inherit!important;border-bottom:0!important}
 
-/* ===== LAYOUT ORIGINAL (NO TOCAR ORDEN) ===== */
+/* ===== LAYOUT ===== */
 main.detail-container{
   max-width:var(--page-max);
   margin:calc(var(--header-h) + 20px) auto 40px;
@@ -51,11 +51,14 @@ main.detail-container{
   margin-bottom:10px; box-shadow:0 10px 26px rgba(0,0,0,.06)
 }
 .main-frame img{
-  max-width:100%; max-height:100%; width:auto; height:auto;
+  max-width:100%;
+  max-height:100%;
+  width:auto; height:auto;
   object-fit:contain; object-position:center;
   cursor:zoom-in; transition:transform .28s ease;
 }
 .main-frame img:hover{transform:scale(1.01)}
+
 .gallery .arrow{
   position:absolute; top:50%; transform:translateY(-50%);
   width:40px;height:40px;border-radius:999px;border:0;background:#fff;color:#111;cursor:pointer;z-index:3;
@@ -64,6 +67,7 @@ main.detail-container{
 }
 .gallery .arrow:hover{transform:translateY(-50%) scale(1.05); box-shadow:0 14px 30px rgba(0,0,0,.16)}
 .gallery .arrow.prev{left:10px} .gallery .arrow.next{right:10px}
+
 .thumbnails{display:flex; gap:10px; overflow-x:auto; padding-bottom:2px; scroll-snap-type:x proximity; max-width:100%}
 .thumbnails::-webkit-scrollbar{height:8px}
 .thumbnails::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12); border-radius:999px}
@@ -101,12 +105,15 @@ main.detail-container{
 .info h1{font-weight:800; line-height:1.1; text-wrap:balance; font-size:clamp(1.4rem, 1.4rem + 1vw, 2rem)}
 .price{font-weight:800; font-size:clamp(1.2rem, 1.2rem + .6vw, 1.6rem); color:var(--gold)}
 .specs{color:var(--muted); font-size:.95rem}
+
 .status-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;font-weight:700;font-size:.85rem;background:#f7f7f8;border:1px solid rgba(17,24,39,.08);width:max-content}
 .status-dot{width:10px;height:10px;border-radius:999px;background:#16a34a}
 .status-pill.unavailable{background:#fcfcfc;opacity:.95}
 .status-pill.unavailable .status-dot{background:#dc2626}
+
 .spec-badges{display:flex; gap:8px; flex-wrap:wrap}
 .spec-badge{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:12px; background:#f7f7f8; border:1px solid rgba(17,24,39,.08); font-weight:700; font-size:.9rem}
+
 .desc{color:#1f2937; text-align:justify; line-height:1.75}
 .desc p + p{margin-top:10px}
 
@@ -187,8 +194,13 @@ footer{background:#0b0b0b;color:#fff;padding:36px 16px}
   .form-actions{justify-content:flex-start}
 }
 
-/* ======== NUEVAS SECCIONES (refinadas, al final) ======== */
-.extra-sections{display:flex;flex-direction:column;gap:22px;margin-top:16px;width:100%}
+/* ===== NUEVAS SECCIONES (siempre al final, ancho completo) ===== */
+.extra-sections{
+  order:99;           /* cae al final del contenedor flex */
+  width:100%;
+  flex:1 0 100%;      /* ocupa fila completa */
+  display:flex;flex-direction:column;gap:22px;margin-top:16px;
+}
 
 /* Card corporativa */
 .card-lite{
@@ -214,42 +226,28 @@ footer{background:#0b0b0b;color:#fff;padding:36px 16px}
 }
 
 /* Grilla de ficha técnica */
-.tech-grid{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:10px;
-}
+.tech-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 @media(min-width:700px){.tech-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(min-width:1024px){.tech-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 
 .kv{
   display:flex;align-items:flex-start;gap:10px;
-  padding:10px 12px;
-  border:1px solid rgba(17,24,39,.06);
-  border-radius:12px;
-  background:#fafafa;
-  min-height:44px;
+  padding:10px 12px;border:1px solid rgba(17,24,39,.06);
+  border-radius:12px;background:#fafafa;min-height:44px;
 }
 .kv .k{color:#6b7280;flex:0 0 46%;max-width:280px}
 .kv .v{font-weight:800;color:#0b1220;word-break:break-word}
 
 /* Características */
-.features{
-  display:grid;gap:10px;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-}
+.features{display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}
 @media(min-width:700px){.features{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(min-width:1024px){.features{grid-template-columns:repeat(4,minmax(0,1fr))}}
-
 .feature{
-  display:flex;gap:10px;align-items:center;
-  padding:10px 12px;border:1px solid rgba(17,24,39,.08);
-  border-radius:999px;background:#fff;
-  font-weight:700;
+  display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid rgba(17,24,39,.08);
+  border-radius:999px;background:#fff;font-weight:700
 }
 .feature .ico{
-  width:20px;height:20px;border-radius:999px;
-  display:inline-flex;align-items:center;justify-content:center;
+  width:20px;height:20px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;
   border:1px solid #10b981;color:#10b981;font-size:.9rem;line-height:1
 }
 .feature.ok .ico{background:#10b98112}
@@ -261,10 +259,7 @@ footer{background:#0b0b0b;color:#fff;padding:36px 16px}
 .agent .name{font-weight:800}
 .agent .sub{color:#6b7280;font-size:.9rem}
 .agent-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
-.btn-mini{
-  border:1px solid rgba(17,24,39,.12);background:#fff;border-radius:10px;
-  padding:8px 12px;cursor:pointer;font-weight:700
-}
+.btn-mini{border:1px solid rgba(17,24,39,.12);background:#fff;border-radius:10px;padding:8px 12px;cursor:pointer;font-weight:700}
 .btn-mini:hover{background:#f9fafb}
 
 /* Mapa */
@@ -340,7 +335,7 @@ async function init(){
 
     const isAvailable = Number(prop.available) === 1;
 
-    /* ===== Galería (original) ===== */
+    /* ===== Galería ===== */
     const galleryDiv=document.createElement('div'); galleryDiv.className='gallery';
     const G=document.createElement('div'); G.className='gallery-inner';
 
@@ -366,7 +361,7 @@ async function init(){
 
     mainImg.addEventListener('click',()=>{
       const overlay=document.createElement('div');
-      Object.assign(overlay.style,{position:'fixed',inset:'0',background:'rgba(0,0,0,0.86)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:'9999',cursor:'zoom-out'});
+      Object.assign(overlay.style,{position:'fixed',inset:'0',background:'rgba(0,0,0,0.86)',display:'flex',alignItems:'center',justify-content:'center',zIndex:'9999',cursor:'zoom-out'});
       const zoomImg=document.createElement('img'); Object.assign(zoomImg.style,{maxWidth:'92%',maxHeight:'92%',objectFit:'contain'}); zoomImg.src=mainImg.src;
       overlay.appendChild(zoomImg); overlay.addEventListener('click',()=>overlay.remove()); document.body.appendChild(overlay);
     });
@@ -421,7 +416,7 @@ async function init(){
       actionsMobile.appendChild(btnShareMobile);
     }catch(_){}})();
 
-    /* ===== INFO (original) ===== */
+    /* ===== INFO ===== */
     const infoDiv=document.createElement('div'); infoDiv.className='info';
     const h1=document.createElement('h1'); h1.textContent=prop.title||'Propiedad';
 
@@ -432,7 +427,7 @@ async function init(){
     const badges=document.createElement('div'); badges.className='spec-badges';
     const bed=(prop.beds||0), bath=(prop.baths||0), sqm=(prop.sqm||0);
     const badge=(svg,label)=>`<span class="spec-badge">${svg}${label}</span>`;
-    const bedSvg='<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 11V7a2 2 0 0 1 2-2h6a4 4 0  0 1 4 4v2h4a2 2 0 0 1 2 2v5h-2v-2H5v2H3v-9h2zm2 4h14v-2a1 1 0  0 0-1-1h-5V9a2 2 0 0 0-2-2H5a1 1 0  0 0-1 1v7z"/></svg>';
+    const bedSvg='<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 11V7a2 2 0 0 1 2-2h6a4 4 0 0 1 4 4v2h4a2 2 0 0 1 2 2v5h-2v-2H5v2H3v-9h2zm2 4h14v-2a1 1 0 0 0-1-1h-5V9a2 2 0 0 0-2-2H5a1 1 0  0 0-1 1v7z"/></svg>';
     const bathSvg='<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 3a3 3 0  0 1 3 3v5h8a1 1 0 1 1 0 2H5v2h14v2H5a3 3 0 0 1-3-3v-3h6V6a1 1 0 0 0-2 0v1H4V6a3 3 0 0 1 3-3z"/></svg>';
     const areaSvg='<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4h16v16H4zM6 6v12h12V6z"/></svg>';
     badges.innerHTML=(bed? badge(bedSvg, `${bed} ${bed===1?'habitación':'habitaciones'}`):'')+
@@ -456,7 +451,7 @@ async function init(){
     if(priceRow.textContent) infoDiv.appendChild(priceRow);
     if(desc.childNodes.length) infoDiv.appendChild(desc);
 
-    /* ===== Formulario (original) ===== */
+    /* ===== Formulario ===== */
     const formBlock=document.createElement('div'); formBlock.className='form-block';
     const form=document.createElement('form');
     form.className='contact-form'; form.action='https://formsubmit.co/altorrainmobiliaria@gmail.com'; form.method='POST';
@@ -489,7 +484,7 @@ async function init(){
     `;
     formBlock.appendChild(form);
 
-    /* Compartir en escritorio dentro del formulario */
+    /* === Compartir en ESCRITORIO (no móvil) === */
     (function(){
       try{
         const fa = form.querySelector('.form-actions');
@@ -515,16 +510,14 @@ async function init(){
       }catch(e){}
     })();
 
-    /* ===== Montaje (original + NUEVO AL FINAL) ===== */
+    /* ===== Montaje ===== */
     container.innerHTML='';
-    galleryDiv.appendChild(G);
-    galleryDiv.appendChild(thumbs);
     container.appendChild(galleryDiv);
     container.appendChild(formBlock);
     container.appendChild(infoDiv);
     container.appendChild(waRow); /* visible solo en móvil */
 
-    /* ====== NUEVAS SECCIONES (solo al final) ====== */
+    /* ====== NUEVAS SECCIONES (siempre AL FINAL, antes del footer) ====== */
     (function(){
       const root = document.createElement('div');
       root.className = 'extra-sections';
@@ -534,7 +527,7 @@ async function init(){
       const fmtCOP = n => (n||n===0) ? ('$ ' + String(n).replace(/\B(?=(\d{3})+(?!\d))/g,'.')) : '';
       const kv = (k,v)=> v!=null && v!=='' ? `<div class="kv"><span class="k">${k}</span><span class="v">${v}</span></div>` : '';
 
-      /* 1) Ficha técnica */
+      // 1) Ficha técnica
       (function renderTech(){
         const b = document.createElement('section'); b.className='card-lite';
         let html = '<h3>Ficha técnica</h3><div class="tech-grid">';
@@ -557,7 +550,7 @@ async function init(){
         if (b.querySelector('.kv .v')) root.appendChild(b);
       })();
 
-      /* 2) Características */
+      // 2) Características
       (function renderFeatures(){
         const list = Array.isArray(prop.features) ? prop.features : [];
         if(!list.length) return;
@@ -567,7 +560,7 @@ async function init(){
         root.appendChild(box);
       })();
 
-      /* 3) Contacto (Asesor / Inmobiliaria) */
+      // 3) Contacto
       (function renderAgent(){
         const info = prop.advisor || null;
         const agency = prop.agency || null;
@@ -618,7 +611,7 @@ async function init(){
         root.appendChild(box);
       })();
 
-      /* 4) Mapa (Leaflet + OSM) */
+      // 4) Mapa (Leaflet + OSM)
       (function renderMap(){
         if(!prop.coords || prop.coords.lat==null || prop.coords.lng==null) return;
         const sec = document.createElement('section'); sec.className='card-lite';
