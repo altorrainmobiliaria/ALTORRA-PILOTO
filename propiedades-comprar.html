@@ -87,7 +87,7 @@
 <!-- Registrar service worker si está disponible -->
 <script>
     if('serviceWorker' in navigator){
-      navigator.serviceWorker.register('/service-worker.js').catch(function(err){ console.warn('SW registration failed', err); });
+      navigator.serviceWorker.register('./service-worker.js').catch(function(err){ console.warn('SW registration failed', err); });
     }
   </script>
 <main id="main" style="padding-bottom:32px">
