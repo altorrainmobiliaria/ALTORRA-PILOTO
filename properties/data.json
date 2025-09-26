@@ -176,6 +176,7 @@
     "images": ["prueba.webp", "prueba2.webp", "prueba3.webp"],
     "available": 1,
     "admin_fee": 230000,
+    "neighborhood": "Parque Heredia - Milán",
     "strata": 4,
     "garages": 2,
     "floor": 17,
