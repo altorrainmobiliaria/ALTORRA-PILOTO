@@ -12,8 +12,6 @@ const CORE_ASSETS = [
   './header.html',
   './footer.html',
   './manifest.json',
-  'properties/data.json',  // Agregado: Cachea JSON de propiedades
-  // Patrones para imágenes (SW no soporta globs wild, pero cacheamos en fetch)
 ];
 
 self.addEventListener('install', event => {
@@ -33,7 +31,6 @@ self.addEventListener('activate', event => {
 /* Strategy:
    - HTML: network-first (fallback cache)
    - JSON/images/CSS/JS: stale-while-revalidate
-   - Imágenes WebP: cache-first para mejor rendimiento
 */
 self.addEventListener('fetch', event => {
   const req = event.request;
@@ -50,21 +47,6 @@ self.addEventListener('fetch', event => {
         caches.open(RUNTIME_CACHE).then(cache => cache.put(req, resClone));
         return res;
       }).catch(() => caches.match(req).then(cached => cached || caches.match('./index.html')))
-    );
-    return;
-  }
-
-  // Imágenes WebP: cache-first (agregado para optimizar)
-  if (url.pathname.endsWith('.webp')) {
-    event.respondWith(
-      caches.match(req).then(cached => {
-        if (cached) return cached;
-        return fetch(req).then(res => {
-          const resClone = res.clone();
-          caches.open(RUNTIME_CACHE).then(cache => cache.put(req, resClone));
-          return res;
-        });
-      })
     );
     return;
   }
