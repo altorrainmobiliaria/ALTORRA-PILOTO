@@ -1,4 +1,4 @@
-/* Altorra - Sistema de Favoritos (con localStorage, persiste entre sesiones) */
+/* Altorra - Sistema de Favoritos (corregido) */
 
 const FAV_KEY = 'altorra:favorites';
 
@@ -27,7 +27,7 @@ function toggleFavorite(id) {
 function updateFavButtons() {
   document.querySelectorAll('.fav-btn').forEach(btn => {
     const id = btn.dataset.id;
-    btn.classList.toggle('active', getFavorites().includes(id));
+    btn.style.color = getFavorites().includes(id) ? 'var(--accent)' : '#ccc';
   });
 }
 
@@ -40,12 +40,9 @@ function updateFavBadge() {
   }
 }
 
-// Inicializar en todas las páginas
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventLoaded('DOMContentLoaded', () => {
   updateFavButtons();
   updateFavBadge();
-
-  // Evento para clicks en botones de fav
   document.body.addEventListener('click', e => {
     if (e.target.classList.contains('fav-btn')) {
       toggleFavorite(e.target.dataset.id);
