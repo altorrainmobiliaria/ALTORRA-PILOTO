@@ -14,11 +14,10 @@
   <header id="header-placeholder"></header>
 
   <main>
-    <h1>Tus Propiedades Favoritas</h1>
+    <h2>Tus Favoritos</h2>
     <section id="fav-list" class="property-grid">
-      <!-- Cards favoritas se cargan aquí -->
+      <!-- Cards -->
     </section>
-    <p id="no-favs" style="display:none;">No tienes favoritos aún. ¡Agrega algunos!</p>
   </main>
 
   <footer id="footer-placeholder"></footer>
@@ -26,8 +25,8 @@
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       const favs = getFavorites();
-      if (!favs.length) {
-        document.getElementById('no-favs').style.display = 'block';
+      if (favs.length === 0) {
+        document.getElementById('fav-list').innerHTML = '<p>No tienes favoritos.</p>';
         return;
       }
       const allProps = await getJSONCached('properties/data.json');
