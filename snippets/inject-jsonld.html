@@ -1,0 +1,37 @@
+<script>
+/* Inject JSON-LD for SEO using loaded property 'prop' */
+(function(){
+  try{
+    if(!window.__PROP_JSON__) return;
+    const p = window.__PROP_JSON__;
+    const ld = {
+      "@context": "https://schema.org",
+      "@type": "RealEstateListing",
+      "name": p.title || "Propiedad en Cartagena",
+      "description": p.description || "",
+      "url": location.href,
+      "datePosted": new Date().toISOString(),
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": p.city || "Cartagena",
+        "addressCountry": "CO"
+      },
+      "offers": {
+        "@type": "Offer",
+        "priceCurrency": "COP",
+        "price": String(p.price || ""),
+        "availability": (Number(p.available)===1) ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+      },
+      "category": p.operation || "venta",
+      "numberOfRooms": p.beds || undefined,
+      "numberOfBathroomsTotal": p.baths || undefined,
+      "floorSize": p.sqm ? { "@type":"QuantitativeValue", "value": p.sqm, "unitCode": "MTK" } : undefined,
+      "image": Array.isArray(p.images) ? p.images.map(src => (src.startsWith('http')?src: (src.startsWith('/')?src:'/'+src))) : undefined
+    };
+    const el = document.createElement('script');
+    el.type = 'application/ld+json';
+    el.textContent = JSON.stringify(ld);
+    document.head.appendChild(el);
+  }catch(e){ console.warn('JSON-LD inject failed', e); }
+})();
+</script>

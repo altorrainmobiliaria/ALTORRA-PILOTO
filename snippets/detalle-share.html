@@ -1,0 +1,41 @@
+<!-- Botón de compartir (HTML) -->
+<button id="btnShare" class="btn btn-share">Compartir</button>
+
+<script>
+// Lógica del botón de compartir que usa la página /p/{id}.html
+(function(){
+  function getId() {
+    const u = new URL(location.href);
+    return u.searchParams.get("id");
+  }
+  function shareUrlFor(id) {
+    // En Pages, /p/{id}.html publicará las metas OG correctas
+    const base = location.origin + (location.pathname.includes("/PRUEBA-PILOTO") ? "/PRUEBA-PILOTO" : "");
+    return `${base}/p/${encodeURIComponent(id)}.html`;
+  }
+  const btn = document.getElementById("btnShare");
+  if (!btn) return;
+
+  btn.addEventListener("click", async () => {
+    const id = getId();
+    if (!id) return alert("No se encontró el ID de la propiedad.");
+    const url = shareUrlFor(id);
+
+    const title = document.querySelector(".property-title")?.textContent?.trim() || "ALTORRA Inmobiliaria";
+    const text  = document.querySelector(".property-summary")?.textContent?.trim() || "Encuentra tu próximo hogar";
+
+    if (navigator.share) {
+      try { await navigator.share({ title, text, url }); }
+      catch(e){ console.log("Share cancel:", e); }
+    } else {
+      // Fallback: copia al portapapeles
+      try {
+        await navigator.clipboard.writeText(url);
+        alert("Enlace de la propiedad copiado al portapapeles.");
+      } catch {
+        prompt("Copia este enlace:", url);
+      }
+    }
+  });
+})();
+</script>
