@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Altorra Inmobiliaria</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
   <script src="scripts.js" defer></script>
   <script src="header-footer.js" defer></script>
-  <script src="js/favorites.js" defer></script> <!-- Agregado para favoritos -->
+  <script src="js/favorites.js" defer></script> <!-- Favoritos seguro -->
 </head>
 <body>
-
   <header id="header-placeholder"></header>
 
   <a href="#main-content" class="visually-hidden">Saltar al contenido</a>
@@ -18,29 +18,23 @@
   <main id="main-content">
     <section class="hero">
       <img src="hero-about.webp" alt="Gestión Integral en Soluciones Inmobiliarias" class="hero-img">
-      <div class="hero-content">
+      <div class="hero-overlay">
         <h1>Gestión Integral en Soluciones Inmobiliarias</h1>
         <p>Seguridad • Legalidad • Confianza</p>
-        <form class="search-form">
-          <label for="operation">Operación</label>
-          <select id="operation">
+        <form class="search-box">
+          <select name="operation">
             <option>Comprar</option>
             <option>Arrendar</option>
             <option>Por días</option>
           </select>
-
-          <label for="type">Tipo de propiedad</label>
-          <select id="type">
+          <select name="type">
             <option>Cualquiera</option>
             <option>Apartamento</option>
             <option>Casa</option>
             <option>Lote</option>
             <option>Oficina</option>
           </select>
-
-          <label for="city">Ciudad</label>
-          <input type="text" id="city" placeholder="Ej: Cartagena">
-
+          <input type="text" name="city" placeholder="Ciudad">
           <button type="submit">Buscar</button>
         </form>
       </div>
@@ -49,43 +43,42 @@
     <section class="publish-section">
       <h2>¿Quieres publicar tu propiedad?</h2>
       <p>Si tienes un inmueble para vender, arrendar o rentar por días, Altorra te ayuda a promocionarlo de forma rápida y segura.</p>
-      <a href="publicar-propiedad.html" class="btn">Publicar mi propiedad</a>
+      <a href="publicar-propiedad.html" class="btn btn-gold">Publicar mi propiedad</a>
     </section>
 
     <section class="section">
       <h2>Propiedades en Venta</h2>
-      <a href="propiedades-comprar.html">Ver todo →</a>
+      <a href="propiedades-comprar.html" class="link">Ver todo →</a>
       <div id="venta-row" class="row">
-        Cargando propiedades...
+        <p>Cargando propiedades...</p>
       </div>
     </section>
 
     <section class="section">
       <h2>Propiedades en Arriendo</h2>
-      <a href="propiedades-arrendar.html">Ver todo →</a>
+      <a href="propiedades-arrendar.html" class="link">Ver todo →</a>
       <div id="arriendo-row" class="row">
-        Cargando propiedades...
+        <p>Cargando propiedades...</p>
       </div>
     </section>
 
     <section class="section">
       <h2>Alojamientos por Días</h2>
-      <a href="propiedades-alojamientos.html">Ver todo →</a>
+      <a href="propiedades-alojamientos.html" class="link">Ver todo →</a>
       <div id="dias-row" class="row">
-        Cargando propiedades...
+        <p>Cargando propiedades...</p>
       </div>
     </section>
 
     <section class="reviews-section">
       <h2>Opiniones de nuestros clientes</h2>
       <div id="google-reviews" class="reviews-row">
-        <!-- Reseñas se cargan aquí -->
+        <!-- Reseñas dinámicas -->
       </div>
-      <a href="https://www.google.com/maps/place/Altorra+Inmobiliaria/@10.400000,-75.500000,15z" class="btn">Escribir mi reseña</a>
+      <a href="https://www.google.com/maps/place/Altorra+Inmobiliaria" class="btn btn-gold">Escribir mi reseña</a>
     </section>
   </main>
 
   <footer id="footer-placeholder"></footer>
-
 </body>
 </html>
