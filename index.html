@@ -1,167 +1,91 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta name="google-site-verification" content="JyazXsNwz172dPOZszIo1g9nro4RPNdwTNosW9uQM2Q" />
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Altorra | Inmobiliaria</title>
-  <meta name="description" content="Altorra - Gestión integral en soluciones inmobiliarias"/>
-  <meta name="theme-color" content="#d4af37"/>
-  <link rel="manifest" href="manifest.json"/>
-  <link rel="preconnect" href="https://i.postimg.cc" crossorigin>
-  <link rel="dns-prefetch" href="https://i.postimg.cc">
-  <link rel="canonical" href="https://altorrainmobiliaria.github.io/ALTORRA-PILOTO/">
-
-  <!-- Preload hero image for faster LCP -->
-  <link rel="preload" as="image" href="https://i.postimg.cc/FHy13q2M/pexels-rdne-8293700.jpg">
-
-  <!-- OG -->
-  <meta property="og:title" content="Altorra Inmobiliaria"/>
-  <meta property="og:description" content="Encuentra las mejores propiedades para comprar, arrendar o rentar por días en Cartagena y ciudades vecinas."/>
-  <meta property="og:image" content="hero-emotion.webp"/>
-
-  <!-- Hints + Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700;800&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="style.css"/>
-
-  <!-- Scripts (defer) -->
-  <script src="header-footer.js" defer></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Altorra Inmobiliaria</title>
+  <link rel="stylesheet" href="style.css">
   <script src="scripts.js" defer></script>
+  <script src="header-footer.js" defer></script>
+  <script src="js/favorites.js" defer></script> <!-- Agregado para favoritos -->
 </head>
 <body>
-  <!-- Header externo -->
-  <div id="header-placeholder"></div>
 
-  <!-- Enlace de salto de accesibilidad -->
-  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+  <header id="header-placeholder"></header>
 
-  <main id="contenido">
-    <!-- HERO -->
-    <section class="hero" aria-label="Hero principal">
-      <img class="bg"
-           src="https://i.postimg.cc/FHy13q2M/pexels-rdne-8293700.jpg"
-           alt="Banner"
-           loading="eager"
-           fetchpriority="high"
-           decoding="async"
-           width="1600"
-           height="1000"/>
-      <div class="overlay" aria-hidden="true"></div>
-      <div class="inner">
+  <a href="#main-content" class="visually-hidden">Saltar al contenido</a>
+
+  <main id="main-content">
+    <section class="hero">
+      <img src="hero-about.webp" alt="Gestión Integral en Soluciones Inmobiliarias" class="hero-img">
+      <div class="hero-content">
         <h1>Gestión Integral en Soluciones Inmobiliarias</h1>
         <p>Seguridad • Legalidad • Confianza</p>
-
-        <form id="quickSearch" class="search-box" aria-label="Buscador rápido">
-          <label class="visually-hidden" for="op">Operación</label>
-          <select id="op" name="op" aria-label="Operación">
-            <option value="comprar">Comprar</option>
-            <option value="arrendar">Arrendar</option>
-            <option value="alojar">Por días</option>
+        <form class="search-form">
+          <label for="operation">Operación</label>
+          <select id="operation">
+            <option>Comprar</option>
+            <option>Arrendar</option>
+            <option>Por días</option>
           </select>
 
-          <label class="visually-hidden" for="f-type">Tipo de propiedad</label>
-          <select id="f-type" name="type" aria-label="Tipo de propiedad">
-            <option value="">Cualquiera</option>
-            <option value="apartamento">Apartamento</option>
-            <option value="casa">Casa</option>
-            <option value="lote">Lote</option>
-            <option value="oficina">Oficina</option>
+          <label for="type">Tipo de propiedad</label>
+          <select id="type">
+            <option>Cualquiera</option>
+            <option>Apartamento</option>
+            <option>Casa</option>
+            <option>Lote</option>
+            <option>Oficina</option>
           </select>
 
-          <label class="visually-hidden" for="f-city">Ciudad</label>
-          <input id="f-city" name="city" placeholder="Ciudad (ej. Cartagena)" aria-label="Ciudad" inputmode="text"/>
+          <label for="city">Ciudad</label>
+          <input type="text" id="city" placeholder="Ej: Cartagena">
 
-          <div class="price-group">
-            <input id="f-code" name="code" placeholder="Código (ej. c-p1)" aria-label="Código de propiedad" inputmode="text" />
-            <input id="f-budget" name="budget" type="number" inputmode="numeric" placeholder="$ Presupuesto" aria-label="Presupuesto (COP)"/>
-          </div>
-
-          <button class="btn btn-primary" type="submit" aria-label="Buscar propiedades">Buscar</button>
+          <button type="submit">Buscar</button>
         </form>
       </div>
     </section>
 
-    <!-- PUBLICA TU PROPIEDAD -->
-    <section id="publica-tu-propiedad" class="publish-section" aria-labelledby="publicar-title">
-      <div class="publish-card">
-        <h2 id="publicar-title">¿Quieres publicar tu propiedad?</h2>
-        <p>Si tienes un inmueble para vender, arrendar o rentar por días, Altorra te ayuda a promocionarlo de forma rápida y segura.</p>
-        <a href="publicar-propiedad.html" class="btn">Publicar mi propiedad</a>
+    <section class="publish-section">
+      <h2>¿Quieres publicar tu propiedad?</h2>
+      <p>Si tienes un inmueble para vender, arrendar o rentar por días, Altorra te ayuda a promocionarlo de forma rápida y segura.</p>
+      <a href="publicar-propiedad.html" class="btn">Publicar mi propiedad</a>
+    </section>
+
+    <section class="section">
+      <h2>Propiedades en Venta</h2>
+      <a href="propiedades-comprar.html">Ver todo →</a>
+      <div id="venta-row" class="row">
+        Cargando propiedades...
       </div>
     </section>
 
-    <!-- VENTA -->
-    <section class="section" aria-labelledby="venta-title">
-      <div class="head">
-        <h2 id="venta-title">Propiedades en <span style="color:var(--gold)">Venta</span></h2>
-        <a href="propiedades-comprar.html">Ver todo →</a>
-      </div>
-      <div class="carousel-wrap">
-        <div id="carouselVenta" class="carousel-row" role="list">
-          <div class="loading" style="padding:12px;color:var(--muted)">Cargando propiedades...</div>
-        </div>
-        <button class="arrow left" type="button" data-target="carouselVenta" aria-label="Desplazar carrusel de venta a la izquierda">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        <button class="arrow right" type="button" data-target="carouselVenta" aria-label="Desplazar carrusel de venta a la derecha">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg>
-        </button>
+    <section class="section">
+      <h2>Propiedades en Arriendo</h2>
+      <a href="propiedades-arrendar.html">Ver todo →</a>
+      <div id="arriendo-row" class="row">
+        Cargando propiedades...
       </div>
     </section>
 
-    <!-- ARRIENDO -->
-    <section class="section" aria-labelledby="arrend-title" style="background:#fff">
-      <div class="head">
-        <h2 id="arrend-title">Propiedades en <span style="color:var(--gold)">Arriendo</span></h2>
-        <a href="propiedades-arrendar.html">Ver todo →</a>
-      </div>
-      <div class="carousel-wrap">
-        <div id="carouselArriendo" class="carousel-row" role="list">
-          <div class="loading" style="padding:12px;color:var(--muted)">Cargando propiedades...</div>
-        </div>
-        <button class="arrow left" type="button" data-target="carouselArriendo" aria-label="Desplazar carrusel de arriendo a la izquierda">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        <button class="arrow right" type="button" data-target="carouselArriendo" aria-label="Desplazar carrusel de arriendo a la derecha">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg>
-        </button>
+    <section class="section">
+      <h2>Alojamientos por Días</h2>
+      <a href="propiedades-alojamientos.html">Ver todo →</a>
+      <div id="dias-row" class="row">
+        Cargando propiedades...
       </div>
     </section>
 
-    <!-- ALOJAMIENTOS -->
-    <section class="section" aria-labelledby="dias-title">
-      <div class="head">
-        <h2 id="dias-title">Alojamientos por <span style="color:var(--gold)">Días</span></h2>
-        <a href="propiedades-alojamientos.html">Ver todo →</a>
+    <section class="reviews-section">
+      <h2>Opiniones de nuestros clientes</h2>
+      <div id="google-reviews" class="reviews-row">
+        <!-- Reseñas se cargan aquí -->
       </div>
-      <div class="carousel-wrap">
-        <div id="carouselDias" class="carousel-row" role="list">
-          <div class="loading" style="padding:12px;color:var(--muted)">Cargando propiedades...</div>
-        </div>
-        <button class="arrow left" type="button" data-target="carouselDias" aria-label="Desplazar carrusel de alojamientos a la izquierda">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        <button class="arrow right" type="button" data-target="carouselDias" aria-label="Desplazar carrusel de alojamientos a la derecha">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg>
-        </button>
-      </div>
-    </section>
-
-    <!-- RESEÑAS -->
-    <section id="reseñas" class="section" aria-labelledby="reseñas-title">
-      <div class="head"><h2 id="reseñas-title">Opiniones de nuestros clientes</h2></div>
-      <div id="google-reviews" class="reviews-wrap" aria-live="polite"></div>
-      <div class="reviews-cta">
-        <a class="btn btn-primary" href="https://search.google.com/local/writereview?placeid=ChIJoym3zbYl9o4Rxs-NeVE8-FY" target="_blank" rel="noopener">
-          Escribir mi reseña
-        </a>
-      </div>
+      <a href="https://www.google.com/maps/place/Altorra+Inmobiliaria/@10.400000,-75.500000,15z" class="btn">Escribir mi reseña</a>
     </section>
   </main>
 
-  <!-- Footer externo -->
-  <div id="footer-placeholder"></div>
+  <footer id="footer-placeholder"></footer>
+
 </body>
 </html>
