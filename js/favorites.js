@@ -1,17 +1,11 @@
-/* Altorra - Sistema de Favoritos (corregido) */
-
 const FAV_KEY = 'altorra:favorites';
 
 function getFavorites() {
-  try {
-    return JSON.parse(localStorage.getItem(FAV_KEY)) || [];
-  } catch { return []; }
+  return JSON.parse(localStorage.getItem(FAV_KEY)) || [];
 }
 
 function saveFavorites(favs) {
-  try {
-    localStorage.setItem(FAV_KEY, JSON.stringify(favs));
-  } catch {}
+  localStorage.setItem(FAV_KEY, JSON.stringify(favs));
 }
 
 function toggleFavorite(id) {
@@ -26,8 +20,7 @@ function toggleFavorite(id) {
 
 function updateFavButtons() {
   document.querySelectorAll('.fav-btn').forEach(btn => {
-    const id = btn.dataset.id;
-    btn.style.color = getFavorites().includes(id) ? 'var(--accent)' : '#ccc';
+    btn.classList.toggle('active', getFavorites().includes(btn.dataset.id));
   });
 }
 
@@ -35,17 +28,15 @@ function updateFavBadge() {
   const badge = document.getElementById('fav-badge');
   if (badge) {
     const count = getFavorites().length;
-    badge.textContent = count > 0 ? count : '';
-    badge.style.display = count > 0 ? 'inline-block' : 'none';
+    badge.textContent = count;
+    badge.style.display = count > 0 ? 'inline' : 'none';
   }
 }
 
-document.addEventLoaded('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
   updateFavButtons();
   updateFavBadge();
-  document.body.addEventListener('click', e => {
-    if (e.target.classList.contains('fav-btn')) {
-      toggleFavorite(e.target.dataset.id);
-    }
+  document.addEventListener('click', e => {
+    if (e.target.classList.contains('fav-btn')) toggleFavorite(e.target.dataset.id);
   });
 });
