@@ -1,65 +1,29 @@
-/* Altorra - Service Worker (Fase 1) */
-const VERSION = 'v1.0.0-' + (self.registration ? (self.registration.scope || '') : '');
-const STATIC_CACHE = 'altorra-static-' + VERSION;
-const RUNTIME_CACHE = 'altorra-runtime-' + VERSION;
-
-const CORE_ASSETS = [
-  './',
-  './index.html',
-  './style.css',
-  './scripts.js',
-  './header-footer.js',
-  './header.html',
-  './footer.html',
-  './manifest.json',
+/* service-worker.js – cache-first para imágenes y estáticos */
+const CACHE = 'altorra-v1';
+const IMG_EXT = ['.webp','.jpg','.jpeg','.png','.gif'];
+const STATIC = [
+  '/', '/index.html', '/style.css', '/scripts.js',
+  '/header.html','/footer.html','/manifest.json'
 ];
 
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(STATIC_CACHE).then(cache => cache.addAll(CORE_ASSETS)).then(() => self.skipWaiting())
-  );
+self.addEventListener('install', (e) => {
+  e.waitUntil(caches.open(CACHE).then(c=>c.addAll(STATIC)).then(()=>self.skipWaiting()));
 });
 
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(keys => Promise.all(
-      keys.filter(k => ![STATIC_CACHE, RUNTIME_CACHE].includes(k)).map(k => caches.delete(k))
-    )).then(() => self.clients.claim())
-  );
+self.addEventListener('activate', (e) => {
+  e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))).then(()=>self.clients.claim());
 });
 
-/* Strategy:
-   - HTML: network-first (fallback cache)
-   - JSON/images/CSS/JS: stale-while-revalidate
-*/
-self.addEventListener('fetch', event => {
-  const req = event.request;
-  const url = new URL(req.url);
-
-  // Only handle GET
-  if (req.method !== 'GET') return;
-
-  // HTML pages: network-first
-  if (req.headers.get('accept')?.includes('text/html')) {
-    event.respondWith(
-      fetch(req).then(res => {
-        const resClone = res.clone();
-        caches.open(RUNTIME_CACHE).then(cache => cache.put(req, resClone));
+self.addEventListener('fetch', (e) => {
+  const url = new URL(e.request.url);
+  const isImg = IMG_EXT.some(ext => url.pathname.endsWith(ext)) || url.pathname.includes('/properties/') || url.pathname.includes('/allure/') || url.pathname.includes('/fmia/') || url.pathname.includes('/serena/') || url.pathname.includes('/fotoprop/') || url.pathname.includes('/Milan/');
+  if (isImg) {
+    e.respondWith(
+      caches.match(e.request).then(cached => cached || fetch(e.request).then(res=>{
+        const copy = res.clone();
+        caches.open(CACHE).then(cache=>cache.put(e.request, copy));
         return res;
-      }).catch(() => caches.match(req).then(cached => cached || caches.match('./index.html')))
+      }).catch(()=>cached))
     );
-    return;
   }
-
-  // Other assets: stale-while-revalidate
-  event.respondWith(
-    caches.match(req).then(cached => {
-      const fetchPromise = fetch(req).then(networkRes => {
-        const resClone = networkRes.clone();
-        caches.open(RUNTIME_CACHE).then(cache => cache.put(req, resClone));
-        return networkRes;
-      }).catch(() => cached);
-      return cached || fetchPromise;
-    })
-  );
 });
