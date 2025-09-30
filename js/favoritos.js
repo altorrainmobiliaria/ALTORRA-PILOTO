@@ -1,7 +1,7 @@
 /* ===================================
    SISTEMA DE FAVORITOS - ALTORRA
    Archivo: js/favoritos.js
-   VERSIÓN CORREGIDA (con observador del header)
+   VERSIÓN REFORZADA (siempre crea ♥ Favoritos en TODAS las páginas)
    =================================== */
 
 (function() {
@@ -10,22 +10,33 @@
   const FAV_KEY = 'altorra:favoritos';
   const BADGE_UPDATE_EVENT = 'altorra:fav-update';
 
-  // ========== Utilidades de Header / Nav ==========
+  // ====== Selección robusta del NAV ======
+  const NAV_SELECTORS = [
+    'nav .nav-list',
+    '#header nav .nav-list',
+    'header nav .nav-list',
+    '.main-nav .nav-list',
+    '.site-header nav .nav-list'
+  ];
+
   function getNavList() {
-    return document.querySelector('nav .nav-list');
+    for (const sel of NAV_SELECTORS) {
+      const el = document.querySelector(sel);
+      if (el) return el;
+    }
+    return null;
   }
 
+  // ====== Asegurar acceso ♥ Favoritos en el header ======
   function ensureFavNavExists() {
     let badge = document.getElementById('fav-badge');
     let badgeContainer = document.getElementById('fav-badge-container');
 
-    // Si ya existe el contenedor, solo retorna el badge
-    if (badgeContainer && badge) return badge;
+    if (badgeContainer && badge) return badge; // ya está todo
 
     const nav = getNavList();
-    if (!nav) return null;
+    if (!nav) return null; // aún no existe el nav
 
-    // Crear contenedor y enlace si no existen
     if (!badgeContainer) {
       const li = document.createElement('div');
       li.id = 'fav-badge-container';
@@ -35,7 +46,7 @@
       const link = document.createElement('a');
       link.href = 'favoritos.html';
       link.className = 'nav-btn';
-      link.innerHTML = '♥ Favoritos';
+      link.textContent = '♥ Favoritos';
       link.style.position = 'relative';
 
       badge = document.createElement('span');
@@ -52,19 +63,18 @@
         border-radius: 10px;
         min-width: 18px;
         text-align: center;
-        display: none; /* Por defecto oculto si hay 0 */
+        display: none; /* oculto si count=0; el link siempre visible */
       `;
 
       link.appendChild(badge);
       li.appendChild(link);
       nav.appendChild(li);
     } else if (!badge) {
-      // Si el contenedor existe pero falta el badge, lo creamos
       const link = badgeContainer.querySelector('a') || (() => {
         const a = document.createElement('a');
         a.href = 'favoritos.html';
         a.className = 'nav-btn';
-        a.innerHTML = '♥ Favoritos';
+        a.textContent = '♥ Favoritos';
         a.style.position = 'relative';
         badgeContainer.appendChild(a);
         return a;
@@ -91,7 +101,7 @@
     return document.getElementById('fav-badge');
   }
 
-  // ========== API de Favoritos ==========
+  // ====== API de Favoritos ======
   function getFavorites() {
     try {
       const raw = localStorage.getItem(FAV_KEY);
@@ -154,17 +164,15 @@
     }
   }
 
-  // ========== Inicializar Botones de Favoritos ==========
+  // ====== Inicializar Botones de Favoritos ======
   function initFavoriteButtons() {
     document.querySelectorAll('.fav-btn').forEach(btn => {
-      // Si ya fue inicializado, saltar
       if (btn.dataset.favInit === 'true') return;
       btn.dataset.favInit = 'true';
 
       const card = btn.closest('.card');
       if (!card) return;
 
-      // Buscar el link de detalle
       const detailLink = card.querySelector('a[href*="detalle-propiedad.html"]');
       if (!detailLink) return;
 
@@ -172,56 +180,44 @@
       const propId = url.searchParams.get('id');
       if (!propId) return;
 
-      // Marcar si ya es favorito
-      const isFav = isFavorite(propId);
-      btn.setAttribute('aria-pressed', isFav ? 'true' : 'false');
+      const alreadyFav = isFavorite(propId);
+      btn.setAttribute('aria-pressed', alreadyFav ? 'true' : 'false');
       const heart = btn.querySelector('.heart');
-      if (heart) heart.textContent = isFav ? '♥' : '♡';
+      if (heart) heart.textContent = alreadyFav ? '♥' : '♡';
 
-      // Evento click
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
 
-        // Extraer datos de la propiedad desde el DOM
-        const titleEl = card.querySelector('h3, .meta h3');
         const priceEl = card.querySelector('.price');
         const specsEl = card.querySelector('.specs');
+        const titleEl = card.querySelector('h3, .meta h3');
         const imgEl = card.querySelector('.media img');
 
-        // Determinar operación por la URL actual
         let operation = 'comprar';
-        if (window.location.pathname.includes('arrendar')) operation = 'arrendar';
-        else if (window.location.pathname.includes('alojamientos')) operation = 'dias';
+        if (location.pathname.includes('arrendar')) operation = 'arrendar';
+        else if (location.pathname.includes('alojamientos')) operation = 'dias';
 
-        // Extraer precio numérico
         let priceNum = 0;
         if (priceEl) {
-          const priceText = priceEl.textContent;
-          const match = priceText.match(/[\d.]+/g);
-          if (match) {
-            priceNum = parseInt(match.join('').replace(/\./g, ''), 10);
-          }
+          const match = (priceEl.textContent || '').match(/[\d.]+/g);
+          if (match) priceNum = parseInt(match.join('').replace(/\./g, ''), 10);
         }
 
-        // Extraer ciudad de specs si existe
         let city = 'Cartagena';
         if (specsEl) {
-          const specsText = specsEl.textContent;
-          const parts = specsText.split('·').map(p => p.trim());
-          // Buscar la parte que parece una ciudad (no tiene números ni m²)
+          const parts = specsEl.textContent.split('·').map(p => p.trim());
           const cityPart = parts.find(p => !p.match(/\d/) && !p.includes('m²'));
           if (cityPart) city = cityPart;
         }
 
-        // Extraer tipo
         let type = '';
         if (specsEl) {
-          const specsText = specsEl.textContent.toLowerCase();
-          if (specsText.includes('apartamento')) type = 'apartamento';
-          else if (specsText.includes('casa')) type = 'casa';
-          else if (specsText.includes('lote')) type = 'lote';
-          else if (specsText.includes('oficina')) type = 'oficina';
+          const t = specsEl.textContent.toLowerCase();
+          if (t.includes('apartamento')) type = 'apartamento';
+          else if (t.includes('casa')) type = 'casa';
+          else if (t.includes('lote')) type = 'lote';
+          else if (t.includes('oficina')) type = 'oficina';
         }
 
         const prop = {
@@ -229,9 +225,9 @@
           title: titleEl ? titleEl.textContent.trim() : 'Propiedad',
           price: priceNum,
           image: imgEl ? imgEl.src : '',
-          city: city,
-          operation: operation,
-          type: type
+          city,
+          operation,
+          type
         };
 
         const nowFav = toggleFavorite(prop);
@@ -243,24 +239,17 @@
     });
   }
 
-  // ========== Badge en Header ==========
+  // ====== Badge en Header ======
   function updateBadge() {
-    // Asegura que el acceso exista (aunque aún no haya favoritos)
-    const badgeEl = ensureFavNavExists();
-    const favs = getFavorites();
-    const count = favs.length;
+    const badge = ensureFavNavExists();       // crea/asegura el acceso
+    const count = getFavorites().length;
 
-    // Si todavía no existe el nav (header no inyectado), salimos sin error.
-    if (!badgeEl) return;
-
-    // Actualizar contador
-    badgeEl.textContent = count;
-
-    // Mostrar/ocultar solo el circulito con el número; el enlace ♥ Favoritos queda siempre
-    badgeEl.style.display = count > 0 ? 'block' : 'none';
+    if (!badge) return;                       // nav aún no está, ya lo cubre el observador
+    badge.textContent = count;
+    badge.style.display = count > 0 ? 'block' : 'none'; // el link queda siempre
   }
 
-  // ========== Toast Notification ==========
+  // ====== Toast ======
   function showToast(message) {
     const existing = document.getElementById('altorra-toast');
     if (existing) existing.remove();
@@ -300,97 +289,83 @@
     }
 
     document.body.appendChild(toast);
-
     setTimeout(() => {
       toast.style.animation = 'toast-out 0.3s ease';
       setTimeout(() => toast.remove(), 300);
     }, 2000);
   }
 
-  // ========== Observadores de cambios en el DOM ==========
-  // Observa cards y carouseles para (re)inicializar botones de favoritos
+  // ====== Observadores ======
+  // 1) Cards/carouseles para inicializar botones dinámicos
   const cardsObserver = new MutationObserver((mutations) => {
     let needsInit = false;
-    mutations.forEach((mutation) => {
-      mutation.addedNodes.forEach((node) => {
-        if (node.nodeType === 1) { // Element node
-          if (node.classList && node.classList.contains('card')) {
-            needsInit = true;
-          } else if (node.querySelector && node.querySelector('.card')) {
-            needsInit = true;
-          }
+    mutations.forEach((m) => {
+      m.addedNodes.forEach((node) => {
+        if (node.nodeType === 1) {
+          if (node.classList && node.classList.contains('card')) needsInit = true;
+          else if (node.querySelector && node.querySelector('.card')) needsInit = true;
         }
       });
     });
-    if (needsInit) {
-      setTimeout(initFavoriteButtons, 100);
-    }
+    if (needsInit) setTimeout(initFavoriteButtons, 100);
   });
 
-  // Observa que el header/nav sea inyectado y en ese instante crea el acceso de favoritos
+  // 2) Header/nav inyectado en cualquier momento (observa todo el documento)
   let headerObserver;
   function observeHeader() {
-    // Si ya existe el nav, asegúralo y sal
-    if (getNavList()) {
-      ensureFavNavExists();
-      updateBadge();
-      return;
-    }
-
-    const host = document.getElementById('header-placeholder') || document.body;
     if (headerObserver) headerObserver.disconnect();
 
-    headerObserver = new MutationObserver((mutations, obs) => {
+    headerObserver = new MutationObserver(() => {
       if (getNavList()) {
         ensureFavNavExists();
         updateBadge();
-        obs.disconnect();
       }
     });
 
-    headerObserver.observe(host, { childList: true, subtree: true });
+    // Observa todo el documento: sirve para páginas donde no existe #header-placeholder
+    headerObserver.observe(document.documentElement, { childList: true, subtree: true });
+
+    // Fallback adicional: reintentos temporizados por si el observer se pierde algo
+    let tries = 0;
+    const maxTries = 40; // ~8s si el intervalo es 200ms
+    const timer = setInterval(() => {
+      if (getNavList()) {
+        ensureFavNavExists();
+        updateBadge();
+        clearInterval(timer);
+      }
+      if (++tries >= maxTries) clearInterval(timer);
+    }, 200);
   }
 
-  // ========== Inicialización ==========
+  // ====== Inicialización ======
   function init() {
-    // Inicializar botones existentes
     initFavoriteButtons();
+    updateBadge();    // intentará crear el acceso si el nav ya existe
 
-    // Asegurar/actualizar badge (si el nav ya está)
-    updateBadge();
-
-    // Observar cambios en el grid de propiedades
+    // Observa listados y carouseles (si existen en esta página)
     const grid = document.getElementById('list');
-    if (grid) {
-      cardsObserver.observe(grid, { childList: true, subtree: true });
-    }
-
-    // También observar los carruseles del home
-    const carousels = document.querySelectorAll('.carousel-row');
-    carousels.forEach(carousel => {
-      cardsObserver.observe(carousel, { childList: true, subtree: true });
+    if (grid) cardsObserver.observe(grid, { childList: true, subtree: true });
+    document.querySelectorAll('.carousel-row').forEach(c => {
+      cardsObserver.observe(c, { childList: true, subtree: true });
     });
 
-    // Observar el header para cuando se inyecte el nav
-    observeHeader();
+    observeHeader();  // garantiza el acceso en cualquier página/tiempo
   }
 
-  // Ejecutar cuando el DOM esté listo
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
   }
 
-  // Escuchar actualizaciones de favoritos
+  // Eventos globales
   document.addEventListener(BADGE_UPDATE_EVENT, updateBadge);
-
-  // Re-inicializar cuando se cargan más propiedades
   document.addEventListener('altorra:properties-loaded', () => {
     setTimeout(initFavoriteButtons, 100);
   });
 
-  // Exponer API global
+  // Exponer API (útil para depurar)
   window.AltorraFavoritos = {
     get: getFavorites,
     add: addFavorite,
