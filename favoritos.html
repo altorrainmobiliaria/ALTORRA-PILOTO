@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Favoritos - Altorra Inmobiliaria</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="scripts.js" defer></script>
+  <script src="header-footer.js" defer></script>
+  <script src="js/favorites.js" defer></script>
+</head>
+<body>
+
+  <header id="header-placeholder"></header>
+
+  <main>
+    <h1>Tus Propiedades Favoritas</h1>
+    <section id="fav-list" class="property-grid">
+      <!-- Cards favoritas se cargan aquí -->
+    </section>
+    <p id="no-favs" style="display:none;">No tienes favoritos aún. ¡Agrega algunos!</p>
+  </main>
+
+  <footer id="footer-placeholder"></footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const favs = getFavorites();
+      if (!favs.length) {
+        document.getElementById('no-favs').style.display = 'block';
+        return;
+      }
+      const allProps = await getJSONCached('properties/data.json');
+      const favProps = allProps.filter(p => favs.includes(p.id));
+      const root = document.getElementById('fav-list');
+      favProps.forEach(p => root.appendChild(buildCard(p, 'list')));
+    });
+  </script>
+</body>
+</html>
