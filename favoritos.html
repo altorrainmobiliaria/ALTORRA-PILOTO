@@ -218,11 +218,27 @@
     <div id="favorites-grid" class="grid"></div>
 
     <div id="empty-state" class="empty-state" style="display:none">
-      <div class="icon">♡</div>
-      <h2>No tienes favoritos aún</h2>
-      <p>Explora propiedades y agrega tus favoritos</p>
-      <a href="index.html" class="btn">Ir al Inicio</a>
-    </div>
+  <div class="icon">♡</div>
+  <h2>No tienes favoritos aún</h2>
+  <p>Explora propiedades y agrega tus favoritos</p>
+  <div class="btn-group">
+    <a href="propiedades-comprar.html" class="btn">Propiedades en Venta</a>
+    <a href="propiedades-arrendar.html" class="btn">Propiedades en Arriendo</a>
+    <a href="propiedades-alojamientos.html" class="btn">Alojamientos por Días</a> 
+  </div>     
+</div>
+
+<style>
+.empty-state .btn-group {
+  display: flex;
+  gap: 12px;               /* espacio entre los botones */
+  justify-content: center; /* centrados en el bloque */
+}
+.empty-state .btn {
+  display: inline-block;
+}
+</style>
+
   </main>
 
   <div id="footer-placeholder"></div>
@@ -373,4 +389,5 @@
 </body>
 
 </html>
+
 
