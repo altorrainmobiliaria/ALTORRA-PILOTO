@@ -1,7 +1,7 @@
 /* ===================================
    SISTEMA DE FAVORITOS - ALTORRA
    Archivo: js/favoritos.js
-   VERSIÓN CORREGIDA
+   VERSIÓN CORREGIDA (con observador del header)
    =================================== */
 
 (function() {
@@ -9,6 +9,87 @@
 
   const FAV_KEY = 'altorra:favoritos';
   const BADGE_UPDATE_EVENT = 'altorra:fav-update';
+
+  // ========== Utilidades de Header / Nav ==========
+  function getNavList() {
+    return document.querySelector('nav .nav-list');
+  }
+
+  function ensureFavNavExists() {
+    let badge = document.getElementById('fav-badge');
+    let badgeContainer = document.getElementById('fav-badge-container');
+
+    // Si ya existe el contenedor, solo retorna el badge
+    if (badgeContainer && badge) return badge;
+
+    const nav = getNavList();
+    if (!nav) return null;
+
+    // Crear contenedor y enlace si no existen
+    if (!badgeContainer) {
+      const li = document.createElement('div');
+      li.id = 'fav-badge-container';
+      li.className = 'nav-item';
+      li.style.position = 'relative';
+
+      const link = document.createElement('a');
+      link.href = 'favoritos.html';
+      link.className = 'nav-btn';
+      link.innerHTML = '♥ Favoritos';
+      link.style.position = 'relative';
+
+      badge = document.createElement('span');
+      badge.id = 'fav-badge';
+      badge.style.cssText = `
+        position: absolute;
+        top: -4px;
+        right: -8px;
+        background: var(--gold);
+        color: #000;
+        font-size: 0.7rem;
+        font-weight: 800;
+        padding: 2px 6px;
+        border-radius: 10px;
+        min-width: 18px;
+        text-align: center;
+        display: none; /* Por defecto oculto si hay 0 */
+      `;
+
+      link.appendChild(badge);
+      li.appendChild(link);
+      nav.appendChild(li);
+    } else if (!badge) {
+      // Si el contenedor existe pero falta el badge, lo creamos
+      const link = badgeContainer.querySelector('a') || (() => {
+        const a = document.createElement('a');
+        a.href = 'favoritos.html';
+        a.className = 'nav-btn';
+        a.innerHTML = '♥ Favoritos';
+        a.style.position = 'relative';
+        badgeContainer.appendChild(a);
+        return a;
+      })();
+      badge = document.createElement('span');
+      badge.id = 'fav-badge';
+      badge.style.cssText = `
+        position: absolute;
+        top: -4px;
+        right: -8px;
+        background: var(--gold);
+        color: #000;
+        font-size: 0.7rem;
+        font-weight: 800;
+        padding: 2px 6px;
+        border-radius: 10px;
+        min-width: 18px;
+        text-align: center;
+        display: none;
+      `;
+      link.appendChild(badge);
+    }
+
+    return document.getElementById('fav-badge');
+  }
 
   // ========== API de Favoritos ==========
   function getFavorites() {
@@ -39,7 +120,7 @@
   function addFavorite(prop) {
     const favs = getFavorites();
     if (favs.some(f => f.id === prop.id)) return;
-    
+
     favs.push({
       id: prop.id,
       title: prop.title,
@@ -53,7 +134,7 @@
       type: prop.type,
       addedAt: Date.now()
     });
-    
+
     saveFavorites(favs);
   }
 
@@ -164,54 +245,19 @@
 
   // ========== Badge en Header ==========
   function updateBadge() {
+    // Asegura que el acceso exista (aunque aún no haya favoritos)
+    const badgeEl = ensureFavNavExists();
     const favs = getFavorites();
     const count = favs.length;
 
-    let badge = document.getElementById('fav-badge');
-    const badgeContainer = document.getElementById('fav-badge-container');
+    // Si todavía no existe el nav (header no inyectado), salimos sin error.
+    if (!badgeEl) return;
 
-    if (!badgeContainer) {
-      const nav = document.querySelector('nav .nav-list');
-      if (!nav) return;
+    // Actualizar contador
+    badgeEl.textContent = count;
 
-      const li = document.createElement('div');
-      li.id = 'fav-badge-container';
-      li.className = 'nav-item';
-      li.style.position = 'relative';
-      
-      const link = document.createElement('a');
-      link.href = 'favoritos.html';
-      link.className = 'nav-btn';
-      link.innerHTML = '♥ Favoritos';
-      link.style.position = 'relative';
-      
-      badge = document.createElement('span');
-      badge.id = 'fav-badge';
-      badge.style.cssText = `
-        position: absolute;
-        top: -4px;
-        right: -8px;
-        background: var(--gold);
-        color: #000;
-        font-size: 0.7rem;
-        font-weight: 800;
-        padding: 2px 6px;
-        border-radius: 10px;
-        min-width: 18px;
-        text-align: center;
-        display: ${count > 0 ? 'block' : 'none'};
-      `;
-      
-      link.appendChild(badge);
-      li.appendChild(link);
-      nav.appendChild(li);
-    }
-
-    if (!badge) badge = document.getElementById('fav-badge');
-    if (badge) {
-      badge.textContent = count;
-      badge.style.display = count > 0 ? 'block' : 'none';
-    }
+    // Mostrar/ocultar solo el circulito con el número; el enlace ♥ Favoritos queda siempre
+    badgeEl.style.display = count > 0 ? 'block' : 'none';
   }
 
   // ========== Toast Notification ==========
@@ -261,9 +307,9 @@
     }, 2000);
   }
 
-  // ========== Observador de cambios en el DOM ==========
-  // Esto detecta cuando se agregan nuevas tarjetas dinámicamente
-  const observer = new MutationObserver((mutations) => {
+  // ========== Observadores de cambios en el DOM ==========
+  // Observa cards y carouseles para (re)inicializar botones de favoritos
+  const cardsObserver = new MutationObserver((mutations) => {
     let needsInit = false;
     mutations.forEach((mutation) => {
       mutation.addedNodes.forEach((node) => {
@@ -281,25 +327,52 @@
     }
   });
 
+  // Observa que el header/nav sea inyectado y en ese instante crea el acceso de favoritos
+  let headerObserver;
+  function observeHeader() {
+    // Si ya existe el nav, asegúralo y sal
+    if (getNavList()) {
+      ensureFavNavExists();
+      updateBadge();
+      return;
+    }
+
+    const host = document.getElementById('header-placeholder') || document.body;
+    if (headerObserver) headerObserver.disconnect();
+
+    headerObserver = new MutationObserver((mutations, obs) => {
+      if (getNavList()) {
+        ensureFavNavExists();
+        updateBadge();
+        obs.disconnect();
+      }
+    });
+
+    headerObserver.observe(host, { childList: true, subtree: true });
+  }
+
   // ========== Inicialización ==========
   function init() {
     // Inicializar botones existentes
     initFavoriteButtons();
-    
-    // Actualizar badge
+
+    // Asegurar/actualizar badge (si el nav ya está)
     updateBadge();
 
     // Observar cambios en el grid de propiedades
     const grid = document.getElementById('list');
     if (grid) {
-      observer.observe(grid, { childList: true, subtree: true });
+      cardsObserver.observe(grid, { childList: true, subtree: true });
     }
 
-    // También observar el carrusel del home
+    // También observar los carruseles del home
     const carousels = document.querySelectorAll('.carousel-row');
     carousels.forEach(carousel => {
-      observer.observe(carousel, { childList: true, subtree: true });
+      cardsObserver.observe(carousel, { childList: true, subtree: true });
     });
+
+    // Observar el header para cuando se inyecte el nav
+    observeHeader();
   }
 
   // Ejecutar cuando el DOM esté listo
