@@ -1,106 +1,19 @@
-<!-- header.html -->
-<header>
-  <div class="container">
-    <a class="brand" href="index.html" aria-label="Ir al inicio">
-      <img data-no-lazy="true" src="https://i.postimg.cc/SsPmBFXt/Chat-GPT-Image-9-ago-2025-10-31-20.png" alt="Logo de Altorra" width="48" height="48"/>
-      <span class="name" style="display:none">Altorra Inmobiliaria</span>
-    </a>
-
-    <nav aria-label="Menú principal">
-      <div class="nav-list">
-        <div class="nav-item" data-size="compact">
-          <button class="nav-btn" data-panel="panel-propiedades" aria-controls="panel-propiedades" aria-expanded="false">Propiedades</button>
-        </div>
-        <div class="nav-item" data-size="mega">
-          <button class="nav-btn" data-panel="panel-servicios" aria-controls="panel-servicios" aria-expanded="false">Servicios</button>
-        </div>
-        <div class="nav-item" data-size="compact">
-          <button class="nav-btn" data-panel="panel-nosotros" aria-controls="panel-nosotros" aria-expanded="false">Nosotros</button>
-        </div>
-        <div class="nav-item">
-          <a class="nav-btn" href="contacto.html">Contacto</a>
-        </div>
-      </div>
-    </nav>
-
-    <button id="navToggle" class="nav-toggle" aria-controls="mobileMenu" aria-expanded="false" aria-label="Abrir menú">
-      <span aria-hidden="true">☰</span> <span class="menu-label">Menú</span>
-    </button>
+<header class="container">
+  <div class="brand">
+    <img src="comprar1.png" alt="Altorra Logo"> <!-- Asume tu logo -->
+    <span class="name">Altorra Inmobiliaria</span>
   </div>
+  
+  <nav>
+    <ul class="nav-list">
+      <li class="nav-item">
+        <button class="nav-btn">Propiedades</button>
+        <!-- Submenús... -->
+      </li>
+      <!-- Tus otros items... -->
+      <li><a href="favoritos.html" class="nav-btn">Favoritos <span id="fav-badge" class="badge" style="display:none;"></span></a></li> <!-- Agregado -->
+    </ul>
+  </nav>
+  
+  <!-- Resto de tu header... -->
 </header>
-
-<!-- PANELS DESKTOP -->
-<div id="panel-propiedades" class="menu-panel panel-compact" role="dialog" aria-modal="false" aria-hidden="true">
-  <a class="menu-link" href="propiedades-comprar.html">Comprar</a>
-  <a class="menu-link" href="propiedades-arrendar.html">Arrendar</a>
-  <a class="menu-link" href="propiedades-alojamientos.html">Rentar por días</a>
-</div>
-
-<div id="panel-servicios" class="menu-panel panel-mega" role="dialog" aria-modal="false" aria-hidden="true">
-  <div class="mega-grid">
-    <div class="mega-col">
-      <h4>Gestión</h4>
-      <a class="menu-link" href="servicios-mantenimiento.html">Administración de inmuebles</a>
-      <a class="menu-link" href="servicios-mantenimiento.html">Avalúos</a>
-      <a class="menu-link" href="servicios-mantenimiento.html">Mantenimiento y reparaciones</a>
-      <a class="menu-link" href="servicios-mantenimiento.html">Mudanzas y logística</a>
-    </div>
-    <div class="mega-col">
-      <h4>Jurídico &amp; Contable</h4>
-      <a class="menu-link" href="servicios-mantenimiento.html">Servicios jurídicos</a>
-      <a class="menu-link" href="servicios-mantenimiento.html">Servicios contables</a>
-      <a class="menu-link" href="servicios-mantenimiento.html">Gestión de contratos</a>
-    </div>
-    <div class="mega-col">
-      <h4>Turismo (Cartagena)</h4>
-      <a class="menu-link" href="servicios-mantenimiento.html">Renta de yates</a>
-      <a class="menu-link" href="servicios-mantenimiento.html">Pasadías en islas</a>
-      <a class="menu-link" href="servicios-mantenimiento.html">Paquetes turísticos</a>
-      <a class="menu-link" href="servicios-mantenimiento.html">Tours históricos</a>
-    </div>
-  </div>
-</div>
-
-<div id="panel-nosotros" class="menu-panel panel-compact" role="dialog" aria-modal="false" aria-hidden="true">
-  <a class="menu-link" href="quienes-somos.html">Quiénes somos</a>
-  <a class="menu-link" href="quienes-somos.html#mision">Misión</a>
-  <a class="menu-link" href="quienes-somos.html#vision">Visión</a>
-  <a class="menu-link" href="quienes-somos.html#valores">Valores</a>
-  <a class="menu-link" href="quienes-somos.html#equipo">Nuestro equipo</a>
-</div>
-
-<!-- DRAWER MÓVIL -->
-<div id="drawerBackdrop" class="drawer-backdrop" aria-hidden="true"></div>
-<aside id="mobileMenu" class="drawer" role="dialog" aria-modal="true" aria-labelledby="mobileMenuTitle" hidden>
-  <div class="block">
-    <h3 id="mobileMenuTitle" style="margin:0;font-weight:800;color:var(--gold)">Menú</h3>
-  </div>
-  <div class="block">
-    <h4>Propiedades</h4>
-    <a href="propiedades-comprar.html">Comprar</a>
-    <a href="propiedades-arrendar.html">Arrendar</a>
-    <a href="propiedades-alojamientos.html">Rentar por días</a>
-  </div>
-  <div class="block">
-    <h4>Servicios</h4>
-    <a href="servicios-mantenimiento.html">Administración de inmuebles</a>
-    <a href="servicios-mantenimiento.html">Avalúos</a>
-    <a href="servicios-mantenimiento.html">Mantenimiento y reparaciones</a>
-    <a href="servicios-mantenimiento.html">Mudanzas y logística</a>
-    <a href="servicios-mantenimiento.html">Servicios jurídicos</a>
-    <a href="servicios-mantenimiento.html">Servicios contables</a>
-    <a href="servicios-mantenimiento.html">Gestión de contratos</a>
-    <h4 style="margin-top:12px">Turismo (Cartagena)</h4>
-    <a href="servicios-mantenimiento.html">Renta de yates</a>
-    <a href="servicios-mantenimiento.html">Pasadías en islas</a>
-    <a href="servicios-mantenimiento.html">Paquetes turísticos</a>
-    <a href="servicios-mantenimiento.html">Tours históricos</a>
-  </div>
-  <div class="block">
-    <h4>Empresa</h4>
-    <a href="quienes-somos.html">Quiénes somos</a>
-    <a href="contacto.html">Contacto</a>
-  </div>
-</aside>
-
-
