@@ -1,7 +1,7 @@
 /* ===================================
    SISTEMA DE FAVORITOS - ALTORRA
    Archivo: js/favoritos.js
-   VERSIÓN CORREGIDA (con observador del header)
+   VERSIÓN CORREGIDA (aparece a la primera en todas las páginas)
    =================================== */
 
 (function() {
@@ -19,7 +19,7 @@
     let badge = document.getElementById('fav-badge');
     let badgeContainer = document.getElementById('fav-badge-container');
 
-    // Si ya existe el contenedor, solo retorna el badge
+    // Si ya existe el contenedor y el badge, listo
     if (badgeContainer && badge) return badge;
 
     const nav = getNavList();
@@ -52,7 +52,7 @@
         border-radius: 10px;
         min-width: 18px;
         text-align: center;
-        display: none; /* Por defecto oculto si hay 0 */
+        display: none; /* oculto si count=0; el link siempre visible */
       `;
 
       link.appendChild(badge);
@@ -327,28 +327,56 @@
     }
   });
 
-  // Observa que el header/nav sea inyectado y en ese instante crea el acceso de favoritos
-  let headerObserver;
-  function observeHeader() {
-    // Si ya existe el nav, asegúralo y sal
-    if (getNavList()) {
-      ensureFavNavExists();
-      updateBadge();
+  // ====== Esperador seguro del NAV (aparece a la primera) ======
+  let navReadyFired = false;
+  function whenNavReady(run) {
+    if (navReadyFired) return;
+    const navNow = getNavList();
+    if (navNow) {
+      navReadyFired = true;
+      run();
       return;
     }
 
-    const host = document.getElementById('header-placeholder') || document.body;
-    if (headerObserver) headerObserver.disconnect();
+    // 1) Observer focalizado (header-placeholder si existe, si no, header o body)
+    const host =
+      document.getElementById('header-placeholder') ||
+      document.querySelector('header') ||
+      document.body;
 
-    headerObserver = new MutationObserver((mutations, obs) => {
+    let mo; let timer; let loadedHandler;
+
+    const cleanup = () => {
+      if (mo) mo.disconnect();
+      if (timer) clearInterval(timer);
+      if (loadedHandler) window.removeEventListener('load', loadedHandler);
+    };
+
+    const tryRun = () => {
+      if (navReadyFired) return;
       if (getNavList()) {
-        ensureFavNavExists();
-        updateBadge();
-        obs.disconnect();
+        navReadyFired = true;
+        cleanup();
+        run();
       }
-    });
+    };
 
-    headerObserver.observe(host, { childList: true, subtree: true });
+    // MutationObserver (ligero, sin tocar estilos)
+    mo = new MutationObserver(() => tryRun());
+    mo.observe(host, { childList: true, subtree: true });
+
+    // 2) Fallback por tiempo (cubre el caso de “se insertó antes de observar”)
+    let tries = 0;
+    timer = setInterval(() => {
+      tryRun();
+      if (++tries >= 40) { // ~4s
+        cleanup(); // evitamos dejar intervalos vivos
+      }
+    }, 100);
+
+    // 3) Fallback al "load" del documento
+    loadedHandler = () => tryRun();
+    window.addEventListener('load', loadedHandler);
   }
 
   // ========== Inicialización ==========
@@ -356,7 +384,7 @@
     // Inicializar botones existentes
     initFavoriteButtons();
 
-    // Asegurar/actualizar badge (si el nav ya está)
+    // Intento inmediato (si el nav ya está)
     updateBadge();
 
     // Observar cambios en el grid de propiedades
@@ -371,8 +399,11 @@
       cardsObserver.observe(carousel, { childList: true, subtree: true });
     });
 
-    // Observar el header para cuando se inyecte el nav
-    observeHeader();
+    // Esperar de forma segura a que el NAV esté listo (primera carga incluida)
+    whenNavReady(() => {
+      ensureFavNavExists();
+      updateBadge();
+    });
   }
 
   // Ejecutar cuando el DOM esté listo
