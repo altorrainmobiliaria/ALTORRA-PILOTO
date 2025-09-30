@@ -1,25 +1,26 @@
 /* ========================================
    ALTORRA - LISTADO DE PROPIEDADES (UNIFICADO)
    Archivo: js/listado-propiedades.js
-   Versión: 2.0 - Optimizado y unificado
+   Versión: 2.1 - CORREGIDO
    ======================================== */
 
 (function() {
   'use strict';
 
   // ===== CONFIGURACIÓN =====
-  const PAGE_SIZE = 9; // Mostrar 9 propiedades por página (grid 3x3)
+  const PAGE_SIZE = 9;
   const WHATSAPP = { phone: '573235016747', company: 'Altorra Inmobiliaria' };
   
   // Determinar modo de página por URL
-  const PAGE_MODE = window.location.pathname.includes('arrendar') ? 'arrendar' :
-                    window.location.pathname.includes('alojamientos') ? 'alojamientos' : 'comprar';
+  const path = window.location.pathname.toLowerCase();
+  const PAGE_MODE = path.includes('arrendar') ? 'arrendar' :
+                    path.includes('alojamientos') ? 'alojamientos' : 'comprar';
 
   // ===== MAPEO DE OPERACIONES =====
   const OPERATION_MAP = {
     'comprar': ['comprar', 'venta', 'ventas', 'sell', 'sale'],
     'arrendar': ['arrendar', 'arriendo', 'alquiler', 'alquilar', 'renta', 'rent'],
-    'alojamientos': ['dias', 'por_dias', 'alojar', 'alojamientos', 'por día', 'temporada', 'vacacional', 'noche']
+    'alojamientos': ['dias', 'por_dias', 'alojar', 'alojamientos', 'por día', 'por_dias', 'temporada', 'vacacional', 'noche']
   };
 
   // ===== ESTADO =====
@@ -94,45 +95,7 @@
       </div>
     `;
 
-    // Botón limpiar filtros
-    const btnClear = document.getElementById('btnClear');
-    if (btnClear) {
-      btnClear.addEventListener('click', () => {
-        if (document.getElementById('f-city')) document.getElementById('f-city').value = '';
-        if (document.getElementById('f-type')) document.getElementById('f-type').value = '';
-        if (document.getElementById('f-min')) document.getElementById('f-min').value = '';
-        if (document.getElementById('f-max')) document.getElementById('f-max').value = '';
-        if (document.getElementById('f-sort')) document.getElementById('f-sort').value = 'relevance';
-        if (document.getElementById('f-search')) document.getElementById('f-search').value = '';
-        
-        const list = document.getElementById('list');
-        if (list) list.dataset.filtered = JSON.stringify(allProperties);
-        
-        renderList(allProperties.slice(0, PAGE_SIZE), true);
-        updateLoadMoreButton(allProperties.length);
-      });
-    }
-
-    // Botón cargar más
-    const btnLoadMore = document.getElementById('btnLoadMore');
-    if (btnLoadMore) {
-      btnLoadMore.addEventListener('click', () => {
-        let filtered = [];
-        try {
-          const list = document.getElementById('list');
-          filtered = JSON.parse(list?.dataset.filtered || 'null') || allProperties;
-        } catch (e) {
-          filtered = allProperties;
-        }
-        
-        const next = filtered.slice(renderedCount, renderedCount + PAGE_SIZE);
-        renderList(next, false);
-        updateLoadMoreButton(filtered.length);
-      });
-    }
-  });
-
-})(); Click en tarjeta (excepto CTAs y favoritos)
+    // Click en tarjeta (excepto CTAs y favoritos)
     card.addEventListener('click', (e) => {
       if (e.target.closest('.cta') || e.target.closest('.fav-btn')) return;
       window.location.href = 'detalle-propiedad.html?id=' + encodeURIComponent(p.id);
@@ -158,7 +121,9 @@
     renderedCount += items.length;
 
     // Disparar evento para que favoritos.js inicialice botones
-    document.dispatchEvent(new CustomEvent('altorra:properties-loaded'));
+    setTimeout(() => {
+      document.dispatchEvent(new CustomEvent('altorra:properties-loaded'));
+    }, 100);
   }
 
   // ===== FILTROS =====
@@ -217,51 +182,64 @@
     }
   }
 
+  // ===== CACHÉ JSON =====
+  async function getJSONCached(url) {
+    const __ALT_NS = 'altorra:json:';
+    const __ALT_VER = '2025-09-30.1';
+    const jsonKey = __ALT_NS + url + '::' + __ALT_VER;
+    
+    let cached = null;
+    try {
+      const raw = localStorage.getItem(jsonKey);
+      if (raw) {
+        const obj = JSON.parse(raw);
+        if (obj && obj.t && (Date.now() - obj.t) < 1000 * 60 * 60 * 6 && obj.data) {
+          cached = obj.data;
+        }
+      }
+    } catch (_) {}
+
+    if (cached) {
+      // Revalidar en background
+      fetch(url, { cache: 'no-store' })
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(fresh => {
+          try {
+            localStorage.setItem(jsonKey, JSON.stringify({ t: Date.now(), data: fresh }));
+          } catch (_) {}
+        })
+        .catch(() => {});
+      return cached;
+    }
+
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    try {
+      localStorage.setItem(jsonKey, JSON.stringify({ t: Date.now(), data }));
+    } catch (_) {}
+    return data;
+  }
+
   // ===== INICIALIZACIÓN =====
   async function init() {
+    console.log('[Altorra] Inicializando listado de propiedades. Modo:', PAGE_MODE);
+    
     try {
-      // Cargar propiedades con caché
-      const __ALT_NS = 'altorra:json:';
-      const __ALT_VER = '2025-09-30.1';
-      const jsonKey = __ALT_NS + 'properties/data.json::' + __ALT_VER;
-      
-      let cached = null;
-      try {
-        const raw = localStorage.getItem(jsonKey);
-        if (raw) {
-          const obj = JSON.parse(raw);
-          if (obj && obj.t && (Date.now() - obj.t) < 1000 * 60 * 60 * 6 && obj.data) {
-            cached = obj.data;
-          }
-        }
-      } catch (_) {}
-
-      let data;
-      if (cached) {
-        data = cached;
-        // Revalidar en background
-        fetch('properties/data.json', { cache: 'no-store' })
-          .then(r => r.ok ? r.json() : Promise.reject())
-          .then(fresh => {
-            try {
-              localStorage.setItem(jsonKey, JSON.stringify({ t: Date.now(), data: fresh }));
-            } catch (_) {}
-          })
-          .catch(() => {});
-      } else {
-        const res = await fetch('properties/data.json', { cache: 'no-store' });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        data = await res.json();
-        try {
-          localStorage.setItem(jsonKey, JSON.stringify({ t: Date.now(), data }));
-        } catch (_) {}
-      }
+      // Cargar propiedades
+      const data = await getJSONCached('properties/data.json');
+      console.log('[Altorra] Propiedades cargadas:', data ? data.length : 0);
 
       // Filtrar por operación
       const validOperations = OPERATION_MAP[PAGE_MODE] || [];
       allProperties = Array.isArray(data) ? 
-        data.filter(p => validOperations.includes(String(p.operation || '').toLowerCase().trim())) : 
+        data.filter(p => {
+          const op = String(p.operation || '').toLowerCase().trim();
+          return validOperations.includes(op);
+        }) : 
         [];
+
+      console.log('[Altorra] Propiedades filtradas por operación:', allProperties.length);
 
       // Leer parámetros de URL
       const qs = new URLSearchParams(location.search);
@@ -274,7 +252,7 @@
         search: qs.get('search') || ''
       };
 
-      // Pre-llenar filtros
+      // Pre-llenar filtros en el DOM
       if (document.getElementById('f-city')) document.getElementById('f-city').value = filters.city;
       if (document.getElementById('f-type') && filters.type) document.getElementById('f-type').value = filters.type;
       if (document.getElementById('f-min') && filters.min) document.getElementById('f-min').value = filters.min;
@@ -299,7 +277,7 @@
       }
 
     } catch (err) {
-      console.error('Error al cargar propiedades:', err);
+      console.error('[Altorra] Error al cargar propiedades:', err);
       const list = document.getElementById('list');
       if (list) {
         list.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)"><p>Error al cargar propiedades. Por favor, recarga la página.</p></div>';
@@ -309,6 +287,7 @@
 
   // ===== EVENTOS =====
   document.addEventListener('DOMContentLoaded', () => {
+    console.log('[Altorra] DOM listo, iniciando...');
     init();
 
     // Botón aplicar filtros
@@ -340,4 +319,42 @@
       });
     }
 
-    //
+    // Botón limpiar filtros
+    const btnClear = document.getElementById('btnClear');
+    if (btnClear) {
+      btnClear.addEventListener('click', () => {
+        if (document.getElementById('f-city')) document.getElementById('f-city').value = '';
+        if (document.getElementById('f-type')) document.getElementById('f-type').value = '';
+        if (document.getElementById('f-min')) document.getElementById('f-min').value = '';
+        if (document.getElementById('f-max')) document.getElementById('f-max').value = '';
+        if (document.getElementById('f-sort')) document.getElementById('f-sort').value = 'relevance';
+        if (document.getElementById('f-search')) document.getElementById('f-search').value = '';
+        
+        const list = document.getElementById('list');
+        if (list) list.dataset.filtered = JSON.stringify(allProperties);
+        
+        renderList(allProperties.slice(0, PAGE_SIZE), true);
+        updateLoadMoreButton(allProperties.length);
+      });
+    }
+
+    // Botón cargar más
+    const btnLoadMore = document.getElementById('btnLoadMore');
+    if (btnLoadMore) {
+      btnLoadMore.addEventListener('click', () => {
+        let filtered = [];
+        try {
+          const list = document.getElementById('list');
+          filtered = JSON.parse(list?.dataset.filtered || 'null') || allProperties;
+        } catch (e) {
+          filtered = allProperties;
+        }
+        
+        const next = filtered.slice(renderedCount, renderedCount + PAGE_SIZE);
+        renderList(next, false);
+        updateLoadMoreButton(filtered.length);
+      });
+    }
+  });
+
+})();
