@@ -4,12 +4,12 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <title>Propiedades en Arriendo | Altorra Inmobiliaria</title>
-<meta content="Arriendo de propiedades con Altorra: atención personalizada y asesoría jurídica." name="description"/>
+<meta content="Compra de propiedades con Altorra: atención personalizada y asesoría jurídica." name="description"/>
 <link href="manifest.json" rel="manifest"/>
 <meta content="#d4af37" name="theme-color"/>
-<meta content="Propiedades en arriendo | Altorra" property="og:title"/>
-<meta content="Encuentra apartamentos, casas y otros inmuebles en arriendo en Cartagena y otras ciudades. Filtra por ciudad, tipo y precio con Altorra." property="og:description"/>
-<meta content="/img/uploads/arrendar1.png" property="og:image"/>
+<meta content="Propiedades en venta | Altorra" property="og:title"/>
+<meta content="Descubre las mejores propiedades en venta en Cartagena y otras ciudades." property="og:description"/>
+<meta content="hero-about.webp" property="og:image"/>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700;800&amp;display=swap" rel="stylesheet"/>
 <link href="style.css" rel="stylesheet"/>
 <style>
@@ -106,9 +106,13 @@ if('serviceWorker' in navigator){
 </section>
 
 <section aria-label="Resultados">
-<div aria-live="polite" class="grid" id="list" role="list"></div>
+<div aria-live="polite" class="grid" id="list" role="list">
+  <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">
+    <p>Cargando propiedades...</p>
+  </div>
+</div>
 <div style="display:flex;justify-content:center;margin:22px">
-<button class="btn btn-ghost" id="btnLoadMore" style="padding:12px 20px">Cargar más</button>
+<button class="btn btn-ghost" id="btnLoadMore" style="padding:12px 20px;display:none">Cargar más</button>
 </div>
 </section>
 </main>
