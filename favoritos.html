@@ -221,22 +221,44 @@
   <div class="icon">♡</div>
   <h2>No tienes favoritos aún</h2>
   <p>Explora propiedades y agrega tus favoritos</p>
+
+  <!-- Agrupador para controlar el layout responsivo -->
   <div class="btn-group">
     <a href="propiedades-comprar.html" class="btn">Propiedades en Venta</a>
     <a href="propiedades-arrendar.html" class="btn">Propiedades en Arriendo</a>
-    <a href="propiedades-alojamientos.html" class="btn">Alojamientos por Días</a> 
-  </div>     
+    <a href="propiedades-alojamientos.html" class="btn">Alojamientos por Días</a>
+  </div>
 </div>
 
 <style>
-.empty-state .btn-group {
-  display: flex;
-  gap: 12px;               /* espacio entre los botones */
-  justify-content: center; /* centrados en el bloque */
-}
-.empty-state .btn {
-  display: inline-block;
-}
+  /* MOBILE-FIRST: en móvil se apilan (columna) y ocupan ancho completo del contenedor */
+  .empty-state .btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;              /* espacio entre botones */
+    align-items: stretch;   /* que cada botón ocupe el ancho disponible */
+  }
+  .empty-state .btn {
+    display: inline-flex;   /* respeta márgenes y centra contenido */
+    justify-content: center;
+    align-items: center;
+    width: 100%;            /* en móvil, botón a lo ancho */
+    text-align: center;
+  }
+
+  /* DESKTOP/TABLET: desde 768px, en fila con espacio y ancho mínimo */
+  @media (min-width: 768px) {
+    .empty-state .btn-group {
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;            /* espacio horizontal entre botones */
+    }
+    .empty-state .btn {
+      width: auto;          /* que ya no ocupen 100% */
+      min-width: 220px;     /* opcional: tamaño visual consistente */
+    }
+  }
 </style>
 
   </main>
@@ -389,5 +411,6 @@
 </body>
 
 </html>
+
 
 
