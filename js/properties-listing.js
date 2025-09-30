@@ -1,13 +1,10 @@
 /* Altorra - Lógica común para listados de propiedades (consolidado) */
-/* v2025-09-30 - Basado en tu código original, optimizado y unificado */
-/* Este archivo reemplaza el JS duplicado en las 3 páginas de propiedades */
+/* v2025-09-30 - Ajustado para corregir carga de propiedades */
 
 document.addEventListener('DOMContentLoaded', async function() {
-  // Detectar la operación basada en data-operation del body
-  const operation = document.body.dataset.operation; // 'comprar', 'arrendar' o 'dias'
+  const operation = document.body.dataset.operation;
   if (!operation) return console.error('Operation no definida en data-operation');
 
-  // Elementos del DOM (asumiendo IDs iguales en tus 3 páginas)
   const filterForm = document.getElementById('filter-form');
   const cityInput = document.getElementById('filter-city');
   const typeInput = document.getElementById('filter-type');
@@ -19,36 +16,43 @@ document.addEventListener('DOMContentLoaded', async function() {
   const listRoot = document.getElementById('property-list');
   const loadMoreBtn = document.getElementById('load-more');
 
-  // Config paginación
   let currentPage = 1;
   const perPage = 12;
   let filteredProperties = [];
 
-  // Cargar datos (usa getJSONCached de tu scripts.js)
-  const allProperties = await getJSONCached('properties/data.json', 6 * 60 * 60 * 1000);
-  if (!allProperties) {
-    listRoot.innerHTML = '<p>Error al cargar propiedades. Intenta recargar.</p>';
+  // Asegurarse de que getJSONCached y buildCard estén definidos (de scripts.js)
+  if (typeof getJSONCached !== 'function' || typeof buildCard !== 'function') {
+    console.error('Faltan funciones getJSONCached o buildCard. Verifica scripts.js');
+    listRoot.innerHTML = '<p>Error: funciones no disponibles. Recarga o contacta soporte.</p>';
     return;
   }
 
-  // Filtrar inicial por operación
+  const allProperties = await getJSONCached('properties/data.json', 6 * 60 * 60 * 1000);
+  if (!allProperties || !Array.isArray(allProperties)) {
+    listRoot.innerHTML = '<p>No se pudieron cargar las propiedades. Verifica el archivo data.json.</p>';
+    return;
+  }
+
   filteredProperties = allProperties.filter(p => p.operation === operation);
 
-  // Función para renderizar (usa buildCard de scripts.js)
   function renderProperties(props, page = 1) {
     const start = (page - 1) * perPage;
     const end = start + perPage;
     const slice = props.slice(start, end);
 
+    if (slice.length === 0 && page === 1) {
+      listRoot.innerHTML = '<p>No hay propiedades disponibles para esta operación.</p>';
+      return;
+    }
+
     slice.forEach(p => {
       const card = buildCard(p, 'list');
-      listRoot.appendChild(card);
+      if (card) listRoot.appendChild(card); // Solo si card es válido
     });
 
     loadMoreBtn.style.display = (end < props.length) ? 'block' : 'none';
   }
 
-  // Aplicar filtros
   function applyFilters() {
     let filtered = allProperties.filter(p => p.operation === operation);
 
@@ -57,7 +61,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (minPriceInput.value) filtered = filtered.filter(p => Number(p.price) >= Number(minPriceInput.value));
     if (maxPriceInput.value) filtered = filtered.filter(p => Number(p.price) <= Number(maxPriceInput.value));
 
-    // Ordenar (usa smartOrder de scripts.js)
     if (orderInput.value === 'Precio ↑') filtered.sort((a, b) => a.price - b.price);
     else if (orderInput.value === 'Precio ↓') filtered.sort((a, b) => b.price - a.price);
     else filtered = smartOrder(filtered);
@@ -68,11 +71,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     renderProperties(filteredProperties, currentPage);
   }
 
-  // Eventos
   if (applyBtn) applyBtn.addEventListener('click', applyFilters);
   if (clearBtn) clearBtn.addEventListener('click', () => { filterForm.reset(); applyFilters(); });
   if (loadMoreBtn) loadMoreBtn.addEventListener('click', () => { currentPage++; renderProperties(filteredProperties, currentPage); });
 
-  // Inicial
   applyFilters();
 });
