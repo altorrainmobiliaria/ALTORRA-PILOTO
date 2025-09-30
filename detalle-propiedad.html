@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="format-detection" content="telephone=no"/>
+<title>Detalle de propiedad | Altorra</title>
+<meta name="description" content="Detalles de propiedad de Altorra Inmobiliaria" />
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#d4af37" />
+<meta property="og:title" content="Detalles de propiedad | Altorra" />
+<meta property="og:description" content="Descubre los detalles de esta propiedad disponible para comprar, arrendar o rentar por días." />
+<meta property="og:image" content="/img/uploads/comprar1.png" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="style.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700;800&display=swap" rel="stylesheet"/>
+
+<style>
+:root{
+  --gold:#d4af37; --accent:#ffb400; --bg:#ffffff; --text:#111827; --muted:#6b7280;
+  --header-h:72px; --page-max:1200px; --overlay:rgba(0,0,0,0.30);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--text);font-family:"Poppins",system-ui,-apple-system,"Segoe UI",Roboto,Arial;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;overflow-x:hidden}
+a{text-decoration:none;color:inherit}
+a[href^="tel"],a[x-apple-data-detectors]{color:inherit!important;text-decoration:none!important;font-weight:inherit!important;border-bottom:0!important}
+
+/* ===== LAYOUT ===== */
+main.detail-container{
+  max-width:var(--page-max);
+  margin:calc(var(--header-h) + 20px) auto 40px;
+  padding:0 16px 40px;
+  display:flex; flex-wrap:wrap; gap:24px;
+}
+.gallery,.info,.form-block,.wa-row{min-width:0}
+.gallery{order:1; flex:1 1 520px; max-width:760px; margin-inline:auto}
+.form-block{order:2; flex:1 1 520px; max-width:760px; margin-inline:auto}
+.info{order:3; flex:1 1 520px}
+.wa-row{display:none} /* solo móvil */
+
+/* ===== GALLERY ===== */
+.gallery-inner{position:relative}
+.main-frame{
+  width:100%;
+  height:clamp(240px, 52vh, 520px);
+  background:#f5f5f7; border-radius:14px; overflow:hidden;
+  display:flex; align-items:center; justify-content:center;
+  margin-bottom:10px; box-shadow:0 10px 26px rgba(0,0,0,.06)
+}
+.main-frame img{
+  max-width:100%;
+  max-height:100%;
+  width:auto; height:auto;
+  object-fit:contain; object-position:center;
+  cursor:zoom-in; transition:transform .28s ease;
+}
+.main-frame img:hover{transform:scale(1.01)}
+.gallery .arrow{
+  position:absolute; top:50%; transform:translateY(-50%);
+  width:40px;height:40px;border-radius:999px;border:0;background:#fff;color:#111;cursor:pointer;z-index:3;
+  display:flex;align-items:center;justify-content:center; box-shadow:0 10px 26px rgba(0,0,0,.12);
+  transition:transform .15s ease, box-shadow .2s ease, opacity .2s ease
+}
+.gallery .arrow:hover{transform:translateY(-50%) scale(1.05); box-shadow:0 14px 30px rgba(0,0,0,.16)}
+.gallery .arrow.prev{left:10px} .gallery .arrow.next{right:10px}
+.thumbnails{display:flex; gap:10px; overflow-x:auto; padding-bottom:2px; scroll-snap-type:x proximity; max-width:100%}
+.thumbnails::-webkit-scrollbar{height:8px}
+.thumbnails::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12); border-radius:999px}
+.thumbnails img{
+  width:96px;height:70px;object-fit:cover;border-radius:10px;flex-shrink:0;cursor:pointer;opacity:.7;border:2px solid transparent;background:#f3f4f6;
+  scroll-snap-align:start;transition:opacity .15s ease,border-color .15s ease,transform .15s ease
+}
+.thumbnails img:hover{opacity:.95;transform:translateY(-1px)}
+.thumbnails img.active{opacity:1;border-color:var(--gold)}
+
+/* ===== BOTONES / FORM ===== */
+.actions{display:flex; gap:12px; flex-wrap:wrap}
+.btn{padding:10px 14px;border-radius:12px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;font-weight:700;border:0}
+.btn svg{width:18px;height:18px}
+.btn-primary{background:linear-gradient(90deg,var(--accent),#ffd95e); color:#000; box-shadow:0 10px 22px rgba(0,0,0,.10)}
+.btn-wa{background:#fff; color:#111; border:1px solid rgba(17,24,39,.14); box-shadow:0 4px 12px rgba(0,0,0,.04)}
+.btn-wa:hover{background:#f9fafb}
+
+.contact-form{display:grid;grid-template-columns:1fr;gap:12px;padding:16px;border:1px solid rgba(17,24,39,.08);border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.05);background:#fff}
+.contact-form h3{margin:0 0 4px;font-size:1.25rem;font-weight:800;color:var(--gold)}
+.contact-form .row-3{display:grid;grid-template-columns:1fr;gap:12px}
+.contact-form input,.contact-form textarea{width:100%;padding:12px 14px;border-radius:12px;border:1px solid rgba(17,24,39,.16);font-size:1rem;background:#fff;transition:border-color .15s ease, box-shadow .15s ease}
+.contact-form textarea{resize:vertical;min-height:110px}
+.contact-form input:focus-visible,.contact-form textarea:focus-visible{outline:3px solid rgba(212,175,55,0.22);border-color:var(--gold)}
+.form-actions{display:flex; gap:12px; flex-wrap:wrap; justify-content:flex-start}
+.wa-in-form{display:inline-flex}
+@media (max-width:860px){
+  .form-actions .btn{width:100%; justify-content:center}
+  .wa-in-form{display:none}
+  .form-actions .btn-share-desktop{display:none !important}
+}
+
+/* ===== INFO ===== */
+.info{display:flex; flex-direction:column; gap:12px}
+.info h1{font-weight:800; line-height:1.1; text-wrap:balance; font-size:clamp(1.4rem, 1.4rem + 1vw, 2rem)}
+.price{font-weight:800; font-size:clamp(1.2rem, 1.2rem + .6vw, 1.6rem); color:var(--gold)}
+.specs{color:var(--muted); font-size:.95rem}
+.status-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;font-weight:700;font-size:.85rem;background:#f7f7f8;border:1px solid rgba(17,24,39,.08);width:max-content}
+.status-dot{width:10px;height:10px;border-radius:999px;background:#16a34a}
+.status-pill.unavailable{background:#fcfcfc;opacity:.95}
+.status-pill.unavailable .status-dot{background:#dc2626}
+.spec-badges{display:flex; gap:8px; flex-wrap:wrap}
+.spec-badge{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:12px; background:#f7f7f8; border:1px solid rgba(17,24,39,.08); font-weight:700; font-size:.9rem}
+.desc{color:#1f2937; text-align:justify; line-height:1.75}
+.desc p + p{margin-top:10px}
+
+/* ===== HEADER / NAV ===== */
+header{position:fixed;top:0;left:0;right:0;height:var(--header-h);display:flex;align-items:center;background:var(--bg);z-index:140;border-bottom:1px solid rgba(0,0,0,0.06);box-shadow:0 8px 26px rgba(0,0,0,0.06)}
+.container{max-width:var(--page-max);margin:0 auto;width:100%;padding:0 16px;display:flex;align-items:center;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;margin-right:6px}
+.brand img{width:48px;height:48px;object-fit:contain}
+nav{margin-left:auto;display:flex;align-items:center;gap:8px}
+.nav-list{display:flex;gap:6px;align-items:center;margin-left:auto}
+.nav-item{position:relative}
+.nav-btn{background:transparent;border:0;padding:8px 12px;font-weight:700;cursor:pointer;border-radius:8px;color:var(--text);font-size:0.95rem}
+.nav-btn:focus{outline:3px solid rgba(212,175,55,0.18);outline-offset:3px}
+.nav-toggle{display:none;margin-left:auto;background:transparent;border:1px solid rgba(0,0,0,.1);border-radius:10px;padding:8px 12px;font-weight:800;color:var(--text);appearance:none;-webkit-appearance:none;-webkit-text-fill-color:var(--text);-webkit-tap-highlight-color:transparent}
+.nav-toggle:focus{outline:3px solid rgba(212,175,55,0.18);outline-offset:3px}
+header .nav-toggle{ color:var(--text) !important; }
+
+/* ===== MÓVIL ===== */
+@media (max-width:860px){
+  .nav-list{display:none}
+  .nav-toggle{display:inline-flex;align-items:center;gap:8px}
+  .gallery{order:1; max-width:100%}
+  .wa-row{order:2; display:block; max-width:100%}
+  .info{order:3}
+  .form-block{
+    order:4;
+    max-width:100% !important;
+    width:100% !important;         /* <= AJUSTE: ocupar todo el ancho en móvil */
+    margin-inline:0 !important;    /* <= AJUSTE: sin márgenes laterales centrados */
+  }
+  .btn{font-size:.95rem}
+  .actions .btn{width:100%; justify-content:center}
+  .contact-form .row-3{grid-template-columns:1fr}
+  .info h1{font-size:1.6rem}
+  .price{font-size:1.25rem}
+}
+
+/* ===== Footer ===== */
+footer{background:#0b0b0b;color:#fff;padding:36px 16px}
+.footer-grid{max-width:var(--page-max);margin:0 auto;width:100%;display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+@media (max-width:920px){.footer-grid{grid-template-columns:1fr}}
+
+/* ===== SECCIONES EXTRA (siempre al final, antes del footer) ===== */
+.extra-sections{
+  order:99; width:100%; flex:1 0 100%;
+  display:flex;flex-direction:column;gap:22px;margin-top:16px;
+}
+.card-lite{border:1px solid rgba(17,24,39,.08);border-radius:14px;padding:16px;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.04)}
+.card-lite h3{margin:0 0 14px 0;font-size:1.05rem;font-weight:800;letter-spacing:.2px;color:#0f172a}
+.card-lite h3::after{content:"";display:block;width:44px;height:3px;border-radius:3px;background:var(--gold);margin-top:8px}
+
+/* ===== FICHA TÉCNICA (nuevo look) ===== */
+.tech-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+@media(min-width:680px){.tech-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:1024px){.tech-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+.kv{
+  position:relative;
+  display:flex; flex-direction:column; gap:6px;
+  border:1px solid rgba(17,24,39,.08);
+  background:linear-gradient(180deg,#fff,#fbfbfc);
+  border-radius:12px; padding:12px 14px; min-height:64px;
+  box-shadow:0 1px 0 rgba(17,24,39,.03) inset;
+}
+.kv .k{
+  font-size:.82rem; letter-spacing:.2px;
+  color:var(--muted);
+}
+.kv .v{
+  font-weight:800; font-size:1.02rem; color:#0b1220;
+  word-break:break-word;
+}
+.kv.small .v{font-weight:700;font-size:.98rem}
+
+/* Chips de características */
+.features{display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(min-width:700px){.features{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:1024px){.features{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.feature{display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid rgba(17,24,39,.08);border-radius:999px;background:#fff;font-weight:700}
+.feature .ico{width:20px;height:20px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #10b981;color:#10b981}
+.feature.ok .ico{background:#10b98112}
+
+/* Mapa */
+.map-wrap{height:340px;border-radius:14px;overflow:hidden;border:1px solid rgba(17,24,39,.08)}
+.leaflet-container{font:inherit}
+</style>
+</head>
+<body>
+  <a href="#propertyDetail" class="skip-link">Saltar al contenido principal</a>
+  <div id="header-placeholder"></div>
+
+  <script>
+    if("serviceWorker" in navigator){
+      navigator.serviceWorker.register("./service-worker.js").catch(err=>console.warn("SW registration failed", err));
+    }
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", ()=> {
+      document.querySelectorAll("img").forEach(img => { if(!img.hasAttribute("loading")) img.setAttribute("loading","lazy"); });
+    });
+  </script>
+
+  <main id="propertyDetail" class="detail-container"></main>
+  <div id="footer-placeholder"></div>
+  <script src="header-footer.js" defer></script>
+
+  <script>
+const __ALT_NS='altorra:json:';const __ALT_VER='2025-09-07.1';
+function __jsonKey(u){return __ALT_NS+u+'::'+__ALT_VER}
+function __now(){return Date.now()}
+async function getJSONCached(u,{ttlMs=1000*60*60*6,revalidate=true}={}){
+  let c=null;try{const raw=localStorage.getItem(__jsonKey(u));if(raw){const o=JSON.parse(raw);if(o&&o.t&&(__now()-o.t)<ttlMs&&o.data)c=o.data;}}catch(_){}
+  if(c){ if(revalidate){ fetch(u,{cache:'no-store'}).then(r=>r.ok?r.json():Promise.reject(r.status)).then(d=>{try{localStorage.setItem(__jsonKey(u),JSON.stringify({t:__now(),data:d}))}catch(_){}}).catch(()=>{});} return c; }
+  const r=await fetch(u,{cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status); const d=await r.json(); try{localStorage.setItem(__jsonKey(u),JSON.stringify({t:__now(),data:d}))}catch(_){}
+  return d;
+}
+
+function getParam(name){const p=new URLSearchParams(window.location.search);return p.get(name)||'';}
+function formatCOP(n){if(!n&&n!==0)return'';return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.');}
+function escapeHtml(s){return String(s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
+function buildWhatsAppLink(p, opts={}){
+  const phone='573235016747', company='Altorra Inmobiliaria';
+  const price=p.price?('$'+formatCOP(p.price)+' COP'):''; let op='';
+  if(p.operation==='arrendar') op=' / mes'; else if(p.operation==='dias') op=' / noche';
+  const text=opts.customText ?? `Hola ${company}, me interesa la propiedad "${p.title}" (ID: ${p.id}) en ${p.city} ${price}${op}. ¿Podemos agendar una visita?`;
+  return 'https://wa.me/'+phone+'?text='+encodeURIComponent(text);
+}
+
+function splitIntoParagraphs(text){
+  if(!text) return [];
+  if(/\n{2,}/.test(text)) return text.split(/\n{2,}/).map(t=>t.trim()).filter(Boolean);
+  const sentences=text.trim().split(/(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÑ0-9])/);
+  const paras=[]; let bucket=[];
+  sentences.forEach(s=>{bucket.push(s);const tooLong=bucket.join(' ').length>320;if(bucket.length>=3||tooLong){paras.push(bucket.join(' '));bucket=[];}});
+  if(bucket.length) paras.push(bucket.join(' '));
+  return paras;
+}
+function buildDescription(el,text){ splitIntoParagraphs(text).forEach(t=>{const p=document.createElement('p'); p.textContent=t; el.appendChild(p);}); }
+
+async function init(){
+  const id=getParam('id'), container=document.getElementById('propertyDetail');
+  if(!id){container.innerHTML='<p>Propiedad no especificada.</p>';return;}
+  try{
+    const res=await fetch('properties/data.json',{cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data=await res.json();
+    const prop=data.find(it=>it.id===id);
+    window.__PROP_JSON__ = prop;
+    if(!prop){container.innerHTML='<p>Propiedad no encontrada.</p>';return;}
+
+    const isAvailable = Number(prop.available) === 1;
+
+    /* ===== Galería ===== */
+    const galleryDiv=document.createElement('div'); galleryDiv.className='gallery';
+    const G=document.createElement('div'); G.className='gallery-inner';
+
+    const imgsRaw=Array.isArray(prop.images)&&prop.images.length?prop.images:['https://i.postimg.cc/0yYb8Y6r/placeholder.png'];
+    const imgs=imgsRaw.map(src=> (src.startsWith('http')||src.startsWith('//'))?src:(src.startsWith('/')?src:'/'+src));
+
+    let currentIndex=0;
+    const frame=document.createElement('div'); frame.className='main-frame';
+    const mainImg=document.createElement('img');
+    mainImg.className='main-img'; mainImg.decoding='async'; mainImg.fetchPriority='high'; mainImg.loading='eager';
+    try{var l=document.createElement('link'); l.rel='preload'; l.as='image'; l.href=imgs[0]; document.head.appendChild(l);}catch(_){}
+    mainImg.src=imgs[0]; mainImg.alt=escapeHtml(prop.title||'Imagen de la propiedad');
+    mainImg.setAttribute('sizes','(max-width: 860px) 100vw, 760px');
+    frame.appendChild(mainImg); G.appendChild(frame);
+
+    const prevBtn=document.createElement('button'); prevBtn.className='arrow prev'; prevBtn.setAttribute('aria-label','Imagen anterior'); prevBtn.innerHTML='&#8249;';
+    const nextBtn=document.createElement('button'); nextBtn.className='arrow next'; nextBtn.setAttribute('aria-label','Imagen siguiente'); nextBtn.innerHTML='&#8250;';
+    const goPrev=()=>{if(!imgs.length)return; currentIndex=(currentIndex-1+imgs.length)%imgs.length; mainImg.src=imgs[currentIndex]; updateActiveThumb();};
+    const goNext=()=>{if(!imgs.length)return; currentIndex=(currentIndex+1)%imgs.length; mainImg.src=imgs[currentIndex]; updateActiveThumb();};
+    prevBtn.addEventListener('click',goPrev); nextBtn.addEventListener('click',goNext);
+    document.addEventListener('keydown',e=>{ if(e.key==='ArrowLeft') goPrev(); if(e.key==='ArrowRight') goNext(); });
+    G.appendChild(prevBtn); G.appendChild(nextBtn);
+
+    mainImg.addEventListener('click',()=>{
+      const overlay=document.createElement('div');
+      Object.assign(overlay.style,{position:'fixed',inset:'0',background:'rgba(0,0,0,0.86)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:'9999',cursor:'zoom-out'});
+      const zoomImg=document.createElement('img'); Object.assign(zoomImg.style,{maxWidth:'92%',maxHeight:'92%',objectFit:'contain'}); zoomImg.src=mainImg.src;
+      overlay.appendChild(zoomImg); overlay.addEventListener('click',()=>overlay.remove()); document.body.appendChild(overlay);
+    });
+
+    const thumbs=document.createElement('div'); thumbs.className='thumbnails'; const thumbEls=[];
+    imgs.forEach((src,idx)=>{const t=document.createElement('img'); t.decoding='async'; t.loading='lazy'; t.src=src; t.alt=escapeHtml(prop.title||'Miniatura');
+      if(idx===0) t.classList.add('active');
+      t.addEventListener('click',()=>{currentIndex=idx; mainImg.src=imgs[currentIndex]; updateActiveThumb();});
+      thumbEls.push(t); thumbs.appendChild(t);
+    });
+    function updateActiveThumb(){thumbEls.forEach((el,idx)=>el.classList.toggle('active', idx===currentIndex));}
+
+    let startX=null;
+    mainImg.addEventListener('touchstart',e=>{startX=e.touches[0].clientX;},{passive:true});
+    mainImg.addEventListener('touchend',e=>{if(startX===null)return; const dx=e.changedTouches[0].clientX-startX; if(Math.abs(dx)>40){dx<0?goNext():goPrev();} startX=null;},{passive:true});
+
+    (function autoplay(){
+      if(!imgs||imgs.length<2) return;
+      const AUTO_MS=3000; let timer=null;
+      const start=()=>{ if(!timer) timer=setInterval(goNext, AUTO_MS); };
+      const stop =()=>{ if(timer){clearInterval(timer); timer=null;} };
+      const restart=()=>{ stop(); start(); };
+      prevBtn.addEventListener('click',restart); nextBtn.addEventListener('click',restart); thumbEls.forEach(el=>el.addEventListener('click',restart));
+      [G, frame, thumbs].forEach(el=>{ el.addEventListener('mouseenter',stop); el.addEventListener('mouseleave',start); el.addEventListener('touchstart',stop,{passive:true}); el.addEventListener('touchend',()=>setTimeout(start,800),{passive:true}); });
+      document.addEventListener('visibilitychange',()=>{document.hidden?stop():start();});
+      setTimeout(start,100);
+    })();
+
+    /* ===== WhatsApp móvil (fila sola) ===== */
+    const waRow=document.createElement('div'); waRow.className='wa-row';
+    const actionsMobile=document.createElement('div'); actionsMobile.className='actions';
+    const waTextOverride = isAvailable ? null : `Hola, me interesa la propiedad "${prop.title}" (ID: ${prop.id}). ¿Podrían avisarme si vuelve a estar disponible?`;
+    const waMobile=document.createElement('a');
+    waMobile.className='btn btn-wa';
+    waMobile.href=buildWhatsAppLink(prop,{customText:waTextOverride});
+    waMobile.target='_blank'; waMobile.rel='noopener';
+    waMobile.innerHTML='<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.52 3.48A11.89 11.89 0 0 0 12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 5.98L0 24l6.21-1.62A11.96 11.96 0  0 0 12 24c6.63 0 12-5.37 12-12 0-3.19-1.24-6.19-3.48-8.52ZM12 22a9.93 9.93 0  0 1-5.06-1.4l-.36-.21-3.69 .96 .99-3.59-.23-.37A9.98 9.98 0  1 1 22 12c0 5.52-4.48 10-10 10Zm5.48-7.55c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67 .15-.2 .3-.77 .97-.94 1.17-.17 .2-.35 .22-.65 .07-.3-.15-1.27-.47-2.42-1.49-.89-.79-1.49-1.76-1.66-2.06-.17-.3-.02-.46 .13-.61 .13-.13 .3-.35 .46-.52 .15-.17 .2-.3 .3-.5 .1-.2 .05-.37 -.02-.52 -.07-.15 -.67-1.62 -.92-2.22 -.24-.58 -.49-.5 -.67-.5h-.57c-.2 0 -.52 .07 -.79 .37 -.27 .3 -1.04 1.02 -1.04 2.48s1.07 2.88 1.22 3.08c.15 .2 2.1 3.2 5.08 4.49 .71 .31 1.26 .49 1.7 .63 .71 .23 1.36 .2 1.87 .12 .57 -.08 1.76 -.72 2.01 -1.41 .25 -.69 .25 -1.28 .17 -1.41-.08 -.13 -.27 -.2 -.57 -.35Z" fill="currentColor"/></svg> WhatsApp';
+    actionsMobile.appendChild(waMobile); waRow.appendChild(actionsMobile);
+
+    (function(){ try{
+      const btnShareMobile = document.createElement('button');
+      btnShareMobile.type = 'button';
+      btnShareMobile.className = 'btn btn-ghost';
+      btnShareMobile.textContent = 'Compartir';
+      btnShareMobile.addEventListener('click', async ()=>{
+        const shareUrl = '/p/' + encodeURIComponent(prop.id) + '.html';
+        const shareText = prop.title ? ('Mira ' + prop.title + ' en Altorra') : 'Mira esta propiedad en Altorra';
+        try{
+          if(navigator.share){ await navigator.share({title: prop.title||'Propiedad', text: shareText, url: shareUrl}); }
+          else{ await navigator.clipboard.writeText(new URL(shareUrl, document.baseURI).href); alert('Enlace copiado'); }
+        }catch(e){ console.warn('Share mobile error', e); }
+      });
+      actionsMobile.appendChild(btnShareMobile);
+    }catch(_){}})();
+
+    /* ===== INFO (texto y precio) ===== */
+    const infoDiv=document.createElement('div'); infoDiv.className='info';
+    const h1=document.createElement('h1'); h1.textContent=prop.title||'Propiedad';
+
+    const status=document.createElement('div');
+    status.className='status-pill'+(isAvailable?'':' unavailable');
+    status.innerHTML=`<span class="status-dot"></span>${isAvailable?'Disponible':'No disponible'}`;
+
+    const badges=document.createElement('div'); badges.className='spec-badges';
+    const bed=(prop.beds||0), bath=(prop.baths||0), sqm=(prop.sqm||0);
+    const badge=(svg,label)=>`<span class="spec-badge">${svg}${label}</span>`;
+    const bedSvg='<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 11V7a2 2 0  0 1 2-2h6a4 4 0  0 1 4 4v2h4a2 2 0  0 1 2 2v5h-2v-2H5v2H3v-9h2zm2 4h14v-2a1 1 0  0 0-1-1h-5V9a2 2 0  0 0-2-2H5a1 1 0  0 0-1 1v7z"/></svg>';
+    const bathSvg='<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 3a3 3 0  0 1 3 3v5h8a1 1 0  1 1 0 2H5v2h14v2H5a3 3 0  0 1-3-3v-3h6V6a1 1 0  0 0-2 0v1H4V6a3 3 0  1 1 3-3z"/></svg>';
+    const areaSvg='<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4h16v16H4zM6 6v12h12V6z"/></svg>';
+    badges.innerHTML=(bed? badge(bedSvg, `${bed} ${bed===1?'habitación':'habitaciones'}`):'')+
+                     (bath? badge(bathSvg, `${bath} ${bath===1?'baño':'baños'}`):'')+
+                     (sqm? badge(areaSvg, `${sqm} m²`):'');
+
+    const specs=document.createElement('div'); specs.className='specs';
+    specs.textContent=[prop.city, prop.type?(prop.type.charAt(0).toUpperCase()+prop.type.slice(1)):''].filter(Boolean).join(' · ');
+
+    const priceRow=document.createElement('div'); priceRow.className='price';
+    if(prop.price){
+      if(prop.operation==='arrendar') priceRow.textContent='$'+formatCOP(prop.price)+' COP / mes';
+      else if(prop.operation==='dias') priceRow.textContent='$'+formatCOP(prop.price)+' COP / noche';
+      else priceRow.textContent='$'+formatCOP(prop.price)+' COP';
+    }
+
+    const desc=document.createElement('div'); desc.className='desc'; buildDescription(desc, prop.description||'');
+
+    infoDiv.appendChild(h1); infoDiv.appendChild(status); infoDiv.appendChild(badges);
+    if(specs.textContent) infoDiv.appendChild(specs);
+    if(priceRow.textContent) infoDiv.appendChild(priceRow);
+    if(desc.childNodes.length) infoDiv.appendChild(desc);
+
+    /* ===== Formulario ===== */
+    const formBlock=document.createElement('div'); formBlock.className='form-block';
+    const form=document.createElement('form');
+    form.className='contact-form'; form.action='https://formsubmit.co/altorrainmobiliaria@gmail.com'; form.method='POST';
+    const msgDefault=isAvailable
+      ? `Hola, estoy interesado(a) en la propiedad "${escapeHtml(prop.title)}". Por favor contácteme.`
+      : `Hola, me interesa la propiedad "${escapeHtml(prop.title)}". ¿Podrían avisarme si vuelve a estar disponible?`;
+    const waInFormHref=buildWhatsAppLink(prop,{customText:waTextOverride});
+    form.innerHTML=`
+      <h3>Solicitar información</h3>
+      <input type="hidden" name="_subject" value="Consulta propiedad ${prop.id} - ${escapeHtml(prop.title)}" />
+      <input type="hidden" name="property_id" value="${prop.id}" />
+      <input type="hidden" name="property_title" value="${escapeHtml(prop.title)}" />
+      <input type="hidden" name="_honey" value="" />
+      <input type="hidden" name="_captcha" value="false" />
+      <input type="hidden" name="_template" value="table" />
+      <input type="hidden" name="_next" value="https://altorrainmobiliaria.github.io/gracias.html" />
+      <div class="row-3">
+        <input type="text" name="name" placeholder="Nombre completo" required />
+        <input type="email" name="email" placeholder="Correo electrónico" required />
+        <input type="tel" name="phone" placeholder="Número de teléfono" required />
+      </div>
+      <textarea name="message" placeholder="Mensaje" rows="4" required>${msgDefault}</textarea>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">${isAvailable ? 'Enviar mensaje' : 'Avisarme'}</button>
+        <a class="btn btn-wa wa-in-form" href="${waInFormHref}" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.52 3.48A11.89 11.89 0 0 0 12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 5.98L0 24l6.21-1.62A11.96 11.96 0  0 0 12 24c6.63 0 12-5.37 12-12 0-3.19-1.24-6.19-3.48-8.52ZM12 22a9.93 9.93 0  0 1-5.06-1.4l-.36-.21-3.69 .96 .99-3.59-.23-.37A9.98 9.98 0  1 1 22 12c0 5.52-4.48 10-10 10Zm5.48-7.55c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67 .15-.2 .3-.77 .97-.94 1.17-.17 .2-.35 .22-.65 .07-.3-.15-1.27-.47-2.42-1.49-.89-.79-1.49-1.76-1.66-2.06-.17-.3-.02-.46 .13-.61 .13-.13 .3-.35 .46-.52 .15-.17 .2-.3 .3-.5 .1-.2 .05-.37 -.02-.52 -.07-.15 -.67-1.62 -.92-2.22 -.24-.58 -.49-.5 -.67-.5h-.57c-.2 0 -.52 .07 -.79 .37 -.27 .3 -1.04 1.02 -1.04 2.48s1.07 2.88 1.22 3.08c.15 .2 2.1 3.2 5.08 4.49 .71 .31 1.26 .49 1.7 .63 .71 .23 1.36 .2 1.87 .12 .57 -.08 1.76 -.72 2.01 -1.41 .25 -.69 .25 -1.28 .17 -1.41-.08 -.13 -.27 -.2 -.57 -.35Z" fill="currentColor"/></svg>
+          WhatsApp
+        </a>
+      </div>
+    `;
+    formBlock.appendChild(form);
+
+    /* ===== Montaje ===== */
+    container.innerHTML='';
+    galleryDiv.appendChild(G);
+    galleryDiv.appendChild(thumbs);
+    container.appendChild(galleryDiv);
+    container.appendChild(formBlock);
+    container.appendChild(infoDiv);
+    container.appendChild(waRow); /* visible solo en móvil */
+
+    /* ====== SECCIONES FINALES ====== */
+    (function(){
+      const root = document.createElement('div');
+      root.className = 'extra-sections';
+      root.id = 'extra-sections';
+      container.appendChild(root);
+
+      const fmtCOP = n => (n||n===0) ? ('$ ' + String(n).replace(/\B(?=(\d{3})+(?!\d))/g,'.')) : '';
+      const kv = (k,v,small=false)=> (v!=null && v!=='') ? `<div class="kv${small?' small':''}"><span class="k">${k}</span><span class="v">${v}</span></div>` : '';
+
+      /* 1) Ficha técnica (limpia) */
+      (function renderTech(){
+        const b = document.createElement('section'); b.className='card-lite';
+        let html = '<h3>Ficha técnica</h3><div class="tech-grid">';
+        html += kv('Operación', (prop.operation==='arrendar'?'Arriendo':(prop.operation==='dias'?'Por días':'Venta')));
+        html += kv('Ciudad', prop.city||'');
+
+        /* ====== NUEVO: BARRIO ====== */
+        html += kv('Barrio', (prop.neighborhood || prop.barrio) || '', true);
+
+        html += kv('Tipo', prop.type ? (prop.type.charAt(0).toUpperCase()+prop.type.slice(1)) : '');
+        html += kv('Área construida', prop.sqm ? (prop.sqm+' m²') : '');
+        html += kv('Área privada', prop.private_area ? (prop.private_area+' m²') : '', true);
+        html += kv('Área de lote', prop.lot_area ? (prop.lot_area+' m²') : '', true);
+        html += kv('Habitaciones', prop.beds!=null ? prop.beds : '');
+        html += kv('Baños', prop.baths!=null ? prop.baths : '');
+        html += kv('Parqueaderos', prop.garages!=null ? prop.garages : '', true);
+        html += kv('Estrato', prop.strata!=null ? prop.strata : '', true);
+        html += kv('Administración', prop.admin_fee!=null ? (fmtCOP(prop.admin_fee)+' COP') : '', true);
+        html += kv('Piso', prop.floor!=null ? prop.floor : '', true);
+        html += kv('Nivel', prop.level!=null ? prop.level : '', true);
+        html += kv('Año construcción', prop.year_built!=null ? prop.year_built : '', true);
+        html += '</div>';
+        b.innerHTML = html;
+        if (b.querySelector('.kv .v')) root.appendChild(b);
+      })();
+
+      /* 2) Características (chips) */
+      (function renderFeatures(){
+        const list = Array.isArray(prop.features) ? prop.features : [];
+        if(!list.length) return;
+        const ok = (txt)=>`<div class="feature ok"><span class="ico">✓</span><span>${txt}</span></div>`;
+        const box = document.createElement('section'); box.className='card-lite';
+        box.innerHTML = '<h3>Características</h3><div class="features">'+ list.map(ok).join('') +'</div>';
+        root.appendChild(box);
+      })();
+
+      /* 3) (Contacto del asesor) — ELIMINADO a solicitud */
+
+      /* 4) Mapa (Leaflet + OSM) */
+      (function renderMap(){
+        if(!prop.coords || prop.coords.lat==null || prop.coords.lng==null) return;
+        const sec = document.createElement('section'); sec.className='card-lite';
+        const mapBox = document.createElement('div'); mapBox.id='map'; mapBox.className='map-wrap';
+        const h3 = document.createElement('h3'); h3.textContent='Ubicación';
+        sec.appendChild(h3); sec.appendChild(mapBox);
+        root.appendChild(sec);
+
+        const css = document.createElement('link');
+        css.rel='stylesheet'; css.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        document.head.appendChild(css);
+        const js = document.createElement('script');
+        js.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'; js.defer=true;
+        js.onload = function(){
+          try{
+            const m = L.map('map',{scrollWheelZoom:false}).setView([prop.coords.lat, prop.coords.lng], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(m);
+            L.marker([prop.coords.lat, prop.coords.lng]).addTo(m).bindPopup(prop.title||'Propiedad').openPopup();
+          }catch(e){ console.warn('Leaflet init error', e); }
+        };
+        document.body.appendChild(js);
+      })();
+    })();
+
+    /* === Reordenar SOLO en móvil: formulario por encima del mapa === */
+    (function mobileReorderForm(){
+      const mq = window.matchMedia('(max-width: 860px)');
+      const formEl = formBlock;
+      const containerEl = container;
+
+      function placeForm(){
+        const mapSection = document.querySelector('#extra-sections .map-wrap')?.closest('section');
+        if (mq.matches && mapSection){
+          // Móvil: insertar el formulario justo antes del mapa
+          mapSection.parentNode.insertBefore(formEl, mapSection);
+        }else{
+          // Escritorio: restaurar el orden original (form antes de info)
+          containerEl.insertBefore(formEl, infoDiv);
+        }
+      }
+      placeForm();
+      (mq.addEventListener ? mq.addEventListener('change', placeForm) : mq.addListener(placeForm));
+      window.addEventListener('orientationchange', placeForm);
+      window.addEventListener('resize', placeForm);
+    })();
+
+    /* ===== SEO Schema ===== */
+    try{
+      const schema={"@context":"https://schema.org","@type":"Offer",
+        "itemOffered":{"@type":"Residence","name":prop.title,
+          "address":{"@type":"PostalAddress","addressLocality":prop.city,"addressRegion":"Bolívar","addressCountry":"CO"},
+          "numberOfRooms":prop.beds,"numberOfBathroomsTotal":prop.baths,
+          "floorSize":{"@type":"QuantitativeValue","value":prop.sqm,"unitCode":"MTR"}},
+        "price":prop.price,"priceCurrency":"COP",
+        "availability":isAvailable?"https://schema.org/InStock":"https://schema.org/OutOfStock"};
+      const ld=document.createElement('script'); ld.type='application/ld+json'; ld.textContent=JSON.stringify(schema); document.head.appendChild(ld);
+    }catch(e){console.warn('Schema injection error',e);}
+
+  }catch(err){ console.error(err); document.getElementById('propertyDetail').innerHTML='<p>Error al cargar la propiedad.</p>'; }
+}
+document.addEventListener('DOMContentLoaded', init);
+  </script>
+  <!-- SEO JSON-LD -->
+  <div style="display:none"><?php /* placeholder for GH Pages */ ?></div>
+  <!--#include file="snippets/inject-jsonld.html" -->
+</body>
+<script>
+/* Inject JSON-LD for SEO using loaded property 'prop' */
+(function(){
+  try{
+    if(!window.__PROP_JSON__) return;
+    const p = window.__PROP_JSON__;
+    const ld = {
+      "@context": "https://schema.org",
+      "@type": "RealEstateListing",
+      "name": p.title || "Propiedad en Cartagena",
+      "description": p.description || "",
+      "url": location.href,
+      "datePosted": new Date().toISOString(),
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": p.city || "Cartagena",
+        "addressCountry": "CO"
+      },
+      "offers": {
+        "@type": "Offer",
+        "priceCurrency": "COP",
+        "price": String(p.price || ""),
+        "availability": (Number(p.available)===1) ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+      },
+      "category": p.operation || "venta",
+      "numberOfRooms": p.beds || undefined,
+      "numberOfBathroomsTotal": p.baths || undefined,
+      "floorSize": p.sqm ? { "@type":"QuantitativeValue", "value": p.sqm, "unitCode": "MTK" } : undefined,
+      "image": Array.isArray(p.images) ? p.images.map(src => (src.startsWith('http')?src: (src.startsWith('/')?src:'/'+src))) : undefined
+    };
+    const el = document.createElement('script');
+    el.type = 'application/ld+json';
+    el.textContent = JSON.stringify(ld);
+    document.head.appendChild(el);
+  }catch(e){ console.warn('JSON-LD inject failed', e); }
+})();
+</script>
+
+</html>

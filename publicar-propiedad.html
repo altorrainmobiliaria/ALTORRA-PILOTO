@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Publica tu propiedad | Altorra</title>
+  <!-- Metadatos descriptivos y sociales -->
+  <meta name="description" content="Envía los datos de tu propiedad para que Altorra la publique en su portal." />
+  <meta name="theme-color" content="#d4af37" />
+  <meta property="og:title" content="Publica tu propiedad | Altorra" />
+  <meta property="og:description" content="Envíanos los datos de tu inmueble para que lo vendamos o lo arrendemos por ti." />
+  <meta property="og:image" content="/hero-family.png" />
+  <link rel="manifest" href="manifest.json" />
+  <!-- Tipografía y estilos globales -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <!-- Estilos específicos de publicación de propiedades -->
+  <style>
+    /* Hero de la página de publicación */
+    .hero-publish{
+      position:relative;
+      min-height:60vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding-top:calc(var(--header-h) + 40px);
+      color:#fff;
+      overflow:hidden;
+      margin-bottom:32px;
+    }
+    .hero-publish .bg{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      z-index:0;
+    }
+    .hero-publish .overlay{
+      position:absolute;
+      inset:0;
+      background:linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.45));
+      z-index:1;
+    }
+    .hero-publish .inner{
+      position:relative;
+      z-index:2;
+      padding:0 16px;
+      max-width:960px;
+    }
+    .hero-title{
+      color:#fff;
+      font-size:clamp(2.2rem,5vw,3rem);
+      font-weight:800;
+      line-height:1.05;
+      text-shadow:0 1px 0 rgba(0,0,0,.35), 0 2px 2px rgba(0,0,0,.35), 0 6px 12px rgba(0,0,0,.28), 0 14px 28px rgba(0,0,0,.22);
+      -webkit-text-stroke:.4px rgba(0,0,0,.15);
+    }
+    .hero-subtitle{
+      margin-top:12px;
+      color:#fff;
+      opacity:.98;
+      font-size:clamp(1rem,2.2vw,1.2rem);
+      font-weight:600;
+      letter-spacing:.2px;
+      line-height:1.35;
+      text-shadow:0 1px 0 rgba(0,0,0,.35), 0 2px 6px rgba(0,0,0,.28), 0 8px 18px rgba(0,0,0,.20);
+      -webkit-text-stroke:.3px rgba(0,0,0,.12);
+    }
+    /* Contenedor principal de la página */
+    main.publish-container{
+      max-width:var(--page-max);
+      margin:0 auto 60px;
+      padding:0 16px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:24px;
+    }
+    .publish-container p.lead{
+      color:var(--muted);
+      margin-bottom:24px;
+      max-width:640px;
+      text-align:center;
+    }
+    /* Tarjeta informativa */
+    .info-section{max-width:var(--page-max);margin:0 auto 40px;padding:0 16px;}
+    .info-card{
+      background:#ffffff;
+      border:1px solid rgba(17,24,39,0.08);
+      border-radius:18px;
+      padding:32px;
+      box-shadow:0 10px 26px rgba(17,24,39,0.06);
+      max-width:820px;
+      margin:0 auto;
+      text-align:center;
+    }
+    .info-card h2{
+      margin:0 0 12px;
+      font-size:1.6rem;
+      font-weight:800;
+      color:var(--gold);
+    }
+    .info-card ul{
+      list-style:none;
+      padding:0;
+      margin:0;
+      color:var(--muted);
+      font-size:1rem;
+    }
+    .info-card ul li{
+      margin:8px 0;
+    }
+    .info-card ul li::before{
+      content:'\2713';
+      color:var(--gold);
+      font-weight:800;
+      margin-right:6px;
+    }
+    /* Formulario de publicación */
+    .publish-form{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+      max-width:720px;
+      width:100%;
+      margin:0 auto;
+      padding:40px 32px;
+      background:#ffffff;
+      border-radius:18px;
+      border:1px solid rgba(17,24,39,0.08);
+      box-shadow:0 12px 32px rgba(17,24,39,0.06);
+    }
+    .publish-form label{
+      display:flex;
+      flex-direction:column;
+      font-weight:600;
+      gap:6px;
+    }
+    .publish-form input,
+    .publish-form select,
+    .publish-form textarea{
+      padding:12px 14px;
+      border-radius:12px;
+      border:1px solid rgba(17,24,39,0.16);
+      font-size:0.95rem;
+      font-family:inherit;
+      background:#fff;
+      transition:border-color .15s ease, box-shadow .15s ease;
+    }
+    .publish-form textarea{
+      resize:vertical;
+      min-height:140px;
+    }
+    .publish-form input:focus-visible,
+    .publish-form select:focus-visible,
+    .publish-form textarea:focus-visible{
+      outline:3px solid rgba(212,175,55,0.25);
+      border-color:var(--gold);
+    }
+
+    /* --------- Ajustes de estilo para selects ---------
+       Por defecto los menús desplegables muestran el texto en azul cuando
+       se selecciona una opción. Para mantener la coherencia visual con
+       el tema de la marca, se personalizan los colores de los select y
+       sus opciones. */
+    .publish-form select{
+      color:var(--text);
+      background-color:#fff;
+      border-color:rgba(17,24,39,0.16);
+      appearance:none;
+      /* Añadir una flecha personalizada usando degradado para remplazar la flecha azul */
+      background-image:linear-gradient(45deg, transparent 50%, var(--gold) 50%),
+                        linear-gradient(-45deg, transparent 50%, var(--gold) 50%);
+      background-position:calc(100% - 20px) calc(50% - 3px), calc(100% - 15px) calc(50% - 3px);
+      background-size:5px 5px;
+      background-repeat:no-repeat;
+      padding-right:32px;
+    }
+    .publish-form select option{
+      color:var(--text);
+      background-color:#fff;
+    }
+    .publish-form select option:checked{
+      background-color:rgba(212,175,55,0.15);
+      color:#111;
+    }
+    .grid{
+      display:grid;
+      gap:16px;
+    }
+    .grid.two{
+      grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+    @media (max-width:700px){
+      .grid.two{grid-template-columns:1fr;}
+    }
+    /* Botón de envío */
+    .publish-form button{
+      align-self:flex-start;
+      padding:14px 28px;
+      border-radius:14px;
+      font-weight:800;
+      background:linear-gradient(90deg,var(--accent),#ffd95e);
+      color:#111;
+      border:none;
+      cursor:pointer;
+      transition:transform .15s ease, box-shadow .2s ease, filter .15s ease;
+    }
+    .publish-form button:hover{
+      transform:translateY(-2px);
+      box-shadow:0 16px 36px rgba(17,24,39,0.12);
+      filter:saturate(1.05);
+    }
+  </style>
+</head>
+<body>
+  <!-- Enlace de salto para accesibilidad -->
+  <a class="skip-link" href="#mainContent">Saltar al contenido principal</a>
+  <!-- Inyección del encabezado -->
+  <div id="header-placeholder"></div>
+  <!-- Hero e información introductoria -->
+  <section class="hero-publish" aria-label="Publica tu propiedad con Altorra">
+    <img class="bg" src="/multimedia/hero-house.webp" alt="Casa moderna y elegante" />
+    <div class="overlay" aria-hidden="true"></div>
+    <div class="inner">
+      <h1 class="hero-title">Publica tu propiedad</h1>
+      <p class="hero-subtitle">Vende, arrienda o renta tu inmueble con el respaldo de Altorra Inmobiliaria.</p>
+    </div>
+  </section>
+  <section class="info-section">
+    <div class="info-card">
+      <h2>¿Por qué publicar con Altorra?</h2>
+      <ul>
+        <li>Difusión en múltiples canales de venta y arriendo.</li>
+        <li>Asesoría jurídica y acompañamiento integral.</li>
+        <li>Amplia red de clientes potenciales.</li>
+        <li>Nos encargamos de todo el proceso por ti.</li>
+      </ul>
+    </div>
+  </section>
+  <!-- Contenido principal con el formulario -->
+  <main class="publish-container" id="mainContent">
+    <p class="lead">Completa el siguiente formulario y un asesor de Altorra se pondrá en contacto contigo para ayudarte a publicar tu inmueble.</p>
+    <form class="publish-form" id="publishForm" action="https://formsubmit.co/altorrainmobiliaria@gmail.com" method="POST" accept-charset="UTF-8">
+      <!-- Configuración para FormSubmit -->
+      <input type="hidden" name="_subject" value="Solicitud para publicar propiedad"/>
+      <input type="hidden" name="_next" value="https://altorrainmobiliaria.github.io/gracias.html"/>
+      <input type="hidden" name="_captcha" value="false"/>
+      <input type="hidden" name="_template" value="table"/>
+      <input type="text" name="_honey" style="display:none"/>
+      <div class="grid two">
+        <label>Nombre completo
+          <input type="text" name="Nombre" autocomplete="name" required />
+        </label>
+        <label>Correo electrónico
+          <input type="email" name="Email" autocomplete="email" required />
+        </label>
+      </div>
+      <div class="grid two">
+        <label>Teléfono de contacto
+          <input type="tel" name="Teléfono" autocomplete="tel" required />
+        </label>
+        <label>Ciudad
+          <input type="text" name="Ciudad" required />
+        </label>
+      </div>
+      <div class="grid two">
+        <label>Operación
+          <select name="Operación" required>
+            <option value="Venta">Venta</option>
+            <option value="Arriendo">Arriendo</option>
+            <option value="Por días">Por días</option>
+          </select>
+        </label>
+        <label>Tipo de propiedad
+          <select name="Tipo" required>
+            <option value="Apartamento">Apartamento</option>
+            <option value="Casa">Casa</option>
+            <option value="Oficina">Oficina</option>
+            <option value="Lote">Lote</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </label>
+      </div>
+      <label>Precio estimado (COP)
+        <input type="number" name="Precio" min="0" inputmode="numeric" />
+      </label>
+      <label>Descripción de la propiedad
+        <textarea name="Descripción" placeholder="Cuéntanos: habitaciones, baños, m², parqueadero, amenidades, cercanías..." required></textarea>
+      </label>
+      <button type="submit">Enviar solicitud</button>
+    </form>
+  </main>
+  <!-- Contenedor para el pie de página -->
+  <div id="footer-placeholder"></div>
+  <!-- Registro del service worker -->
+  <script>
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.register('/service-worker.js').catch(function(err){ console.warn('SW registration failed', err); });
+    }
+  </script>
+  <!-- Inyección del header y footer -->
+  <script src="header-footer.js" defer></script>
+</body>
+</html>
