@@ -94,7 +94,45 @@
       </div>
     `;
 
-    // Click en tarjeta (excepto CTAs y favoritos)
+    // Botón limpiar filtros
+    const btnClear = document.getElementById('btnClear');
+    if (btnClear) {
+      btnClear.addEventListener('click', () => {
+        if (document.getElementById('f-city')) document.getElementById('f-city').value = '';
+        if (document.getElementById('f-type')) document.getElementById('f-type').value = '';
+        if (document.getElementById('f-min')) document.getElementById('f-min').value = '';
+        if (document.getElementById('f-max')) document.getElementById('f-max').value = '';
+        if (document.getElementById('f-sort')) document.getElementById('f-sort').value = 'relevance';
+        if (document.getElementById('f-search')) document.getElementById('f-search').value = '';
+        
+        const list = document.getElementById('list');
+        if (list) list.dataset.filtered = JSON.stringify(allProperties);
+        
+        renderList(allProperties.slice(0, PAGE_SIZE), true);
+        updateLoadMoreButton(allProperties.length);
+      });
+    }
+
+    // Botón cargar más
+    const btnLoadMore = document.getElementById('btnLoadMore');
+    if (btnLoadMore) {
+      btnLoadMore.addEventListener('click', () => {
+        let filtered = [];
+        try {
+          const list = document.getElementById('list');
+          filtered = JSON.parse(list?.dataset.filtered || 'null') || allProperties;
+        } catch (e) {
+          filtered = allProperties;
+        }
+        
+        const next = filtered.slice(renderedCount, renderedCount + PAGE_SIZE);
+        renderList(next, false);
+        updateLoadMoreButton(filtered.length);
+      });
+    }
+  });
+
+})(); Click en tarjeta (excepto CTAs y favoritos)
     card.addEventListener('click', (e) => {
       if (e.target.closest('.cta') || e.target.closest('.fav-btn')) return;
       window.location.href = 'detalle-propiedad.html?id=' + encodeURIComponent(p.id);
