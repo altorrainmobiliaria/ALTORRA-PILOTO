@@ -10,13 +10,14 @@
   <script src="js/favorites.js" defer></script>
 </head>
 <body>
-
   <header id="header-placeholder"></header>
 
   <main>
-    <h2>Tus Favoritos</h2>
-    <section id="fav-list" class="property-grid">
-      <!-- Cards -->
+    <section class="section">
+      <h2>Tus Favoritos</h2>
+      <div id="fav-list" class="row">
+        <p id="no-favs" style="display: none;">No tienes favoritos. ¡Explora propiedades!</p>
+      </div>
     </section>
   </main>
 
@@ -25,14 +26,15 @@
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       const favs = getFavorites();
+      const list = document.getElementById('fav-list');
+      const noFavs = document.getElementById('no-favs');
       if (favs.length === 0) {
-        document.getElementById('fav-list').innerHTML = '<p>No tienes favoritos.</p>';
+        noFavs.style.display = 'block';
         return;
       }
       const allProps = await getJSONCached('properties/data.json');
       const favProps = allProps.filter(p => favs.includes(p.id));
-      const root = document.getElementById('fav-list');
-      favProps.forEach(p => root.appendChild(buildCard(p, 'list')));
+      favProps.forEach(p => list.appendChild(buildCard(p, 'list')));
     });
   </script>
 </body>
