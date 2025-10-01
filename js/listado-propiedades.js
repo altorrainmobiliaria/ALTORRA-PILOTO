@@ -1,33 +1,27 @@
 /* ========================================
-   ALTORRA - LISTADO DE PROPIEDADES (UNIFICADO)
-   Archivo: js/listado-propiedades.js
-   Versión: 2.1 - CORREGIDO
+   ALTORRA - LISTADO DE PROPIEDADES
+   Versión: 3.0 - Filtros Avanzados
    ======================================== */
 
 (function() {
   'use strict';
 
-  // ===== CONFIGURACIÓN =====
   const PAGE_SIZE = 9;
   const WHATSAPP = { phone: '573235016747', company: 'Altorra Inmobiliaria' };
   
-  // Determinar modo de página por URL
   const path = window.location.pathname.toLowerCase();
   const PAGE_MODE = path.includes('arrendar') ? 'arrendar' :
                     path.includes('alojamientos') ? 'alojamientos' : 'comprar';
 
-  // ===== MAPEO DE OPERACIONES =====
   const OPERATION_MAP = {
     'comprar': ['comprar', 'venta', 'ventas', 'sell', 'sale'],
     'arrendar': ['arrendar', 'arriendo', 'alquiler', 'alquilar', 'renta', 'rent'],
     'alojamientos': ['dias', 'por_dias', 'alojar', 'alojamientos', 'por día', 'por_dias', 'temporada', 'vacacional', 'noche']
   };
 
-  // ===== ESTADO =====
   let allProperties = [];
   let renderedCount = 0;
 
-  // ===== UTILIDADES =====
   function formatCOP(n) {
     if (!n && n !== 0) return '';
     return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
@@ -59,7 +53,6 @@
     return `https://wa.me/${WHATSAPP.phone}?text=${encodeURIComponent(text)}`;
   }
 
-  // ===== CREAR TARJETA =====
   function createCard(p) {
     const card = document.createElement('article');
     card.className = 'card';
@@ -95,7 +88,6 @@
       </div>
     `;
 
-    // Click en tarjeta (excepto CTAs y favoritos)
     card.addEventListener('click', (e) => {
       if (e.target.closest('.cta') || e.target.closest('.fav-btn')) return;
       window.location.href = 'detalle-propiedad.html?id=' + encodeURIComponent(p.id);
@@ -104,7 +96,6 @@
     return card;
   }
 
-  // ===== RENDERIZAR LISTA =====
   function renderList(items, replace) {
     const root = document.getElementById('list');
     if (!root) return;
@@ -120,17 +111,15 @@
     
     renderedCount += items.length;
 
-    // Disparar evento para que favoritos.js inicialice botones
     setTimeout(() => {
       document.dispatchEvent(new CustomEvent('altorra:properties-loaded'));
     }, 100);
   }
 
-  // ===== FILTROS =====
-  function applyFilters({ city, type, min, max, sort, search }) {
+  // ===== FILTROS AVANZADOS =====
+  function applyFilters({ city, type, min, max, sort, search, bedsMin, bathsMin, sqmMin, sqmMax }) {
     let arr = allProperties.slice();
 
-    // Búsqueda por texto
     if (search) {
       const terms = search.toLowerCase().trim().split(/\s+/);
       arr = arr.filter(p => {
@@ -144,6 +133,13 @@
 
     if (city) arr = arr.filter(p => p.city.toLowerCase().includes(city.toLowerCase()));
     if (type) arr = arr.filter(p => p.type === type);
+    
+    // Filtros avanzados
+    if (bedsMin) arr = arr.filter(p => (p.beds || 0) >= Number(bedsMin));
+    if (bathsMin) arr = arr.filter(p => (p.baths || 0) >= Number(bathsMin));
+    if (sqmMin) arr = arr.filter(p => (p.sqm || 0) >= Number(sqmMin));
+    if (sqmMax) arr = arr.filter(p => (p.sqm || 0) <= Number(sqmMax));
+    
     if (min) {
       const v = Number(min);
       arr = arr.filter(p => p.price >= (isNaN(v) ? 0 : v));
@@ -157,8 +153,8 @@
     if (sort === 'price-asc') arr.sort((a, b) => a.price - b.price);
     else if (sort === 'price-desc') arr.sort((a, b) => b.price - a.price);
     else if (sort === 'newest') arr.sort((a, b) => new Date(b.added || '2000-01-01') - new Date(a.added || '2000-01-01'));
+    else if (sort === 'sqm-desc') arr.sort((a, b) => (b.sqm || 0) - (a.sqm || 0));
     else {
-      // Por defecto: featured primero, luego highlightScore
       arr.sort((a, b) => {
         const featDiff = (b.featured || 0) - (a.featured || 0);
         if (featDiff !== 0) return featDiff;
@@ -169,7 +165,18 @@
     return arr;
   }
 
-  // ===== ACTUALIZAR BOTÓN "CARGAR MÁS" =====
+  // ===== ACTUALIZAR CONTADOR =====
+  function updateResultsCount(total, filtered) {
+    const el = document.getElementById('resultsCount');
+    if (!el) return;
+    
+    if (filtered === total) {
+      el.innerHTML = `Mostrando <strong>${total}</strong> ${total === 1 ? 'propiedad' : 'propiedades'}`;
+    } else {
+      el.innerHTML = `<strong>${filtered}</strong> de <strong>${total}</strong> propiedades encontradas`;
+    }
+  }
+
   function updateLoadMoreButton(filteredCount) {
     const btn = document.getElementById('btnLoadMore');
     if (!btn) return;
@@ -182,10 +189,9 @@
     }
   }
 
-  // ===== CACHÉ JSON =====
   async function getJSONCached(url) {
     const __ALT_NS = 'altorra:json:';
-    const __ALT_VER = '2025-09-30.1';
+    const __ALT_VER = '2025-09-30.2';
     const jsonKey = __ALT_NS + url + '::' + __ALT_VER;
     
     let cached = null;
@@ -200,7 +206,6 @@
     } catch (_) {}
 
     if (cached) {
-      // Revalidar en background
       fetch(url, { cache: 'no-store' })
         .then(r => r.ok ? r.json() : Promise.reject())
         .then(fresh => {
@@ -221,16 +226,13 @@
     return data;
   }
 
-  // ===== INICIALIZACIÓN =====
   async function init() {
-    console.log('[Altorra] Inicializando listado de propiedades. Modo:', PAGE_MODE);
+    console.log('[Altorra] Inicializando listado. Modo:', PAGE_MODE);
     
     try {
-      // Cargar propiedades
       const data = await getJSONCached('properties/data.json');
       console.log('[Altorra] Propiedades cargadas:', data ? data.length : 0);
 
-      // Filtrar por operación
       const validOperations = OPERATION_MAP[PAGE_MODE] || [];
       allProperties = Array.isArray(data) ? 
         data.filter(p => {
@@ -239,9 +241,8 @@
         }) : 
         [];
 
-      console.log('[Altorra] Propiedades filtradas por operación:', allProperties.length);
+      console.log('[Altorra] Propiedades filtradas:', allProperties.length);
 
-      // Leer parámetros de URL
       const qs = new URLSearchParams(location.search);
       const filters = {
         city: qs.get('city') || '',
@@ -249,26 +250,33 @@
         min: qs.get('min') || '',
         max: qs.get('max') || '',
         sort: qs.get('sort') || 'relevance',
-        search: qs.get('search') || ''
+        search: qs.get('search') || '',
+        bedsMin: qs.get('beds') || '',
+        bathsMin: qs.get('baths') || '',
+        sqmMin: qs.get('sqm_min') || '',
+        sqmMax: qs.get('sqm_max') || ''
       };
 
-      // Pre-llenar filtros en el DOM
+      // Pre-llenar
       if (document.getElementById('f-city')) document.getElementById('f-city').value = filters.city;
       if (document.getElementById('f-type') && filters.type) document.getElementById('f-type').value = filters.type;
       if (document.getElementById('f-min') && filters.min) document.getElementById('f-min').value = filters.min;
       if (document.getElementById('f-max') && filters.max) document.getElementById('f-max').value = filters.max;
       if (document.getElementById('f-sort') && filters.sort) document.getElementById('f-sort').value = filters.sort;
       if (document.getElementById('f-search')) document.getElementById('f-search').value = filters.search;
+      if (document.getElementById('f-beds-min') && filters.bedsMin) document.getElementById('f-beds-min').value = filters.bedsMin;
+      if (document.getElementById('f-baths-min') && filters.bathsMin) document.getElementById('f-baths-min').value = filters.bathsMin;
+      if (document.getElementById('f-sqm-min') && filters.sqmMin) document.getElementById('f-sqm-min').value = filters.sqmMin;
+      if (document.getElementById('f-sqm-max') && filters.sqmMax) document.getElementById('f-sqm-max').value = filters.sqmMax;
 
-      // Aplicar filtros y renderizar
       const filtered = applyFilters(filters);
       const list = document.getElementById('list');
       if (list) list.dataset.filtered = JSON.stringify(filtered);
       
       renderList(filtered.slice(0, PAGE_SIZE), true);
       updateLoadMoreButton(filtered.length);
+      updateResultsCount(allProperties.length, filtered.length);
 
-      // Mensaje si no hay resultados
       if (filtered.length === 0) {
         const list = document.getElementById('list');
         if (list) {
@@ -277,7 +285,7 @@
       }
 
     } catch (err) {
-      console.error('[Altorra] Error al cargar propiedades:', err);
+      console.error('[Altorra] Error:', err);
       const list = document.getElementById('list');
       if (list) {
         list.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)"><p>Error al cargar propiedades. Por favor, recarga la página.</p></div>';
@@ -285,12 +293,9 @@
     }
   }
 
-  // ===== EVENTOS =====
   document.addEventListener('DOMContentLoaded', () => {
-    console.log('[Altorra] DOM listo, iniciando...');
     init();
 
-    // Botón aplicar filtros
     const btnApply = document.getElementById('btnApply');
     if (btnApply) {
       btnApply.addEventListener('click', () => {
@@ -300,7 +305,11 @@
           min: document.getElementById('f-min')?.value || '',
           max: document.getElementById('f-max')?.value || '',
           sort: document.getElementById('f-sort')?.value || 'relevance',
-          search: document.getElementById('f-search')?.value.trim() || ''
+          search: document.getElementById('f-search')?.value.trim() || '',
+          bedsMin: document.getElementById('f-beds-min')?.value || '',
+          bathsMin: document.getElementById('f-baths-min')?.value || '',
+          sqmMin: document.getElementById('f-sqm-min')?.value || '',
+          sqmMax: document.getElementById('f-sqm-max')?.value || ''
         };
         
         const filtered = applyFilters(filters);
@@ -309,6 +318,7 @@
         
         renderList(filtered.slice(0, PAGE_SIZE), true);
         updateLoadMoreButton(filtered.length);
+        updateResultsCount(allProperties.length, filtered.length);
 
         if (filtered.length === 0) {
           const list = document.getElementById('list');
@@ -319,7 +329,6 @@
       });
     }
 
-    // Botón limpiar filtros
     const btnClear = document.getElementById('btnClear');
     if (btnClear) {
       btnClear.addEventListener('click', () => {
@@ -329,16 +338,20 @@
         if (document.getElementById('f-max')) document.getElementById('f-max').value = '';
         if (document.getElementById('f-sort')) document.getElementById('f-sort').value = 'relevance';
         if (document.getElementById('f-search')) document.getElementById('f-search').value = '';
+        if (document.getElementById('f-beds-min')) document.getElementById('f-beds-min').value = '';
+        if (document.getElementById('f-baths-min')) document.getElementById('f-baths-min').value = '';
+        if (document.getElementById('f-sqm-min')) document.getElementById('f-sqm-min').value = '';
+        if (document.getElementById('f-sqm-max')) document.getElementById('f-sqm-max').value = '';
         
         const list = document.getElementById('list');
         if (list) list.dataset.filtered = JSON.stringify(allProperties);
         
         renderList(allProperties.slice(0, PAGE_SIZE), true);
         updateLoadMoreButton(allProperties.length);
+        updateResultsCount(allProperties.length, allProperties.length);
       });
     }
 
-    // Botón cargar más
     const btnLoadMore = document.getElementById('btnLoadMore');
     if (btnLoadMore) {
       btnLoadMore.addEventListener('click', () => {
