@@ -1,6 +1,6 @@
 /* ========================================
    ALTORRA - LISTADO DE PROPIEDADES
-   Versión: 3.1 - FILTROS AVANZADOS CORREGIDOS
+   Versión: 3.2 - TODOS LOS ERRORES CORREGIDOS
    Fecha: 01-Oct-2025
    ======================================== */
 
@@ -137,25 +137,33 @@
     if (city) arr = arr.filter(p => p.city.toLowerCase().includes(city.toLowerCase()));
     if (type) arr = arr.filter(p => p.type === type);
     
-    // ✅ FILTROS AVANZADOS (CORREGIDOS)
-    if (bedsMin) {
-      const minBeds = Number(bedsMin);
-      arr = arr.filter(p => (p.beds || 0) >= minBeds);
+    // ✅ FILTROS AVANZADOS (CORREGIDOS - validación robusta)
+    if (bedsMin && bedsMin !== '') {
+      const minBeds = parseInt(bedsMin, 10);
+      if (!isNaN(minBeds)) {
+        arr = arr.filter(p => (p.beds || 0) >= minBeds);
+      }
     }
     
-    if (bathsMin) {
-      const minBaths = Number(bathsMin);
-      arr = arr.filter(p => (p.baths || 0) >= minBaths);
+    if (bathsMin && bathsMin !== '') {
+      const minBaths = parseInt(bathsMin, 10);
+      if (!isNaN(minBaths)) {
+        arr = arr.filter(p => (p.baths || 0) >= minBaths);
+      }
     }
     
-    if (sqmMin) {
-      const minSqm = Number(sqmMin);
-      arr = arr.filter(p => (p.sqm || 0) >= minSqm);
+    if (sqmMin && sqmMin !== '') {
+      const minSqm = parseFloat(sqmMin);
+      if (!isNaN(minSqm)) {
+        arr = arr.filter(p => (p.sqm || 0) >= minSqm);
+      }
     }
     
-    if (sqmMax) {
-      const maxSqm = Number(sqmMax);
-      arr = arr.filter(p => (p.sqm || 0) <= maxSqm);
+    if (sqmMax && sqmMax !== '') {
+      const maxSqm = parseFloat(sqmMax);
+      if (!isNaN(maxSqm)) {
+        arr = arr.filter(p => (p.sqm || 0) <= maxSqm);
+      }
     }
     
     // Filtros de precio
@@ -189,7 +197,7 @@
     return arr;
   }
 
-  // ===== ✅ ACTUALIZAR CONTADOR (CORREGIDO) =====
+  // ===== ✅ ACTUALIZAR CONTADOR =====
   function updateResultsCount(total, filtered) {
     const el = document.getElementById('resultsCount');
     if (!el) return;
@@ -215,7 +223,7 @@
 
   async function getJSONCached(url) {
     const __ALT_NS = 'altorra:json:';
-    const __ALT_VER = '2025-10-01.1'; // ✅ Nueva versión
+    const __ALT_VER = '2025-10-01.2'; // ✅ Nueva versión
     const jsonKey = __ALT_NS + url + '::' + __ALT_VER;
     
     let cached = null;
@@ -252,6 +260,10 @@
 
   async function init() {
     console.log('[Altorra] Inicializando listado. Modo:', PAGE_MODE);
+    
+    // ✅ MOSTRAR MENSAJE DE CARGA INMEDIATAMENTE
+    const counter = document.getElementById('resultsCount');
+    if (counter) counter.innerHTML = 'Cargando propiedades...';
     
     try {
       const data = await getJSONCached('properties/data.json');
@@ -298,11 +310,11 @@
       const list = document.getElementById('list');
       if (list) list.dataset.filtered = JSON.stringify(filtered);
       
+      // ✅ ACTUALIZAR CONTADOR INMEDIATAMENTE (antes del render)
+      updateResultsCount(allProperties.length, filtered.length);
+      
       renderList(filtered.slice(0, PAGE_SIZE), true);
       updateLoadMoreButton(filtered.length);
-      
-      // ✅ ACTUALIZAR CONTADOR (esto faltaba)
-      updateResultsCount(allProperties.length, filtered.length);
 
       if (filtered.length === 0) {
         const list = document.getElementById('list');
@@ -348,9 +360,9 @@
         const list = document.getElementById('list');
         if (list) list.dataset.filtered = JSON.stringify(filtered);
         
+        updateResultsCount(allProperties.length, filtered.length);
         renderList(filtered.slice(0, PAGE_SIZE), true);
         updateLoadMoreButton(filtered.length);
-        updateResultsCount(allProperties.length, filtered.length);
 
         if (filtered.length === 0) {
           const list = document.getElementById('list');
@@ -379,9 +391,9 @@
         const list = document.getElementById('list');
         if (list) list.dataset.filtered = JSON.stringify(allProperties);
         
+        updateResultsCount(allProperties.length, allProperties.length);
         renderList(allProperties.slice(0, PAGE_SIZE), true);
         updateLoadMoreButton(allProperties.length);
-        updateResultsCount(allProperties.length, allProperties.length);
       });
     }
 
