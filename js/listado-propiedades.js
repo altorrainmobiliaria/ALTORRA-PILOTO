@@ -1,6 +1,7 @@
 /* ========================================
    ALTORRA - LISTADO DE PROPIEDADES
-   Versión: 3.0 - Filtros Avanzados
+   Versión: 3.1 - FILTROS AVANZADOS CORREGIDOS
+   Fecha: 01-Oct-2025
    ======================================== */
 
 (function() {
@@ -116,10 +117,11 @@
     }, 100);
   }
 
-  // ===== FILTROS AVANZADOS =====
+  // ===== 🔧 FILTROS AVANZADOS CORREGIDOS =====
   function applyFilters({ city, type, min, max, sort, search, bedsMin, bathsMin, sqmMin, sqmMax }) {
     let arr = allProperties.slice();
 
+    // Búsqueda por palabras clave
     if (search) {
       const terms = search.toLowerCase().trim().split(/\s+/);
       arr = arr.filter(p => {
@@ -131,15 +133,32 @@
       });
     }
 
+    // Filtros básicos
     if (city) arr = arr.filter(p => p.city.toLowerCase().includes(city.toLowerCase()));
     if (type) arr = arr.filter(p => p.type === type);
     
-    // Filtros avanzados
-    if (bedsMin) arr = arr.filter(p => (p.beds || 0) >= Number(bedsMin));
-    if (bathsMin) arr = arr.filter(p => (p.baths || 0) >= Number(bathsMin));
-    if (sqmMin) arr = arr.filter(p => (p.sqm || 0) >= Number(sqmMin));
-    if (sqmMax) arr = arr.filter(p => (p.sqm || 0) <= Number(sqmMax));
+    // ✅ FILTROS AVANZADOS (CORREGIDOS)
+    if (bedsMin) {
+      const minBeds = Number(bedsMin);
+      arr = arr.filter(p => (p.beds || 0) >= minBeds);
+    }
     
+    if (bathsMin) {
+      const minBaths = Number(bathsMin);
+      arr = arr.filter(p => (p.baths || 0) >= minBaths);
+    }
+    
+    if (sqmMin) {
+      const minSqm = Number(sqmMin);
+      arr = arr.filter(p => (p.sqm || 0) >= minSqm);
+    }
+    
+    if (sqmMax) {
+      const maxSqm = Number(sqmMax);
+      arr = arr.filter(p => (p.sqm || 0) <= maxSqm);
+    }
+    
+    // Filtros de precio
     if (min) {
       const v = Number(min);
       arr = arr.filter(p => p.price >= (isNaN(v) ? 0 : v));
@@ -149,12 +168,17 @@
       arr = arr.filter(p => p.price <= (isNaN(v) ? Infinity : v));
     }
 
-    // Ordenamiento
-    if (sort === 'price-asc') arr.sort((a, b) => a.price - b.price);
-    else if (sort === 'price-desc') arr.sort((a, b) => b.price - a.price);
-    else if (sort === 'newest') arr.sort((a, b) => new Date(b.added || '2000-01-01') - new Date(a.added || '2000-01-01'));
-    else if (sort === 'sqm-desc') arr.sort((a, b) => (b.sqm || 0) - (a.sqm || 0));
-    else {
+    // ✅ ORDENAMIENTO CORREGIDO
+    if (sort === 'price-asc') {
+      arr.sort((a, b) => (a.price || 0) - (b.price || 0));
+    } else if (sort === 'price-desc') {
+      arr.sort((a, b) => (b.price || 0) - (a.price || 0));
+    } else if (sort === 'newest') {
+      arr.sort((a, b) => new Date(b.added || '2000-01-01') - new Date(a.added || '2000-01-01'));
+    } else if (sort === 'sqm-desc') {
+      arr.sort((a, b) => (b.sqm || 0) - (a.sqm || 0));
+    } else {
+      // Relevancia (por defecto)
       arr.sort((a, b) => {
         const featDiff = (b.featured || 0) - (a.featured || 0);
         if (featDiff !== 0) return featDiff;
@@ -165,7 +189,7 @@
     return arr;
   }
 
-  // ===== ACTUALIZAR CONTADOR =====
+  // ===== ✅ ACTUALIZAR CONTADOR (CORREGIDO) =====
   function updateResultsCount(total, filtered) {
     const el = document.getElementById('resultsCount');
     if (!el) return;
@@ -191,7 +215,7 @@
 
   async function getJSONCached(url) {
     const __ALT_NS = 'altorra:json:';
-    const __ALT_VER = '2025-09-30.2';
+    const __ALT_VER = '2025-10-01.1'; // ✅ Nueva versión
     const jsonKey = __ALT_NS + url + '::' + __ALT_VER;
     
     let cached = null;
@@ -241,8 +265,9 @@
         }) : 
         [];
 
-      console.log('[Altorra] Propiedades filtradas:', allProperties.length);
+      console.log('[Altorra] Propiedades filtradas por operación:', allProperties.length);
 
+      // ✅ LEER PARÁMETROS DE URL CORRECTAMENTE
       const qs = new URLSearchParams(location.search);
       const filters = {
         city: qs.get('city') || '',
@@ -257,7 +282,7 @@
         sqmMax: qs.get('sqm_max') || ''
       };
 
-      // Pre-llenar
+      // ✅ PRE-LLENAR INPUTS (incluye filtros avanzados)
       if (document.getElementById('f-city')) document.getElementById('f-city').value = filters.city;
       if (document.getElementById('f-type') && filters.type) document.getElementById('f-type').value = filters.type;
       if (document.getElementById('f-min') && filters.min) document.getElementById('f-min').value = filters.min;
@@ -275,6 +300,8 @@
       
       renderList(filtered.slice(0, PAGE_SIZE), true);
       updateLoadMoreButton(filtered.length);
+      
+      // ✅ ACTUALIZAR CONTADOR (esto faltaba)
       updateResultsCount(allProperties.length, filtered.length);
 
       if (filtered.length === 0) {
@@ -285,17 +312,20 @@
       }
 
     } catch (err) {
-      console.error('[Altorra] Error:', err);
+      console.error('[Altorra] Error al cargar propiedades:', err);
       const list = document.getElementById('list');
       if (list) {
         list.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)"><p>Error al cargar propiedades. Por favor, recarga la página.</p></div>';
       }
+      const counter = document.getElementById('resultsCount');
+      if (counter) counter.textContent = 'Error al cargar';
     }
   }
 
   document.addEventListener('DOMContentLoaded', () => {
     init();
 
+    // ✅ BOTÓN BUSCAR (con filtros avanzados)
     const btnApply = document.getElementById('btnApply');
     if (btnApply) {
       btnApply.addEventListener('click', () => {
@@ -311,6 +341,8 @@
           sqmMin: document.getElementById('f-sqm-min')?.value || '',
           sqmMax: document.getElementById('f-sqm-max')?.value || ''
         };
+        
+        console.log('[Altorra] Aplicando filtros:', filters);
         
         const filtered = applyFilters(filters);
         const list = document.getElementById('list');
@@ -329,6 +361,7 @@
       });
     }
 
+    // ✅ BOTÓN LIMPIAR
     const btnClear = document.getElementById('btnClear');
     if (btnClear) {
       btnClear.addEventListener('click', () => {
@@ -352,6 +385,7 @@
       });
     }
 
+    // ✅ BOTÓN CARGAR MÁS
     const btnLoadMore = document.getElementById('btnLoadMore');
     if (btnLoadMore) {
       btnLoadMore.addEventListener('click', () => {
