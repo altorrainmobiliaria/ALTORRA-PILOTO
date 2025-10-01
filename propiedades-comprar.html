@@ -7,22 +7,34 @@
 <meta content="Compra de propiedades con Altorra: atención personalizada y asesoría jurídica." name="description"/>
 <link href="manifest.json" rel="manifest"/>
 <meta content="#d4af37" name="theme-color"/>
-<meta content="Propiedades en venta | Altorra" property="og:title"/>
-<meta content="Descubre las mejores propiedades en venta en Cartagena y otras ciudades." property="og:description"/>
-<meta content="hero-about.webp" property="og:image"/>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700;800&amp;display=swap" rel="stylesheet"/>
 <link href="style.css" rel="stylesheet"/>
 <style>
 :root{--card-radius:14px;--badge-h:28px;}
 main{padding-top:calc(var(--header-h) + 12px);max-width:var(--page-max);margin:0 auto}
-.filters{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;padding:12px 16px;background:#fff;border-radius:12px;margin:16px;border:1px solid rgba(0,0,0,.06)}
-.filters .control{display:flex;flex-direction:column;gap:6px}
+
+/* Filtros mejorados con expansión */
+.filters{background:#fff;border-radius:12px;margin:16px;border:1px solid rgba(0,0,0,.06);box-shadow:0 4px 12px rgba(0,0,0,.04)}
+.filters-main{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;padding:12px 16px}
+.filters-advanced{display:none;padding:0 16px 12px;border-top:1px dashed rgba(0,0,0,.08);margin-top:8px}
+.filters-advanced.open{display:block}
+.filters-advanced .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+
+.control{display:flex;flex-direction:column;gap:6px}
 .filters label{font-weight:700;font-size:.85rem;color:var(--muted)}
 .filters input[type="text"], .filters select, .filters input[type="number"]{padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.08);min-width:160px}
 .filters .actions{margin-left:auto;display:flex;gap:8px;align-items:center}
-.btn{padding:10px 14px;border-radius:10px;font-weight:800;border:0;cursor:pointer}
+.btn{padding:10px 14px;border-radius:10px;font-weight:800;border:0;cursor:pointer;transition:all .15s ease}
 .btn-primary{background:linear-gradient(90deg,var(--accent),#ffd95e);color:#111;box-shadow:0 10px 22px rgba(0,0,0,.08)}
 .btn-ghost{background:transparent;border:1px solid rgba(0,0,0,.08);color:var(--text)}
+.btn-toggle{background:transparent;border:1px dashed rgba(0,0,0,.12);color:var(--muted);font-size:.9rem;padding:8px 12px}
+.btn-toggle:hover{border-color:var(--gold);color:var(--gold)}
+
+/* Contador de resultados */
+.results-header{display:flex;justify-content:space-between;align-items:center;padding:0 16px 12px;flex-wrap:wrap;gap:10px}
+.results-count{color:var(--muted);font-weight:600;font-size:.95rem}
+.results-count strong{color:var(--text)}
+
 .grid{display:grid;gap:18px;padding:16px;grid-template-columns:repeat(3,1fr)}
 @media (max-width:1024px){.grid{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:720px){.grid{grid-template-columns:1fr}}
@@ -35,7 +47,7 @@ main{padding-top:calc(var(--header-h) + 12px);max-width:var(--page-max);margin:0
 .badge{height:var(--badge-h);display:inline-flex;align-items:center;gap:6px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:.2px;
   background:rgba(255,255,255,.9);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid rgba(0,0,0,.06);white-space:nowrap;line-height:var(--badge-h)}
 .badge--dark{background:rgba(17,24,39,.9);color:#fff}
-.fav-btn{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.95);border-radius:999px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:0;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+.fav-btn{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.95);border-radius:999px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:0;box-shadow:0 6px 18px rgba(0,0,0,.08);cursor:pointer}
 .fav-btn .heart{font-size:18px;color:#b7b7b7;transition:transform .12s ease,color .12s ease}
 .fav-btn[aria-pressed="true"] .heart{color:var(--accent);transform:scale(1.07)}
 .meta{padding:12px 14px;display:flex;flex-direction:column;gap:8px}
@@ -56,54 +68,93 @@ footer{background:#0b0b0b;color:#fff;padding:36px 16px}
 <body>
 <a class="skip-link" href="#main">Saltar al contenido principal</a>
 <div id="header-placeholder"></div>
-<script>
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('/service-worker.js').catch(function(err){ console.warn('SW registration failed', err); });
-}
-</script>
 
 <main id="main" style="padding-bottom:32px">
 <section aria-label="Filtros de búsqueda" class="filters">
-<div class="control" style="flex:2;min-width:280px">
-<label for="f-search">🔍 Buscar por palabra clave</label>
-<input id="f-search" placeholder="Ciudad, barrio, código o característica..." type="text"/>
-</div>
-<div class="control">
-<label for="f-city">Ciudad</label>
-<input id="f-city" placeholder="Ej. Cartagena" type="text"/>
-</div>
-<div class="control">
-<label for="f-type">Tipo</label>
-<select id="f-type">
-<option value="">Cualquiera</option>
-<option value="apartamento">Apartamento</option>
-<option value="casa">Casa</option>
-<option value="lote">Lote</option>
-<option value="oficina">Oficina</option>
-</select>
-</div>
-<div class="control">
-<label for="f-min">Precio min (COP)</label>
-<input id="f-min" min="0" placeholder="0" type="number"/>
-</div>
-<div class="control">
-<label for="f-max">Precio max (COP)</label>
-<input id="f-max" min="0" placeholder="—" type="number"/>
-</div>
-<div class="control">
-<label for="f-sort">Ordenar</label>
-<select id="f-sort">
-<option value="relevance">Relevancia</option>
-<option value="price-asc">Precio ↑</option>
-<option value="price-desc">Precio ↓</option>
-<option value="newest">Más recientes</option>
-</select>
-</div>
-<div class="actions">
-<button class="btn btn-ghost" id="btnClear" type="button">Limpiar</button>
-<button class="btn btn-primary" id="btnApply" type="button">Aplicar filtros</button>
-</div>
+  <div class="filters-main">
+    <div class="control" style="flex:2;min-width:280px">
+      <label for="f-search">🔍 Buscar por palabra clave</label>
+      <input id="f-search" placeholder="Ciudad, barrio, código o característica..." type="text"/>
+    </div>
+    <div class="control">
+      <label for="f-city">Ciudad</label>
+      <input id="f-city" placeholder="Ej. Cartagena" type="text"/>
+    </div>
+    <div class="control">
+      <label for="f-type">Tipo</label>
+      <select id="f-type">
+        <option value="">Cualquiera</option>
+        <option value="apartamento">Apartamento</option>
+        <option value="casa">Casa</option>
+        <option value="lote">Lote</option>
+        <option value="oficina">Oficina</option>
+      </select>
+    </div>
+    <div class="actions">
+      <button class="btn btn-toggle" id="btnToggleAdvanced" type="button">+ Filtros avanzados</button>
+      <button class="btn btn-ghost" id="btnClear" type="button">Limpiar</button>
+      <button class="btn btn-primary" id="btnApply" type="button">Buscar</button>
+    </div>
+  </div>
+
+  <div class="filters-advanced" id="advancedFilters">
+    <div class="row">
+      <div class="control">
+        <label for="f-beds-min">Habitaciones mínimas</label>
+        <select id="f-beds-min">
+          <option value="">Cualquiera</option>
+          <option value="1">1+</option>
+          <option value="2">2+</option>
+          <option value="3">3+</option>
+          <option value="4">4+</option>
+        </select>
+      </div>
+      <div class="control">
+        <label for="f-baths-min">Baños mínimos</label>
+        <select id="f-baths-min">
+          <option value="">Cualquiera</option>
+          <option value="1">1+</option>
+          <option value="2">2+</option>
+          <option value="3">3+</option>
+        </select>
+      </div>
+      <div class="control">
+        <label for="f-sqm-min">Área mínima (m²)</label>
+        <input id="f-sqm-min" type="number" min="0" placeholder="Ej. 50"/>
+      </div>
+      <div class="control">
+        <label for="f-sqm-max">Área máxima (m²)</label>
+        <input id="f-sqm-max" type="number" min="0" placeholder="Ej. 200"/>
+      </div>
+    </div>
+    <div class="row">
+      <div class="control">
+        <label for="f-min">Precio mínimo (COP)</label>
+        <input id="f-min" min="0" placeholder="0" type="number"/>
+      </div>
+      <div class="control">
+        <label for="f-max">Precio máximo (COP)</label>
+        <input id="f-max" min="0" placeholder="—" type="number"/>
+      </div>
+      <div class="control">
+        <label for="f-sort">Ordenar por</label>
+        <select id="f-sort">
+          <option value="relevance">Relevancia</option>
+          <option value="price-asc">Precio: Menor a Mayor</option>
+          <option value="price-desc">Precio: Mayor a Menor</option>
+          <option value="newest">Más Recientes</option>
+          <option value="sqm-desc">Área: Mayor a Menor</option>
+        </select>
+      </div>
+    </div>
+  </div>
 </section>
+
+<div class="results-header">
+  <div class="results-count" id="resultsCount">
+    Cargando propiedades...
+  </div>
+</div>
 
 <section aria-label="Resultados">
 <div aria-live="polite" class="grid" id="list" role="list">
@@ -121,5 +172,20 @@ if('serviceWorker' in navigator){
 <script defer src="header-footer.js"></script>
 <script defer src="js/listado-propiedades.js"></script>
 <script defer src="js/favoritos.js"></script>
+
+<script>
+// Toggle filtros avanzados
+document.addEventListener('DOMContentLoaded', () => {
+  const btnToggle = document.getElementById('btnToggleAdvanced');
+  const advanced = document.getElementById('advancedFilters');
+  
+  if (btnToggle && advanced) {
+    btnToggle.addEventListener('click', () => {
+      const isOpen = advanced.classList.toggle('open');
+      btnToggle.textContent = isOpen ? '− Filtros avanzados' : '+ Filtros avanzados';
+    });
+  }
+});
+</script>
 </body>
 </html>
