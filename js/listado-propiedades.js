@@ -1,8 +1,6 @@
 /* ========================================
    ALTORRA - LISTADO DE PROPIEDADES
-   Versión: 5.0 - CORRECCIÓN DEFINITIVA
-   Fecha: 02-Oct-2025
-   ✅ SOLUCIÓN: Espera garantizada del DOM
+   Versión: 6.0 - CON BOTONES DE FAVORITO
    ======================================== */
 
 (function() {
@@ -74,15 +72,13 @@
           ${p.sqm ? `<span class="badge">${p.sqm} m²</span>` : ''}
           ${(p.beds || 0) > 0 ? `<span class="badge">${p.beds}H · ${p.baths || 0}B</span>` : ''}
         </div>
-        <button class="fav-btn" type="button" aria-label="Guardar favorito" aria-pressed="false">
+        <button class="fav-btn" type="button" aria-label="Guardar favorito" aria-pressed="false" data-prop-id="${escapeHtml(p.id)}">
           <span class="heart">♡</span>
         </button>
       </div>
       <div class="meta">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-          <h3>${escapeHtml(p.title)}</h3>
-          <div class="price">${getPriceLabel(p)}</div>
-        </div>
+        <h3>${escapeHtml(p.title)}</h3>
+        <div class="price">${getPriceLabel(p)}</div>
         <div class="specs">${p.beds ? p.beds + 'H · ' : ''}${p.baths ? p.baths + 'B · ' : ''}${p.sqm ? p.sqm + ' m² · ' : ''}${escapeHtml(p.city)} · ${capitalize(p.type)}</div>
         <div class="cta">
           <a class="btn btn-primary" href="detalle-propiedad.html?id=${encodeURIComponent(p.id)}">Ver detalles</a>
@@ -134,8 +130,6 @@
     const bathsMin = document.getElementById('f-baths-min')?.value || '';
     const sqmMin = document.getElementById('f-sqm-min')?.value || '';
     const sqmMax = document.getElementById('f-sqm-max')?.value || '';
-
-    console.log('[Filtros]', { city, type, min, max, sort, search, bedsMin, bathsMin, sqmMin, sqmMax });
 
     let arr = allProperties.slice();
 
@@ -279,8 +273,6 @@
   }
 
   async function init() {
-    console.log('[Altorra] Inicializando listado. Modo:', PAGE_MODE);
-    
     const counter = document.getElementById('resultsCount');
     const list = document.getElementById('list');
     
@@ -293,8 +285,7 @@
     
     try {
       const data = await getJSONCached('properties/data.json');
-      console.log('[Altorra] Propiedades cargadas:', data ? data.length : 0);
-
+      
       const validOperations = OPERATION_MAP[PAGE_MODE] || [];
       allProperties = Array.isArray(data) ? 
         data.filter(p => {
@@ -302,8 +293,6 @@
           return validOperations.includes(op);
         }) : 
         [];
-
-      console.log('[Altorra] Propiedades filtradas por operación:', allProperties.length);
 
       const qs = new URLSearchParams(location.search);
       if (qs.has('city')) {
@@ -325,22 +314,6 @@
       if (qs.has('search')) {
         const searchInput = document.getElementById('f-search');
         if (searchInput) searchInput.value = qs.get('search');
-      }
-      if (qs.has('beds')) {
-        const bedsSelect = document.getElementById('f-beds-min');
-        if (bedsSelect) bedsSelect.value = qs.get('beds');
-      }
-      if (qs.has('baths')) {
-        const bathsSelect = document.getElementById('f-baths-min');
-        if (bathsSelect) bathsSelect.value = qs.get('baths');
-      }
-      if (qs.has('sqm_min')) {
-        const sqmMinInput = document.getElementById('f-sqm-min');
-        if (sqmMinInput) sqmMinInput.value = qs.get('sqm_min');
-      }
-      if (qs.has('sqm_max')) {
-        const sqmMaxInput = document.getElementById('f-sqm-max');
-        if (sqmMaxInput) sqmMaxInput.value = qs.get('sqm_max');
       }
 
       filteredProperties = applyFilters();
@@ -373,10 +346,7 @@
     if (btnApply && !btnApply.dataset.attached) {
       btnApply.dataset.attached = 'true';
       btnApply.addEventListener('click', () => {
-        console.log('[Altorra] Botón Buscar presionado');
-        
         filteredProperties = applyFilters();
-        
         updateResultsCount(allProperties.length, filteredProperties.length);
         renderList(filteredProperties.slice(0, PAGE_SIZE), true);
         updateLoadMoreButton(filteredProperties.length);
@@ -402,7 +372,6 @@
         if (document.getElementById('f-sort')) document.getElementById('f-sort').value = 'relevance';
         
         filteredProperties = allProperties.slice();
-        
         updateResultsCount(allProperties.length, allProperties.length);
         renderList(allProperties.slice(0, PAGE_SIZE), true);
         updateLoadMoreButton(allProperties.length);
@@ -420,22 +389,19 @@
     }
   }
 
-  // ✅ CORRECCIÓN CRÍTICA: Esperar DOM + inicializar inmediatamente
   function startApp() {
     if (window.__ALTORRA_LISTADO_INIT__) return;
     window.__ALTORRA_LISTADO_INIT__ = true;
     
-    console.log('[Altorra] DOM listo, iniciando...');
     init();
     attachEvents();
   }
 
-  // ✅ Garantizar que SIEMPRE esperamos el DOM
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', startApp);
   } else {
-    // Si el DOM ya está listo, ejecutar inmediatamente
     startApp();
   }
 
+  console.log('[Listado] Sistema inicializado ✅');
 })();
