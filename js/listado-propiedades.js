@@ -1,7 +1,7 @@
 /* ========================================
    ALTORRA - LISTADO DE PROPIEDADES
-   Versión: 3.3 - CARGA GARANTIZADA
-   Fecha: 01-Oct-2025
+   Versión: 4.0 - CORRECCIÓN DEFINITIVA
+   Fecha: 02-Oct-2025
    ======================================== */
 
 (function() {
@@ -21,6 +21,7 @@
   };
 
   let allProperties = [];
+  let filteredProperties = [];
   let renderedCount = 0;
 
   function formatCOP(n) {
@@ -117,11 +118,28 @@
     }, 100);
   }
 
-  function applyFilters({ city, type, min, max, sort, search, bedsMin, bathsMin, sqmMin, sqmMax }) {
+  function applyFilters() {
+    // ✅ LEER VALORES ACTUALES DE LOS FILTROS
+    const city = (document.getElementById('f-city')?.value || '').trim();
+    const type = document.getElementById('f-type')?.value || '';
+    const min = document.getElementById('f-min')?.value || '';
+    const max = document.getElementById('f-max')?.value || '';
+    const sort = document.getElementById('f-sort')?.value || 'relevance';
+    const search = (document.getElementById('f-search')?.value || '').trim();
+    
+    // ✅ FILTROS AVANZADOS
+    const bedsMin = document.getElementById('f-beds-min')?.value || '';
+    const bathsMin = document.getElementById('f-baths-min')?.value || '';
+    const sqmMin = document.getElementById('f-sqm-min')?.value || '';
+    const sqmMax = document.getElementById('f-sqm-max')?.value || '';
+
+    console.log('[Filtros]', { city, type, min, max, sort, search, bedsMin, bathsMin, sqmMin, sqmMax });
+
     let arr = allProperties.slice();
 
+    // Búsqueda por texto
     if (search) {
-      const terms = search.toLowerCase().trim().split(/\s+/);
+      const terms = search.toLowerCase().split(/\s+/);
       arr = arr.filter(p => {
         const searchable = [
           p.title, p.description, p.city, p.type, 
@@ -131,9 +149,17 @@
       });
     }
 
-    if (city) arr = arr.filter(p => p.city.toLowerCase().includes(city.toLowerCase()));
-    if (type) arr = arr.filter(p => p.type === type);
+    // Filtro ciudad
+    if (city) {
+      arr = arr.filter(p => p.city.toLowerCase().includes(city.toLowerCase()));
+    }
+
+    // Filtro tipo
+    if (type) {
+      arr = arr.filter(p => p.type === type);
+    }
     
+    // ✅ HABITACIONES MÍNIMAS
     if (bedsMin && bedsMin !== '') {
       const minBeds = parseInt(bedsMin, 10);
       if (!isNaN(minBeds)) {
@@ -141,6 +167,7 @@
       }
     }
     
+    // ✅ BAÑOS MÍNIMOS
     if (bathsMin && bathsMin !== '') {
       const minBaths = parseInt(bathsMin, 10);
       if (!isNaN(minBaths)) {
@@ -148,6 +175,7 @@
       }
     }
     
+    // ✅ ÁREA MÍNIMA
     if (sqmMin && sqmMin !== '') {
       const minSqm = parseFloat(sqmMin);
       if (!isNaN(minSqm)) {
@@ -155,6 +183,7 @@
       }
     }
     
+    // ✅ ÁREA MÁXIMA
     if (sqmMax && sqmMax !== '') {
       const maxSqm = parseFloat(sqmMax);
       if (!isNaN(maxSqm)) {
@@ -162,15 +191,23 @@
       }
     }
     
+    // Precio mínimo
     if (min) {
       const v = Number(min);
-      arr = arr.filter(p => p.price >= (isNaN(v) ? 0 : v));
-    }
-    if (max) {
-      const v = Number(max);
-      arr = arr.filter(p => p.price <= (isNaN(v) ? Infinity : v));
+      if (!isNaN(v)) {
+        arr = arr.filter(p => (p.price || 0) >= v);
+      }
     }
 
+    // Precio máximo
+    if (max) {
+      const v = Number(max);
+      if (!isNaN(v)) {
+        arr = arr.filter(p => (p.price || 0) <= v);
+      }
+    }
+
+    // Ordenamiento
     if (sort === 'price-asc') {
       arr.sort((a, b) => (a.price || 0) - (b.price || 0));
     } else if (sort === 'price-desc') {
@@ -180,6 +217,7 @@
     } else if (sort === 'sqm-desc') {
       arr.sort((a, b) => (b.sqm || 0) - (a.sqm || 0));
     } else {
+      // Relevancia (featured + highlightScore)
       arr.sort((a, b) => {
         const featDiff = (b.featured || 0) - (a.featured || 0);
         if (featDiff !== 0) return featDiff;
@@ -213,39 +251,41 @@
     }
   }
 
+  // ✅ CACHE MÁS INTELIGENTE CON REVALIDACIÓN
   async function getJSONCached(url) {
-    const __ALT_NS = 'altorra:json:';
-    const __ALT_VER = '2025-10-01.3';
-    const jsonKey = __ALT_NS + url + '::' + __ALT_VER;
+    const CACHE_KEY = 'altorra:properties:v5'; // Cambia v5 si actualizas data.json
+    const CACHE_TTL = 1000 * 60 * 30; // 30 minutos
     
     let cached = null;
     try {
-      const raw = localStorage.getItem(jsonKey);
+      const raw = localStorage.getItem(CACHE_KEY);
       if (raw) {
         const obj = JSON.parse(raw);
-        if (obj && obj.t && (Date.now() - obj.t) < 1000 * 60 * 60 * 6 && obj.data) {
+        if (obj && obj.t && (Date.now() - obj.t) < CACHE_TTL && obj.data) {
           cached = obj.data;
         }
       }
     } catch (_) {}
 
+    // Si tenemos caché válida, la usamos y revalidamos en background
     if (cached) {
       fetch(url, { cache: 'no-store' })
         .then(r => r.ok ? r.json() : Promise.reject())
         .then(fresh => {
           try {
-            localStorage.setItem(jsonKey, JSON.stringify({ t: Date.now(), data: fresh }));
+            localStorage.setItem(CACHE_KEY, JSON.stringify({ t: Date.now(), data: fresh }));
           } catch (_) {}
         })
         .catch(() => {});
       return cached;
     }
 
+    // Sin caché: fetch directo
     const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     try {
-      localStorage.setItem(jsonKey, JSON.stringify({ t: Date.now(), data }));
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ t: Date.now(), data }));
     } catch (_) {}
     return data;
   }
@@ -256,11 +296,11 @@
     const counter = document.getElementById('resultsCount');
     const list = document.getElementById('list');
     
-    // ✅ FORZAR mensaje de carga
+    // ✅ MENSAJE DE CARGA INMEDIATO
     if (counter) {
       counter.innerHTML = '<span style="color:var(--muted)">⏳ Cargando propiedades...</span>';
     }
-    if (list && list.children.length === 0) {
+    if (list) {
       list.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)"><p>⏳ Cargando propiedades...</p></div>';
     }
     
@@ -278,41 +318,27 @@
 
       console.log('[Altorra] Propiedades filtradas por operación:', allProperties.length);
 
+      // Aplicar filtros iniciales desde URL
       const qs = new URLSearchParams(location.search);
-      const filters = {
-        city: qs.get('city') || '',
-        type: qs.get('type') || '',
-        min: qs.get('min') || '',
-        max: qs.get('max') || '',
-        sort: qs.get('sort') || 'relevance',
-        search: qs.get('search') || '',
-        bedsMin: qs.get('beds') || '',
-        bathsMin: qs.get('baths') || '',
-        sqmMin: qs.get('sqm_min') || '',
-        sqmMax: qs.get('sqm_max') || ''
-      };
+      if (qs.has('city')) document.getElementById('f-city').value = qs.get('city');
+      if (qs.has('type') && document.getElementById('f-type')) document.getElementById('f-type').value = qs.get('type');
+      if (qs.has('min')) document.getElementById('f-min').value = qs.get('min');
+      if (qs.has('max')) document.getElementById('f-max').value = qs.get('max');
+      if (qs.has('search')) document.getElementById('f-search').value = qs.get('search');
+      if (qs.has('beds')) document.getElementById('f-beds-min').value = qs.get('beds');
+      if (qs.has('baths')) document.getElementById('f-baths-min').value = qs.get('baths');
+      if (qs.has('sqm_min')) document.getElementById('f-sqm-min').value = qs.get('sqm_min');
+      if (qs.has('sqm_max')) document.getElementById('f-sqm-max').value = qs.get('sqm_max');
 
-      if (document.getElementById('f-city')) document.getElementById('f-city').value = filters.city;
-      if (document.getElementById('f-type') && filters.type) document.getElementById('f-type').value = filters.type;
-      if (document.getElementById('f-min') && filters.min) document.getElementById('f-min').value = filters.min;
-      if (document.getElementById('f-max') && filters.max) document.getElementById('f-max').value = filters.max;
-      if (document.getElementById('f-sort') && filters.sort) document.getElementById('f-sort').value = filters.sort;
-      if (document.getElementById('f-search')) document.getElementById('f-search').value = filters.search;
-      if (document.getElementById('f-beds-min') && filters.bedsMin) document.getElementById('f-beds-min').value = filters.bedsMin;
-      if (document.getElementById('f-baths-min') && filters.bathsMin) document.getElementById('f-baths-min').value = filters.bathsMin;
-      if (document.getElementById('f-sqm-min') && filters.sqmMin) document.getElementById('f-sqm-min').value = filters.sqmMin;
-      if (document.getElementById('f-sqm-max') && filters.sqmMax) document.getElementById('f-sqm-max').value = filters.sqmMax;
-
-      const filtered = applyFilters(filters);
-      const list = document.getElementById('list');
-      if (list) list.dataset.filtered = JSON.stringify(filtered);
+      filteredProperties = applyFilters();
       
-      updateResultsCount(allProperties.length, filtered.length);
+      // ✅ ACTUALIZAR CONTADOR INMEDIATAMENTE
+      updateResultsCount(allProperties.length, filteredProperties.length);
       
-      renderList(filtered.slice(0, PAGE_SIZE), true);
-      updateLoadMoreButton(filtered.length);
+      renderList(filteredProperties.slice(0, PAGE_SIZE), true);
+      updateLoadMoreButton(filteredProperties.length);
 
-      if (filtered.length === 0) {
+      if (filteredProperties.length === 0) {
         const list = document.getElementById('list');
         if (list) {
           list.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)"><h3>No se encontraron propiedades</h3><p>Intenta ajustar los filtros de búsqueda.</p></div>';
@@ -330,46 +356,20 @@
     }
   }
 
-  function startApp() {
-    if (window.__ALTORRA_LISTADO_INIT__) return;
-    window.__ALTORRA_LISTADO_INIT__ = true;
-    init();
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', startApp);
-  } else {
-    startApp();
-  }
-
   function attachEvents() {
     const btnApply = document.getElementById('btnApply');
-    if (btnApply) {
+    if (btnApply && !btnApply.dataset.attached) {
+      btnApply.dataset.attached = 'true';
       btnApply.addEventListener('click', () => {
-        const filters = {
-          city: document.getElementById('f-city')?.value.trim() || '',
-          type: document.getElementById('f-type')?.value || '',
-          min: document.getElementById('f-min')?.value || '',
-          max: document.getElementById('f-max')?.value || '',
-          sort: document.getElementById('f-sort')?.value || 'relevance',
-          search: document.getElementById('f-search')?.value.trim() || '',
-          bedsMin: document.getElementById('f-beds-min')?.value || '',
-          bathsMin: document.getElementById('f-baths-min')?.value || '',
-          sqmMin: document.getElementById('f-sqm-min')?.value || '',
-          sqmMax: document.getElementById('f-sqm-max')?.value || ''
-        };
+        console.log('[Altorra] Botón Buscar presionado');
         
-        console.log('[Altorra] Aplicando filtros:', filters);
+        filteredProperties = applyFilters();
         
-        const filtered = applyFilters(filters);
-        const list = document.getElementById('list');
-        if (list) list.dataset.filtered = JSON.stringify(filtered);
-        
-        updateResultsCount(allProperties.length, filtered.length);
-        renderList(filtered.slice(0, PAGE_SIZE), true);
-        updateLoadMoreButton(filtered.length);
+        updateResultsCount(allProperties.length, filteredProperties.length);
+        renderList(filteredProperties.slice(0, PAGE_SIZE), true);
+        updateLoadMoreButton(filteredProperties.length);
 
-        if (filtered.length === 0) {
+        if (filteredProperties.length === 0) {
           const list = document.getElementById('list');
           if (list) {
             list.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)"><h3>No se encontraron propiedades</h3><p>Intenta ajustar los filtros de búsqueda.</p></div>';
@@ -379,7 +379,8 @@
     }
 
     const btnClear = document.getElementById('btnClear');
-    if (btnClear) {
+    if (btnClear && !btnClear.dataset.attached) {
+      btnClear.dataset.attached = 'true';
       btnClear.addEventListener('click', () => {
         if (document.getElementById('f-city')) document.getElementById('f-city').value = '';
         if (document.getElementById('f-type')) document.getElementById('f-type').value = '';
@@ -392,8 +393,7 @@
         if (document.getElementById('f-sqm-min')) document.getElementById('f-sqm-min').value = '';
         if (document.getElementById('f-sqm-max')) document.getElementById('f-sqm-max').value = '';
         
-        const list = document.getElementById('list');
-        if (list) list.dataset.filtered = JSON.stringify(allProperties);
+        filteredProperties = allProperties.slice();
         
         updateResultsCount(allProperties.length, allProperties.length);
         renderList(allProperties.slice(0, PAGE_SIZE), true);
@@ -402,27 +402,27 @@
     }
 
     const btnLoadMore = document.getElementById('btnLoadMore');
-    if (btnLoadMore) {
+    if (btnLoadMore && !btnLoadMore.dataset.attached) {
+      btnLoadMore.dataset.attached = 'true';
       btnLoadMore.addEventListener('click', () => {
-        let filtered = [];
-        try {
-          const list = document.getElementById('list');
-          filtered = JSON.parse(list?.dataset.filtered || 'null') || allProperties;
-        } catch (e) {
-          filtered = allProperties;
-        }
-        
-        const next = filtered.slice(renderedCount, renderedCount + PAGE_SIZE);
+        const next = filteredProperties.slice(renderedCount, renderedCount + PAGE_SIZE);
         renderList(next, false);
-        updateLoadMoreButton(filtered.length);
+        updateLoadMoreButton(filteredProperties.length);
       });
     }
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', attachEvents);
-  } else {
+  function startApp() {
+    if (window.__ALTORRA_LISTADO_INIT__) return;
+    window.__ALTORRA_LISTADO_INIT__ = true;
+    init();
     attachEvents();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startApp);
+  } else {
+    startApp();
   }
 
 })();
