@@ -264,6 +264,7 @@ document.addEventListener('DOMContentLoaded', function(){
     window.location.href = url;
   });
 });
+
 /* ============== 5) Miniaturas home ← properties/data.json (con caché) ============== */
 (function(){
   const cfg = [
@@ -275,7 +276,24 @@ document.addEventListener('DOMContentLoaded', function(){
   function formatCOP(n){ if(n==null) return ''; return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.'); }
   function escapeHtml(s){ return String(s||'').replace(/[&<>"]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
 
-  /* ===== buildCard con botón de favorito (conservador) ===== */
+  /* ===== Toast reutilizable para favoritos (estilo detalle) ===== */
+  function showFavToast(added){
+    try{
+      const toast = document.createElement('div');
+      toast.textContent = added ? '♥ Agregado a favoritos' : 'Removido de favoritos';
+      toast.style.cssText = `
+        position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+        background:#111;color:#fff;padding:12px 24px;border-radius:8px;
+        font-weight:700;z-index:9999;opacity:0;transition:opacity .2s ease;
+        box-shadow:0 10px 26px rgba(0,0,0,.18);
+      `;
+      document.body.appendChild(toast);
+      requestAnimationFrame(()=>{ toast.style.opacity='1'; });
+      setTimeout(()=>{ toast.style.opacity='0'; setTimeout(()=>toast.remove(), 250); }, 2000);
+    }catch(_){}
+  }
+
+  /* ===== buildCard con botón de favorito (mejorado) ===== */
   function buildCard(p, mode){
     const el = document.createElement('article');
     el.className = 'card'; el.setAttribute('role','listitem');
@@ -302,26 +320,32 @@ document.addEventListener('DOMContentLoaded', function(){
     mediaDiv.className = 'media';
     mediaDiv.style.position = 'relative';
 
-    // Botón favorito (solo actúa si existe la API AltorraFavoritos)
+    // Botón favorito
     const favBtn = document.createElement('button');
     favBtn.className = 'fav-btn';
     favBtn.type = 'button';
     favBtn.setAttribute('aria-label', 'Guardar favorito');
     favBtn.setAttribute('aria-pressed', 'false');
     favBtn.setAttribute('data-prop-id', p.id || '');
-    favBtn.innerHTML = '<span class="heart">♡</span>';
+    // corazón más grande + texto
+    favBtn.innerHTML = `
+      <span class="heart" style="font-size:1.25rem;line-height:1">♡</span>
+      <span class="label" style="font-weight:700;font-size:.92rem">Guardar en favoritos</span>
+    `;
 
-    // Sincronizar estado inicial
+    // Sincronizar estado inicial (♥ y texto)
     try{
       if (window.AltorraFavoritos && p && p.id){
         var isFav = !!window.AltorraFavoritos.isFavorite(p.id);
         favBtn.setAttribute('aria-pressed', isFav ? 'true' : 'false');
-        var h1 = favBtn.querySelector('.heart');
-        if(h1){ h1.textContent = isFav ? '♥' : '♡'; }
+        var heartEl = favBtn.querySelector('.heart');
+        var labelEl = favBtn.querySelector('.label');
+        if(heartEl){ heartEl.textContent = isFav ? '♥' : '♡'; }
+        if(labelEl){ labelEl.textContent = isFav ? 'Guardado en favoritos' : 'Guardar en favoritos'; } // ← ajuste
       }
     }catch(_){}
 
-    // Toggle favorito
+    // Toggle favorito + toast (actualiza ♥ y texto)
     favBtn.addEventListener('click', function(ev){
       ev.preventDefault();
       ev.stopPropagation();
@@ -334,7 +358,15 @@ document.addEventListener('DOMContentLoaded', function(){
         });
         favBtn.setAttribute('aria-pressed', nowFav ? 'true' : 'false');
         var h2 = favBtn.querySelector('.heart');
+        var lbl = favBtn.querySelector('.label');
         if(h2){ h2.textContent = nowFav ? '♥' : '♡'; }
+        if(lbl){ lbl.textContent = nowFav ? 'Guardado en favoritos' : 'Guardar en favoritos'; } // ← ajuste
+
+        // pequeño feedback de escala
+        favBtn.style.transform='scale(1.04)';
+        setTimeout(()=>{ favBtn.style.transform='scale(1)'; }, 160);
+
+        showFavToast(nowFav);
       }catch(_){}
     });
 
@@ -445,7 +477,7 @@ if('serviceWorker' in navigator){
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "ALTORRA Inmobiliaria",
-      "url": "https://altorrainmobiliaria.github.io/ALTORRA-PILOTO/",
+      "url": "https://altorrainmobiliaria.github.io",
       "logo": "https://i.postimg.cc/SsPmBFXt/Chat-GPT-Image-9-altorra-logo-2025-10-31-20.png",
       "sameAs": ["https://www.instagram.com/altorrainmobiliaria", "https://www.facebook.com/share/16MEXCeAB4/?mibextid=wwXIfr", "https://www.tiktok.com/@altorrainmobiliaria"]
     };
