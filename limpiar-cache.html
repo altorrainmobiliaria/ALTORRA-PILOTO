@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Limpiar Caché | Altorra</title>
+  <meta name="robots" content="noindex, nofollow">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 1.8rem;
+      color: #1f2937;
+    }
+    p {
+      color: #6b7280;
+      margin: 0 0 30px;
+      line-height: 1.6;
+    }
+    .btn {
+      display: inline-block;
+      padding: 14px 28px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+      margin: 5px;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+    .btn-secondary {
+      background: #e5e7eb;
+      color: #1f2937;
+    }
+    .status {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 10px;
+      font-weight: 600;
+      display: none;
+    }
+    .status.success {
+      background: #d1fae5;
+      color: #065f46;
+      display: block;
+    }
+    .status.info {
+      background: #dbeafe;
+      color: #1e40af;
+      display: block;
+    }
+    .cache-info {
+      margin-top: 30px;
+      padding: 20px;
+      background: #f9fafb;
+      border-radius: 10px;
+      text-align: left;
+    }
+    .cache-info h3 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+      color: #1f2937;
+    }
+    .cache-item {
+      padding: 8px 0;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 0.9rem;
+      color: #6b7280;
+    }
+    .cache-item:last-child {
+      border-bottom: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🧹 Limpiar Caché</h1>
+    <p>Si ves información desactualizada o los cambios no aparecen, limpia el caché del navegador.</p>
+    
+    <button class="btn" id="clearBtn">Limpiar Caché Ahora</button>
+    <button class="btn btn-secondary" id="infoBtn">Ver Caché Actual</button>
+    
+    <div class="status" id="status"></div>
+    
+    <div class="cache-info" id="cacheInfo" style="display:none;">
+      <h3>📦 Elementos en caché:</h3>
+      <div id="cacheList"></div>
+    </div>
+
+    <p style="margin-top: 30px; font-size: 0.85rem;">
+      <a href="index.html" style="color: #667eea; text-decoration: none; font-weight: 600;">← Volver al inicio</a>
+    </p>
+  </div>
+
+  <script>
+    const status = document.getElementById('status');
+    const cacheInfo = document.getElementById('cacheInfo');
+    const cacheList = document.getElementById('cacheList');
+
+    function showStatus(message, type = 'success') {
+      status.textContent = message;
+      status.className = `status ${type}`;
+      setTimeout(() => {
+        status.style.display = 'none';
+      }, 5000);
+    }
+
+    function getCacheItems() {
+      const items = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith('altorra:')) {
+          const size = new Blob([localStorage.getItem(key)]).size;
+          items.push({ key, size });
+        }
+      }
+      return items;
+    }
+
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
+
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      try {
+        // Limpiar todo lo relacionado con Altorra
+        const keys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key.startsWith('altorra:')) {
+            keys.push(key);
+          }
+        }
+        
+        keys.forEach(key => localStorage.removeItem(key));
+        
+        showStatus(`✅ Caché limpiada exitosamente. Se eliminaron ${keys.length} elementos.`, 'success');
+        
+        // Ocultar lista de caché
+        cacheInfo.style.display = 'none';
+        
+        // Recargar después de 2 segundos
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      } catch (err) {
+        showStatus('❌ Error al limpiar caché: ' + err.message, 'error');
+      }
+    });
+
+    document.getElementById('infoBtn').addEventListener('click', () => {
+      const items = getCacheItems();
+      
+      if (items.length === 0) {
+        cacheList.innerHTML = '<div class="cache-item">No hay elementos en caché</div>';
+      } else {
+        let totalSize = 0;
+        cacheList.innerHTML = items.map(item => {
+          totalSize += item.size;
+          return `<div class="cache-item">${item.key.replace('altorra:', '')} • ${formatBytes(item.size)}</div>`;
+        }).join('');
+        
+        cacheList.innerHTML += `<div class="cache-item" style="font-weight:700;color:#1f2937;margin-top:10px">Total: ${items.length} elementos • ${formatBytes(totalSize)}</div>`;
+      }
+      
+      cacheInfo.style.display = 'block';
+      showStatus(`📊 Mostrando ${items.length} elementos en caché`, 'info');
+    });
+  </script>
+</body>
+</html>
