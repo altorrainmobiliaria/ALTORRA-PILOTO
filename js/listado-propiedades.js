@@ -1,6 +1,6 @@
 /* ========================================
    ALTORRA - LISTADO DE PROPIEDADES
-   Versión: 3.2 - TODOS LOS ERRORES CORREGIDOS
+   Versión: 3.3 - CARGA GARANTIZADA
    Fecha: 01-Oct-2025
    ======================================== */
 
@@ -117,11 +117,9 @@
     }, 100);
   }
 
-  // ===== 🔧 FILTROS AVANZADOS CORREGIDOS =====
   function applyFilters({ city, type, min, max, sort, search, bedsMin, bathsMin, sqmMin, sqmMax }) {
     let arr = allProperties.slice();
 
-    // Búsqueda por palabras clave
     if (search) {
       const terms = search.toLowerCase().trim().split(/\s+/);
       arr = arr.filter(p => {
@@ -133,11 +131,9 @@
       });
     }
 
-    // Filtros básicos
     if (city) arr = arr.filter(p => p.city.toLowerCase().includes(city.toLowerCase()));
     if (type) arr = arr.filter(p => p.type === type);
     
-    // ✅ FILTROS AVANZADOS (CORREGIDOS - validación robusta)
     if (bedsMin && bedsMin !== '') {
       const minBeds = parseInt(bedsMin, 10);
       if (!isNaN(minBeds)) {
@@ -166,7 +162,6 @@
       }
     }
     
-    // Filtros de precio
     if (min) {
       const v = Number(min);
       arr = arr.filter(p => p.price >= (isNaN(v) ? 0 : v));
@@ -176,7 +171,6 @@
       arr = arr.filter(p => p.price <= (isNaN(v) ? Infinity : v));
     }
 
-    // ✅ ORDENAMIENTO CORREGIDO
     if (sort === 'price-asc') {
       arr.sort((a, b) => (a.price || 0) - (b.price || 0));
     } else if (sort === 'price-desc') {
@@ -186,7 +180,6 @@
     } else if (sort === 'sqm-desc') {
       arr.sort((a, b) => (b.sqm || 0) - (a.sqm || 0));
     } else {
-      // Relevancia (por defecto)
       arr.sort((a, b) => {
         const featDiff = (b.featured || 0) - (a.featured || 0);
         if (featDiff !== 0) return featDiff;
@@ -197,7 +190,6 @@
     return arr;
   }
 
-  // ===== ✅ ACTUALIZAR CONTADOR =====
   function updateResultsCount(total, filtered) {
     const el = document.getElementById('resultsCount');
     if (!el) return;
@@ -223,7 +215,7 @@
 
   async function getJSONCached(url) {
     const __ALT_NS = 'altorra:json:';
-    const __ALT_VER = '2025-10-01.2'; // ✅ Nueva versión
+    const __ALT_VER = '2025-10-01.3';
     const jsonKey = __ALT_NS + url + '::' + __ALT_VER;
     
     let cached = null;
@@ -261,9 +253,8 @@
   async function init() {
     console.log('[Altorra] Inicializando listado. Modo:', PAGE_MODE);
     
-    // ✅ MOSTRAR MENSAJE DE CARGA INMEDIATAMENTE
     const counter = document.getElementById('resultsCount');
-    if (counter) counter.innerHTML = 'Cargando propiedades...';
+    if (counter) counter.innerHTML = '<span style="color:var(--muted)">⏳ Cargando propiedades...</span>';
     
     try {
       const data = await getJSONCached('properties/data.json');
@@ -279,7 +270,6 @@
 
       console.log('[Altorra] Propiedades filtradas por operación:', allProperties.length);
 
-      // ✅ LEER PARÁMETROS DE URL CORRECTAMENTE
       const qs = new URLSearchParams(location.search);
       const filters = {
         city: qs.get('city') || '',
@@ -294,7 +284,6 @@
         sqmMax: qs.get('sqm_max') || ''
       };
 
-      // ✅ PRE-LLENAR INPUTS (incluye filtros avanzados)
       if (document.getElementById('f-city')) document.getElementById('f-city').value = filters.city;
       if (document.getElementById('f-type') && filters.type) document.getElementById('f-type').value = filters.type;
       if (document.getElementById('f-min') && filters.min) document.getElementById('f-min').value = filters.min;
@@ -310,7 +299,6 @@
       const list = document.getElementById('list');
       if (list) list.dataset.filtered = JSON.stringify(filtered);
       
-      // ✅ ACTUALIZAR CONTADOR INMEDIATAMENTE (antes del render)
       updateResultsCount(allProperties.length, filtered.length);
       
       renderList(filtered.slice(0, PAGE_SIZE), true);
@@ -334,10 +322,19 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
+  function startApp() {
+    if (window.__ALTORRA_LISTADO_INIT__) return;
+    window.__ALTORRA_LISTADO_INIT__ = true;
     init();
+  }
 
-    // ✅ BOTÓN BUSCAR (con filtros avanzados)
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startApp);
+  } else {
+    startApp();
+  }
+
+  function attachEvents() {
     const btnApply = document.getElementById('btnApply');
     if (btnApply) {
       btnApply.addEventListener('click', () => {
@@ -373,7 +370,6 @@
       });
     }
 
-    // ✅ BOTÓN LIMPIAR
     const btnClear = document.getElementById('btnClear');
     if (btnClear) {
       btnClear.addEventListener('click', () => {
@@ -397,7 +393,6 @@
       });
     }
 
-    // ✅ BOTÓN CARGAR MÁS
     const btnLoadMore = document.getElementById('btnLoadMore');
     if (btnLoadMore) {
       btnLoadMore.addEventListener('click', () => {
@@ -414,6 +409,12 @@
         updateLoadMoreButton(filtered.length);
       });
     }
-  });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachEvents);
+  } else {
+    attachEvents();
+  }
 
 })();
