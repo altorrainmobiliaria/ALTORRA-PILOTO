@@ -248,7 +248,7 @@ document.addEventListener('DOMContentLoaded', function(){
         let data; try{ data = await getJSONCached('properties/data.json', { ttlMs: 1000*60*60*6, revalidate:false }); }
         catch(_){ try{ data = await getJSONCached('/PRUEBA-PILOTO/properties/data.json', { ttlMs: 1000*60*60*6, revalidate:false }); }
         catch(__){ data = await getJSONCached('/properties/data.json', { ttlMs: 1000*60*60*6, revalidate:false }); }}
-        const hit = (Array.isArray(data)?data:[]).find(p => String(p.id||'').toLowerCase() === code.toLowerCase());
+        const hit = (Array.isArray(data)?data:[]).find(function(p){ return String(p.id||'').toLowerCase() === code.toLowerCase(); });
         if(hit){ window.location.href = 'detalle-propiedad.html?id=' + encodeURIComponent(code); return; }
         // si no existe, seguimos a la página de la operación con el code para que muestre mensaje
       }catch(_){ /* seguimos usando redirección a listados */ }
@@ -275,19 +275,14 @@ document.addEventListener('DOMContentLoaded', function(){
   function formatCOP(n){ if(n==null) return ''; return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.'); }
   function escapeHtml(s){ return String(s||'').replace(/[&<>"]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
 
-  /* ========================================
-     REEMPLAZO: buildCard con botón de favorito
-     ======================================== */
+  /* ===== buildCard con botón de favorito (conservador) ===== */
   function buildCard(p, mode){
     const el = document.createElement('article');
-    el.className = 'card';
-    el.setAttribute('role','listitem');
+    el.className = 'card'; el.setAttribute('role','listitem');
 
-    // === Imagen ===
+    // Imagen
     const img = document.createElement('img');
-    img.loading = 'lazy';
-    img.decoding = 'async';
-    img.alt = escapeHtml(p.title || 'Propiedad');
+    img.loading='lazy'; img.decoding='async'; img.alt = escapeHtml(p.title || 'Propiedad');
     const raw = p.image || p.img || p.img_url || p.imgUrl || p.photo;
 
     if (raw) {
@@ -302,11 +297,12 @@ document.addEventListener('DOMContentLoaded', function(){
       img.src = 'https://i.postimg.cc/0yYb8Y6r/placeholder.png';
     }
 
-    // === Contenedor media + botón favorito ===
+    // Contenedor media + botón favorito
     const mediaDiv = document.createElement('div');
     mediaDiv.className = 'media';
     mediaDiv.style.position = 'relative';
 
+    // Botón favorito (solo actúa si existe la API AltorraFavoritos)
     const favBtn = document.createElement('button');
     favBtn.className = 'fav-btn';
     favBtn.type = 'button';
@@ -315,70 +311,69 @@ document.addEventListener('DOMContentLoaded', function(){
     favBtn.setAttribute('data-prop-id', p.id || '');
     favBtn.innerHTML = '<span class="heart">♡</span>';
 
-    // Toggle favorito (si existe la API)
-    favBtn.addEventListener('click', (ev) => {
+    // Sincronizar estado inicial
+    try{
+      if (window.AltorraFavoritos && p && p.id){
+        var isFav = !!window.AltorraFavoritos.isFavorite(p.id);
+        favBtn.setAttribute('aria-pressed', isFav ? 'true' : 'false');
+        var h1 = favBtn.querySelector('.heart');
+        if(h1){ h1.textContent = isFav ? '♥' : '♡'; }
+      }
+    }catch(_){}
+
+    // Toggle favorito
+    favBtn.addEventListener('click', function(ev){
       ev.preventDefault();
       ev.stopPropagation();
-      if (!window.AltorraFavoritos || !p?.id) return;
-      const nowFav = window.AltorraFavoritos.toggle({
-        id: p.id, title: p.title, city: p.city, price: p.price,
-        image: p.image || (Array.isArray(p.images) && p.images[0]) || '',
-        operation: p.operation, beds: p.beds, baths: p.baths, sqm: p.sqm, type: p.type
-      });
-      favBtn.setAttribute('aria-pressed', nowFav ? 'true' : 'false');
-      const heart = favBtn.querySelector('.heart');
-      if (heart) heart.textContent = nowFav ? '♥' : '♡';
+      if (!window.AltorraFavoritos || !(p && p.id)) return;
+      try{
+        var nowFav = window.AltorraFavoritos.toggle({
+          id: p.id, title: p.title, city: p.city, price: p.price,
+          image: p.image || (Array.isArray(p.images) && p.images[0]) || '',
+          operation: p.operation, beds: p.beds, baths: p.baths, sqm: p.sqm, type: p.type
+        });
+        favBtn.setAttribute('aria-pressed', nowFav ? 'true' : 'false');
+        var h2 = favBtn.querySelector('.heart');
+        if(h2){ h2.textContent = nowFav ? '♥' : '♡'; }
+      }catch(_){}
     });
-
-    // Sincroniza estado inicial si la API existe
-    if (window.AltorraFavoritos && p?.id) {
-      const isFav = !!window.AltorraFavoritos.isFavorite(p.id);
-      favBtn.setAttribute('aria-pressed', isFav ? 'true' : 'false');
-      const heart = favBtn.querySelector('.heart');
-      if (heart) heart.textContent = isFav ? '♥' : '♡';
-    }
 
     mediaDiv.appendChild(img);
     mediaDiv.appendChild(favBtn);
 
-    // === Texto ===
-    const body = document.createElement('div');
-    body.className = 'body';
+    // Cuerpo
+    const body = document.createElement('div'); body.className='body';
+    const h3 = document.createElement('h3'); h3.innerHTML = escapeHtml(p.title || 'Sin título');
 
-    const h3 = document.createElement('h3');
-    h3.innerHTML = escapeHtml(p.title || 'Sin título');
-
-    const specs = document.createElement('div');
-    specs.style.color = 'var(--muted)';
+    const specs = document.createElement('div'); specs.style.color='var(--muted)';
     const parts = [];
-    if (p.beds)  parts.push(p.beds+'H');
-    if (p.baths) parts.push(p.baths+'B');
-    if (p.sqm)   parts.push(p.sqm+' m²');
+    if(p.beds)  parts.push(p.beds+'H');
+    if(p.baths) parts.push(p.baths+'B');
+    if(p.sqm)   parts.push(p.sqm+' m²');
     specs.textContent = parts.join(' · ');
 
     const price = document.createElement('div');
-    price.style.marginTop = '4px';
-    price.style.fontWeight = '800';
-    price.style.color = 'var(--gold)';
-    if (p.price) {
+    price.style.marginTop='4px'; price.style.fontWeight='800'; price.style.color='var(--gold)';
+    if(p.price){
       price.textContent = (mode==='arriendo' ? '$'+formatCOP(p.price)+' COP / mes' :
                            mode==='dias'     ? '$'+formatCOP(p.price)+' COP / noche' :
                                                '$'+formatCOP(p.price)+' COP');
     }
 
-    // === Ensamble ===
+    // Ensamble
     el.appendChild(mediaDiv);
     el.appendChild(body);
-    body.appendChild(h3);
-    body.appendChild(specs);
-    body.appendChild(price);
+    body.appendChild(h3); body.appendChild(specs); body.appendChild(price);
 
-    // === Click en card (evita error si target no soporta closest) ===
+    // Click en tarjeta (evitar navegación si se hizo click en fav)
     el.addEventListener('click', function(e){
-      const t = e.target;
-      if (t && typeof t.closest === 'function' && t.closest('.fav-btn')) return;
+      // recorremos hacia arriba sin usar closest para máxima compatibilidad
+      var n = e.target;
+      while(n && n !== el){
+        if(n.classList && n.classList.contains('fav-btn')) return;
+        n = n.parentNode;
+      }
       const id = p.id || '';
-      if (!id) return;
       window.location.href = 'detalle-propiedad.html?id=' + encodeURIComponent(id);
     });
 
@@ -389,7 +384,7 @@ document.addEventListener('DOMContentLoaded', function(){
     try{
       let data; try{ data = await getJSONCached('properties/data.json', { ttlMs: 1000*60*60*6, revalidate: true }); }catch(_){ try{ data = await getJSONCached('/PRUEBA-PILOTO/properties/data.json', { ttlMs: 1000*60*60*6, revalidate: true }); }catch(__){ data = await getJSONCached('/properties/data.json', { ttlMs: 1000*60*60*6, revalidate: true }); }}
       if(!Array.isArray(data)) throw new Error('Formato inválido');
-      return data.filter(it => String(it.operation).toLowerCase() === String(op).toLowerCase());
+      return data.filter(function(it){ return String(it.operation).toLowerCase() === String(op).toLowerCase(); });
     }catch(e){
       console.warn('No se pudieron cargar propiedades', op, e);
       return [];
@@ -397,9 +392,10 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   document.addEventListener('DOMContentLoaded', async function(){
-    const tasks = cfg.map(c => fetchByOperation(c.operation).then(arr => ({c, arr})));
+    const tasks = cfg.map(function(c){ return fetchByOperation(c.operation).then(function(arr){ return {c, arr}; }); });
     const results = await Promise.all(tasks);
-    results.forEach(({c, arr})=>{
+    results.forEach(function(pair){
+      const c = pair.c, arr = pair.arr;
       const root = document.getElementById(c.targetId);
       if(!root) return;
       root.innerHTML = '';
@@ -414,24 +410,21 @@ document.addEventListener('DOMContentLoaded', function(){
         return;
       }
 
-      /* === REEMPLAZO 1: usar orden inteligente === */
+      /* === ORDEN INTELIGENTE === */
       const ordered = smartOrder(arr);
-      ordered.slice(0,8).forEach(p => root.appendChild(buildCard(p, c.mode)));
+      ordered.slice(0,8).forEach(function(p){ root.appendChild(buildCard(p, c.mode)); });
     });
 
-    // Si la revalidación en background actualiza el JSON, podemos refrescar cards (opcional)
-    document.addEventListener('altorra:json-updated', (ev) => {
-      if (!/properties\/data\.json$/.test(ev.detail?.url || '')) return;
-      // Render simple otra vez (sin flicker porque ya hay contenido)
-      cfg.forEach(async (c) => {
+    // Refresco si hay revalidación del JSON
+    document.addEventListener('altorra:json-updated', function(ev){
+      if (!/properties\/data\.json$/.test((ev.detail && ev.detail.url) || '')) return;
+      cfg.forEach(async function(c){
         const root = document.getElementById(c.targetId);
         if(!root) return;
         const arr = await fetchByOperation(c.operation);
         root.innerHTML = '';
-
-        /* === REEMPLAZO 2: usar orden inteligente en refresco === */
         const ordered = smartOrder(arr);
-        ordered.slice(0,8).forEach(p => root.appendChild(buildCard(p, c.mode)));
+        ordered.slice(0,8).forEach(function(p){ root.appendChild(buildCard(p, c.mode)); });
       });
     }, { once: true });
   });
@@ -457,4 +450,9 @@ if('serviceWorker' in navigator){
       "sameAs": ["https://www.instagram.com/altorrainmobiliaria", "https://www.facebook.com/share/16MEXCeAB4/?mibextid=wwXIfr", "https://www.tiktok.com/@altorrainmobiliaria"]
     };
     var s = document.createElement('script');
-    s.type = "application/ld
+    s.type = "application/ld+json";
+    s.className = "org-jsonld";
+    s.textContent = JSON.stringify(org);
+    document.head.appendChild(s);
+  }catch(e){ console.warn("Org JSON-LD inject failed", e); }
+})();
