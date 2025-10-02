@@ -58,13 +58,18 @@ window.__ALT_BUILD='2025-09-15d';
 /* v2025-09-07.1 — Fixes: city sin doble encode + URLs absolutas en imágenes */
 
 /* ============== 0) Utilidades comunes ============== */
-const ALT_CACHE_VER = '2025-09-07.1';
+const ALT_CACHE_VER = '2025-09-07.1';        // ↺ Sube si cambias estructura de datos
 const ALT_NS = 'altorra:json:';
 function jsonKey(url){ return `${ALT_NS}${url}::${ALT_CACHE_VER}`; }
 function now(){ return Date.now(); }
+// Normaliza rutas (soporta subcarpetas)
 function resolveAsset(u){ if(!u) return ''; try{ return new URL(u, document.baseURI).href; }catch(_){ return u; }}
 
-/** Cache JSON con TTL y revalidación en background */
+/**
+ * Cache JSON en localStorage con TTL y revalidación en segundo plano.
+ * - Si hay caché válida ⇒ devuelve rápido (resolve con caché) y además revalida.
+ * - Si no hay caché ⇒ hace fetch normal, guarda y devuelve.
+ */
 async function getJSONCached(url, { ttlMs = 1000 * 60 * 60 * 6, revalidate = true } = {}) {
   let cached = null;
   try {
@@ -77,19 +82,23 @@ async function getJSONCached(url, { ttlMs = 1000 * 60 * 60 * 6, revalidate = tru
     }
   } catch(_) {}
 
+  // Si hay caché vigente, lo entregamos ya
   if (cached) {
     if (revalidate) {
+      // Revalidación en background no bloqueante
       fetch(url, { cache: 'no-store' })
         .then(r => r.ok ? r.json() : Promise.reject(r.status))
         .then(data => {
           try { localStorage.setItem(jsonKey(url), JSON.stringify({ t: now(), data })); } catch(_){}
+          // Aviso opcional por evento (por si una vista quiere re-pintar)
           document.dispatchEvent(new CustomEvent('altorra:json-updated', { detail: { url } }));
         })
-        .catch(()=>{});
+        .catch(()=>{ /* silencio */ });
     }
     return cached;
   }
 
+  // Sin caché: fetch normal
   const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error('HTTP ' + res.status);
   const data = await res.json();
@@ -100,8 +109,9 @@ async function getJSONCached(url, { ttlMs = 1000 * 60 * 60 * 6, revalidate = tru
 /* ============== 1) Lazy load de imágenes (excluye críticas) ============== */
 document.addEventListener('DOMContentLoaded', function() {
   const isCritical = (img) => {
-    if (img.hasAttribute('loading')) return true;
-    if (img.matches('.no-lazy, [data-eager]')) return true;
+    if (img.hasAttribute('loading')) return true;             // respeta configuración explícita (eager/lazy)
+    if (img.matches('.no-lazy, [data-eager]')) return true;   // opt-out explícito
+    // No hacer lazy en header/footer (logo, íconos) ni hero
     const inHeader = img.closest('header');
     const inFooter = img.closest('footer');
     const isHero   = img.closest('.hero');
@@ -116,7 +126,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
-/* ============== 2) Reseñas ============== */
+/* ============== 2) Reseñas: carga desde reviews.json y pinta 3 al azar ============== */
 (function(){
   const wrap = document.getElementById('google-reviews');
   const fallback = document.getElementById('reviews-fallback');
@@ -151,7 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }).catch(function(err){ console.warn('No se pudieron cargar reseñas', err); });
 })();
 
-/* ============== 3) Buscador rápido → redirección ============== */
+/* ============== 3) Buscador rápido → redirección con querystring ============== */
 (function(){
   const form = document.getElementById('quickSearch');
   if(!form) return;
@@ -160,6 +170,7 @@ document.addEventListener('DOMContentLoaded', function() {
     e.preventDefault();
     e.stopImmediatePropagation();
 
+    // 1) Si el usuario digitó un código, validamos primero
     const codeEl = document.getElementById('f-code');
     const code = (codeEl && codeEl.value || '').trim();
     if (code) {
@@ -174,13 +185,15 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch {
         alert('No fue posible validar el código en este momento.');
       }
-      return;
+      return; // ✅ Nunca seguimos a listados si hubo intento de código
     }
 
+    // 2) Si no hay código, armamos redirección a listados
     const op   = document.getElementById('op')?.value || 'comprar';
     const type = document.getElementById('f-type')?.value || '';
     const city = document.getElementById('f-city')?.value || '';
-    const budget = document.getElementById('f-budget')?.value || '';
+    // En la home solo tienes un campo de presupuesto:
+    const budget = document.getElementById('f-budget')?.value || ''; // ← este es tu "Presupuesto"
 
     const map = {
       comprar: 'propiedades-comprar.html',
@@ -192,7 +205,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const params = new URLSearchParams();
     if (city)  params.set('city', city);
     if (type)  params.set('type', type);
-    if (budget) params.set('max', budget);
+    if (budget) params.set('max', budget); // ✅ presupuesto → max
 
     const query = params.toString();
     window.location.href = dest + (query ? '?' + query : '');
@@ -216,7 +229,8 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 })();
 
-/* ============== 4) Buscador rápido (home) 2 ============== */
+
+/* ============== 4) Buscador rápido (home) -> redirección a listados o al detalle por Código ============== */
 document.addEventListener('DOMContentLoaded', function(){
   const form = document.getElementById('quickSearch');
   if(!form) return;
@@ -228,6 +242,7 @@ document.addEventListener('DOMContentLoaded', function(){
     const code = (document.getElementById('f-code')?.value || '').trim();
     const budget = document.getElementById('f-budget')?.value || '';
 
+    // Si hay código, intentamos resolverlo aquí (para mejor UX)
     if(code){
       try{
         let data; try{ data = await getJSONCached('properties/data.json', { ttlMs: 1000*60*60*6, revalidate:false }); }
@@ -235,7 +250,8 @@ document.addEventListener('DOMContentLoaded', function(){
         catch(__){ data = await getJSONCached('/properties/data.json', { ttlMs: 1000*60*60*6, revalidate:false }); }}
         const hit = (Array.isArray(data)?data:[]).find(function(p){ return String(p.id||'').toLowerCase() === code.toLowerCase(); });
         if(hit){ window.location.href = 'detalle-propiedad.html?id=' + encodeURIComponent(code); return; }
-      }catch(_){}
+        // si no existe, seguimos a la página de la operación con el code para que muestre mensaje
+      }catch(_){ /* seguimos usando redirección a listados */ }
     }
 
     const page = op==='arrendar' ? 'propiedades-arrendar.html' : (op==='alojar' ? 'propiedades-alojamientos.html' : 'propiedades-comprar.html');
@@ -260,7 +276,7 @@ document.addEventListener('DOMContentLoaded', function(){
   function formatCOP(n){ if(n==null) return ''; return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.'); }
   function escapeHtml(s){ return String(s||'').replace(/[&<>"]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
 
-  /* ===== Toast reutilizable para favoritos ===== */
+  /* ===== Toast reutilizable para favoritos (estilo detalle) ===== */
   function showFavToast(added){
     try{
       const toast = document.createElement('div');
@@ -277,7 +293,7 @@ document.addEventListener('DOMContentLoaded', function(){
     }catch(_){}
   }
 
-  /* ===== buildCard con botón de favorito (centrado) ===== */
+  /* ===== buildCard con botón de favorito (en la misma línea, centrado) ===== */
   function buildCard(p, mode){
     const el = document.createElement('article');
     el.className = 'card'; el.setAttribute('role','listitem');
@@ -293,18 +309,24 @@ document.addEventListener('DOMContentLoaded', function(){
       if (isAbsolute || str.startsWith('/')) {
         img.src = str;
       } else {
-        img.src = '/' + str.replace(/^\.?\//,'');
+        img.src = '/' + str.replace(/^\.?\//,''); // normaliza a ruta absoluta local
       }
     } else {
       img.src = 'https://i.postimg.cc/0yYb8Y6r/placeholder.png';
     }
 
-    // Contenedor media + botón favorito
+    // Contenedor media (solo imagen)
     const mediaDiv = document.createElement('div');
     mediaDiv.className = 'media';
     mediaDiv.style.position = 'relative';
+    mediaDiv.appendChild(img);
 
-    // Botón favorito centrado
+    // Cuerpo
+    const body = document.createElement('div'); body.className='body';
+
+    // --- FAVORITOS: centrado en su propia línea dentro del body (no sobre la foto) ---
+    const favRow = document.createElement('div');
+    favRow.style.cssText = 'display:flex;justify-content:center;margin:8px 0 6px;';
     const favBtn = document.createElement('button');
     favBtn.className = 'fav-btn';
     favBtn.type = 'button';
@@ -312,20 +334,18 @@ document.addEventListener('DOMContentLoaded', function(){
     favBtn.setAttribute('aria-pressed', 'false');
     favBtn.setAttribute('data-prop-id', p.id || '');
     favBtn.innerHTML = `
-      <span class="heart" style="font-size:1.25rem;line-height:1">♡</span>
+      <span class="heart" style="font-size:1.1rem;line-height:1">♡</span>
       <span class="label" style="font-weight:700;font-size:.92rem">Guardar en favoritos</span>
     `;
-    // estilos para centrar y legibilidad sobre la foto
     Object.assign(favBtn.style, {
-      position:'absolute', left:'50%', transform:'translateX(-50%)',
-      bottom:'10px', zIndex:'3',
       display:'inline-flex', alignItems:'center', gap:'8px',
       padding:'6px 12px', borderRadius:'999px',
       background:'#fff', border:'1px solid rgba(17,24,39,.12)',
-      boxShadow:'0 8px 18px rgba(0,0,0,.12)', cursor:'pointer'
+      boxShadow:'0 4px 10px rgba(0,0,0,.06)', cursor:'pointer'
     });
+    favRow.appendChild(favBtn);
 
-    // Estado inicial
+    // Estado inicial (♥ y texto)
     try{
       if (window.AltorraFavoritos && p && p.id){
         var isFav = !!window.AltorraFavoritos.isFavorite(p.id);
@@ -353,19 +373,12 @@ document.addEventListener('DOMContentLoaded', function(){
         var lbl = favBtn.querySelector('.label');
         if(h2){ h2.textContent = nowFav ? '♥' : '♡'; }
         if(lbl){ lbl.textContent = nowFav ? 'Guardado en favoritos' : 'Guardar en favoritos'; }
-
-        favBtn.style.transform='translateX(-50%) scale(1.04)';
-        setTimeout(()=>{ favBtn.style.transform='translateX(-50%)'; }, 160);
-
+        favBtn.style.transform='scale(1.04)';
+        setTimeout(()=>{ favBtn.style.transform='scale(1)'; }, 160);
         showFavToast(nowFav);
       }catch(_){}
     });
 
-    mediaDiv.appendChild(img);
-    mediaDiv.appendChild(favBtn);
-
-    // Cuerpo
-    const body = document.createElement('div'); body.className='body';
     const h3 = document.createElement('h3'); h3.innerHTML = escapeHtml(p.title || 'Sin título');
 
     const specs = document.createElement('div'); specs.style.color='var(--muted)';
@@ -386,9 +399,12 @@ document.addEventListener('DOMContentLoaded', function(){
     // Ensamble
     el.appendChild(mediaDiv);
     el.appendChild(body);
-    body.appendChild(h3); body.appendChild(specs); body.appendChild(price);
+    body.appendChild(favRow);      // <— aquí va la línea centrada
+    body.appendChild(h3);
+    body.appendChild(specs);
+    body.appendChild(price);
 
-    // Navegación (evitar si clic en fav)
+    // Click en tarjeta (evitar navegación si se hizo click en fav)
     el.addEventListener('click', function(e){
       var n = e.target;
       while(n && n !== el){
@@ -432,10 +448,12 @@ document.addEventListener('DOMContentLoaded', function(){
         return;
       }
 
+      /* === ORDEN INTELIGENTE === */
       const ordered = smartOrder(arr);
       ordered.slice(0,8).forEach(function(p){ root.appendChild(buildCard(p, c.mode)); });
     });
 
+    // Refresco si hay revalidación del JSON
     document.addEventListener('altorra:json-updated', function(ev){
       if (!/properties\/data\.json$/.test((ev.detail && ev.detail.url) || '')) return;
       cfg.forEach(async function(c){
@@ -450,7 +468,7 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 })();
 
-/* ============== 6) Registrar service worker ============== */
+/* ============== 6) Registrar service worker para PWA (si existe) ============== */
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('/service-worker.js').catch(function(err){
     console.warn('SW registration failed', err);
