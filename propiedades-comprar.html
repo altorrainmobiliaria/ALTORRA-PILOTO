@@ -158,13 +158,12 @@ footer{background:#0b0b0b;color:#fff;padding:36px 16px}
 
 <div id="footer-placeholder"></div>
 
+<!-- ✅ ORDEN CORRECTO DE SCRIPTS -->
 <script defer src="header-footer.js"></script>
-<!-- ✅ NUEVO: Cache Manager PRIMERO -->
-<script src="js/cache-manager.js"></script>
-<!-- ✅ Luego el listado que depende del cache -->
-<script src="js/listado-propiedades.js"></script>
+<script defer src="js/listado-propiedades.js"></script>
 <script defer src="js/favoritos.js"></script>
 
+<!-- ✅ Toggle de filtros avanzados (con espera del DOM) -->
 <script>
 (function() {
   'use strict';
