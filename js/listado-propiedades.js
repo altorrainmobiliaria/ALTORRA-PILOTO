@@ -254,7 +254,15 @@
     console.log('[Altorra] Inicializando listado. Modo:', PAGE_MODE);
     
     const counter = document.getElementById('resultsCount');
-    if (counter) counter.innerHTML = '<span style="color:var(--muted)">⏳ Cargando propiedades...</span>';
+    const list = document.getElementById('list');
+    
+    // ✅ FORZAR mensaje de carga
+    if (counter) {
+      counter.innerHTML = '<span style="color:var(--muted)">⏳ Cargando propiedades...</span>';
+    }
+    if (list && list.children.length === 0) {
+      list.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)"><p>⏳ Cargando propiedades...</p></div>';
+    }
     
     try {
       const data = await getJSONCached('properties/data.json');
