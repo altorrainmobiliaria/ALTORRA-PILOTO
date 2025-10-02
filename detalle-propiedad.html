@@ -373,11 +373,75 @@ async function init(){
       else priceRow.textContent='$'+formatCOP(prop.price)+' COP';
     }
 
+    /* ===== Botón Favoritos (DESPUÉS del precio) ===== */
+    function addFavoriteButton(){
+      const favBtn = document.createElement('button');
+      favBtn.id = 'detail-fav-btn';
+      favBtn.type = 'button';
+      favBtn.className = 'btn btn-ghost';
+      favBtn.style.cssText = `
+        display:inline-flex;align-items:center;gap:8px;
+        padding:12px 20px;border-radius:12px;font-weight:700;
+        border:2px solid rgba(212,175,55,0.3);background:#fff;color:var(--text);
+        cursor:pointer;transition:all .2s ease;margin-top:12px;
+      `;
+      const hasAPI = !!window.AltorraFavoritos;
+      const isFav = hasAPI ? window.AltorraFavoritos.isFavorite(prop.id) : false;
+      favBtn.innerHTML = isFav
+        ? '<span style="font-size:1.2rem">♥</span> Guardado en favoritos'
+        : '<span style="font-size:1.2rem">♡</span> Guardar en favoritos';
+      favBtn.setAttribute('aria-pressed', isFav ? 'true' : 'false');
+
+      favBtn.addEventListener('click', () => {
+        if (!hasAPI) { alert('Sistema de favoritos no disponible'); return; }
+        const nowFav = window.AltorraFavoritos.toggle({
+          id: prop.id, title: prop.title, city: prop.city, price: prop.price,
+          image: prop.image || (Array.isArray(prop.images) && prop.images[0]) || '',
+          operation: prop.operation, beds: prop.beds, baths: prop.baths, sqm: prop.sqm, type: prop.type
+        });
+        favBtn.setAttribute('aria-pressed', nowFav ? 'true' : 'false');
+        favBtn.innerHTML = nowFav
+          ? '<span style="font-size:1.2rem">♥</span> Guardado en favoritos'
+          : '<span style="font-size:1.2rem">♡</span> Guardar en favoritos';
+
+        favBtn.style.transform = 'scale(1.05)';
+        setTimeout(() => { favBtn.style.transform = 'scale(1)'; }, 200);
+
+        const toast = document.createElement('div');
+        toast.textContent = nowFav ? '♥ Agregado a favoritos' : 'Removido de favoritos';
+        toast.style.cssText = `
+          position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+          background:#111;color:#fff;padding:12px 24px;border-radius:8px;
+          font-weight:600;z-index:9999;opacity:0;transition:opacity .2s ease;
+        `;
+        document.body.appendChild(toast);
+        requestAnimationFrame(()=>{ toast.style.opacity = '1'; });
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          setTimeout(() => toast.remove(), 250);
+        }, 2000);
+      });
+
+      favBtn.addEventListener('mouseenter', () => {
+        favBtn.style.borderColor = 'var(--gold)';
+        favBtn.style.boxShadow = '0 4px 12px rgba(212,175,55,0.2)';
+      });
+      favBtn.addEventListener('mouseleave', () => {
+        favBtn.style.borderColor = 'rgba(212,175,55,0.3)';
+        favBtn.style.boxShadow = 'none';
+      });
+
+      infoDiv.appendChild(favBtn);
+    }
+
     const desc=document.createElement('div'); desc.className='desc'; buildDescription(desc, prop.description||'');
 
     infoDiv.appendChild(h1); infoDiv.appendChild(status); infoDiv.appendChild(badges);
     if(specs.textContent) infoDiv.appendChild(specs);
-    if(priceRow.textContent) infoDiv.appendChild(priceRow);
+    if(priceRow.textContent){
+      infoDiv.appendChild(priceRow);
+      addFavoriteButton(); /* <-- aquí se inserta el botón justo después del precio */
+    }
     if(desc.childNodes.length) infoDiv.appendChild(desc);
 
     /* ===== Formulario ===== */
@@ -576,6 +640,4 @@ document.addEventListener('DOMContentLoaded', init);
 })();
 </script>
   <script defer src="js/favoritos.js"></script>
-
-
 </html>
