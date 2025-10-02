@@ -158,26 +158,6 @@ footer{background:#0b0b0b;color:#fff;padding:36px 16px}
 
 <div id="footer-placeholder"></div>
 
-<script>
-(function() {
-  'use strict';
-  function showLoading() {
-    const counter = document.getElementById('resultsCount');
-    const list = document.getElementById('list');
-    if (counter && !counter.textContent.trim()) {
-      counter.innerHTML = '<span style="color:var(--muted)">⏳ Cargando propiedades...</span>';
-    }
-    if (list && !list.children.length) {
-      list.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)"><p>⏳ Cargando propiedades...</p></div>';
-    }
-  }
-  showLoading();
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', showLoading);
-  }
-})();
-</script>
-
 <script defer src="header-footer.js"></script>
 <script src="js/listado-propiedades.js"></script>
 <script defer src="js/favoritos.js"></script>
