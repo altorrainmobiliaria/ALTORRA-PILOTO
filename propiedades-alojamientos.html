@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <title>Alojamientos por Días | Altorra Inmobiliaria</title>
-<meta content="Compra de propiedades con Altorra: atención personalizada y asesoría jurídica." name="description"/>
+<meta content="Rentas de corta estancia con Altorra Inmobiliaria." name="description"/>
 <link href="manifest.json" rel="manifest"/>
 <meta content="#d4af37" name="theme-color"/>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700;800&amp;display=swap" rel="stylesheet"/>
@@ -157,26 +157,6 @@ footer{background:#0b0b0b;color:#fff;padding:36px 16px}
 </main>
 
 <div id="footer-placeholder"></div>
-
-<script>
-(function() {
-  'use strict';
-  function showLoading() {
-    const counter = document.getElementById('resultsCount');
-    const list = document.getElementById('list');
-    if (counter && !counter.textContent.trim()) {
-      counter.innerHTML = '<span style="color:var(--muted)">⏳ Cargando propiedades...</span>';
-    }
-    if (list && !list.children.length) {
-      list.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)"><p>⏳ Cargando propiedades...</p></div>';
-    }
-  }
-  showLoading();
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', showLoading);
-  }
-})();
-</script>
 
 <script defer src="header-footer.js"></script>
 <script src="js/listado-propiedades.js"></script>
