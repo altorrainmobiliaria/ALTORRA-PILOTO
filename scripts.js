@@ -275,51 +275,113 @@ document.addEventListener('DOMContentLoaded', function(){
   function formatCOP(n){ if(n==null) return ''; return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.'); }
   function escapeHtml(s){ return String(s||'').replace(/[&<>"]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
 
+  /* ========================================
+     REEMPLAZO: buildCard con botón de favorito
+     ======================================== */
   function buildCard(p, mode){
     const el = document.createElement('article');
-    el.className = 'card'; el.setAttribute('role','listitem');
+    el.className = 'card';
+    el.setAttribute('role','listitem');
 
+    // === Imagen ===
     const img = document.createElement('img');
-    // Respetamos lazy por defecto, pero permitimos excluir si se desea con .no-lazy / data-eager
-    img.loading='lazy'; img.decoding='async'; img.alt = escapeHtml(p.title || 'Propiedad');
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    img.alt = escapeHtml(p.title || 'Propiedad');
     const raw = p.image || p.img || p.img_url || p.imgUrl || p.photo;
 
     if (raw) {
-      const isAbsolute = /^https?:\/\//i.test(raw);
-      if (isAbsolute || raw.startsWith('/')) {
-        img.src = raw;
+      const str = String(raw);
+      const isAbsolute = /^https?:\/\//i.test(str);
+      if (isAbsolute || str.startsWith('/')) {
+        img.src = str;
       } else {
-        img.src = '/' + raw.replace(/^\.?\//,''); // normaliza a ruta absoluta local
+        img.src = '/' + str.replace(/^\.?\//,''); // normaliza a ruta absoluta local
       }
     } else {
       img.src = 'https://i.postimg.cc/0yYb8Y6r/placeholder.png';
     }
 
-    const body = document.createElement('div'); body.className='body';
-    const h3 = document.createElement('h3'); h3.innerHTML = escapeHtml(p.title || 'Sin título');
+    // === Contenedor media + botón favorito ===
+    const mediaDiv = document.createElement('div');
+    mediaDiv.className = 'media';
+    mediaDiv.style.position = 'relative';
 
-    const specs = document.createElement('div'); specs.style.color='var(--muted)';
+    const favBtn = document.createElement('button');
+    favBtn.className = 'fav-btn';
+    favBtn.type = 'button';
+    favBtn.setAttribute('aria-label', 'Guardar favorito');
+    favBtn.setAttribute('aria-pressed', 'false');
+    favBtn.setAttribute('data-prop-id', p.id || '');
+    favBtn.innerHTML = '<span class="heart">♡</span>';
+
+    // Toggle favorito (si existe la API)
+    favBtn.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      if (!window.AltorraFavoritos || !p?.id) return;
+      const nowFav = window.AltorraFavoritos.toggle({
+        id: p.id, title: p.title, city: p.city, price: p.price,
+        image: p.image || (Array.isArray(p.images) && p.images[0]) || '',
+        operation: p.operation, beds: p.beds, baths: p.baths, sqm: p.sqm, type: p.type
+      });
+      favBtn.setAttribute('aria-pressed', nowFav ? 'true' : 'false');
+      const heart = favBtn.querySelector('.heart');
+      if (heart) heart.textContent = nowFav ? '♥' : '♡';
+    });
+
+    // Sincroniza estado inicial si la API existe
+    if (window.AltorraFavoritos && p?.id) {
+      const isFav = !!window.AltorraFavoritos.isFavorite(p.id);
+      favBtn.setAttribute('aria-pressed', isFav ? 'true' : 'false');
+      const heart = favBtn.querySelector('.heart');
+      if (heart) heart.textContent = isFav ? '♥' : '♡';
+    }
+
+    mediaDiv.appendChild(img);
+    mediaDiv.appendChild(favBtn);
+
+    // === Texto ===
+    const body = document.createElement('div');
+    body.className = 'body';
+
+    const h3 = document.createElement('h3');
+    h3.innerHTML = escapeHtml(p.title || 'Sin título');
+
+    const specs = document.createElement('div');
+    specs.style.color = 'var(--muted)';
     const parts = [];
-    if(p.beds)  parts.push(p.beds+'H');
-    if(p.baths) parts.push(p.baths+'B');
-    if(p.sqm)   parts.push(p.sqm+' m²');
+    if (p.beds)  parts.push(p.beds+'H');
+    if (p.baths) parts.push(p.baths+'B');
+    if (p.sqm)   parts.push(p.sqm+' m²');
     specs.textContent = parts.join(' · ');
 
     const price = document.createElement('div');
-    price.style.marginTop='4px'; price.style.fontWeight='800'; price.style.color='var(--gold)';
-    if(p.price){
+    price.style.marginTop = '4px';
+    price.style.fontWeight = '800';
+    price.style.color = 'var(--gold)';
+    if (p.price) {
       price.textContent = (mode==='arriendo' ? '$'+formatCOP(p.price)+' COP / mes' :
                            mode==='dias'     ? '$'+formatCOP(p.price)+' COP / noche' :
                                                '$'+formatCOP(p.price)+' COP');
     }
 
-    el.appendChild(img); el.appendChild(body);
-    body.appendChild(h3); body.appendChild(specs); body.appendChild(price);
+    // === Ensamble ===
+    el.appendChild(mediaDiv);
+    el.appendChild(body);
+    body.appendChild(h3);
+    body.appendChild(specs);
+    body.appendChild(price);
 
-    el.addEventListener('click', function(){
+    // === Click en card (evita error si target no soporta closest) ===
+    el.addEventListener('click', function(e){
+      const t = e.target;
+      if (t && typeof t.closest === 'function' && t.closest('.fav-btn')) return;
       const id = p.id || '';
+      if (!id) return;
       window.location.href = 'detalle-propiedad.html?id=' + encodeURIComponent(id);
     });
+
     return el;
   }
 
@@ -395,9 +457,4 @@ if('serviceWorker' in navigator){
       "sameAs": ["https://www.instagram.com/altorrainmobiliaria", "https://www.facebook.com/share/16MEXCeAB4/?mibextid=wwXIfr", "https://www.tiktok.com/@altorrainmobiliaria"]
     };
     var s = document.createElement('script');
-    s.type = "application/ld+json";
-    s.className = "org-jsonld";
-    s.textContent = JSON.stringify(org);
-    document.head.appendChild(s);
-  }catch(e){ console.warn("Org JSON-LD inject failed", e); }
-})();
+    s.type = "application/ld
