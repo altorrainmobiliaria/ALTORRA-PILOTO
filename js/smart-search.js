@@ -1,18 +1,18 @@
-/* =========================================================
-   ALTORRA • Smart Search (V7 - Mobile First)
-   - Evita zoom de Safari (font-size 16px en inputs)
-   - No cierra al scrollear fuera (tap real para cerrar)
-   - Dropdown con scroll móvil fluido (iOS/Android)
-   - Relevancia por tokens (title/hood/city/id) + fuzzy apoyo
-   - Singleton dropdown (sin encogimientos)
-   ========================================================= */
+/* =====================================================================
+   ALTORRA • Smart Search (V8 - Semantic Features & Mobile Ready)
+   - Semántica de amenities: piscina, balcón, vista al mar, ascensor, etc.
+   - Sinónimos ES/EN y tolerancia a acentos/plurales
+   - Reconoce 3h/2b/1g (habitaciones/baños/garajes) como mínimos
+   - Relevancia estricta por tokens + boost fuerte en features
+   - Singleton dropdown estable (PC/móvil), sin zoom iOS, con scroll fluido
+   ===================================================================== */
 
 (function () {
   'use strict';
 
   /* ---------- Config ---------- */
   const MIN_CHARS = 2;
-  const MAX_SUGGESTIONS = 10;
+  const MAX_SUGGESTIONS = 12;
   const DEBOUNCE_MS = 200;
   const MIN_W = 360, MAX_W = 920, VW_LIMIT = 0.96;
 
@@ -20,7 +20,6 @@
   const debounce = (fn, wait) => { let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), wait); }; };
   const escapeHtml = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
   const normalize  = s => String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\w\s]/g,' ').replace(/\s+/g,' ').trim();
-  const splitTokens = s => normalize(s).split(' ').filter(Boolean);
   const clamp = (v, min, max)=>Math.max(min, Math.min(max, v));
   const fuzzyScore = (n, h)=>{ n=n.toLowerCase(); let s=0,i=0,j=0; while(i<n.length && j<h.length){ if(n[i]===h[j]){s++;i++;} j++; } return i===n.length ? s/n.length : 0; };
 
@@ -42,6 +41,106 @@
   }
   const toArrayData = d => Array.isArray(d) ? d : (d && Array.isArray(d.properties) ? d.properties : Object.values(d||{}).find(Array.isArray) || []);
 
+  /* ---------- Vocabulario / Sinónimos ---------- */
+  // clave = canónico; valores = sinónimos/variantes
+  const FEATURE_SYNONYMS = {
+    'vista al mar': ['vista al mar','frente al mar','vista mar','ocean view','sea view','vista al oceano','vista oceano','mar'],
+    'piscina':      ['piscina','alberca','pileta','swimming pool','pool'],
+    'balcon':       ['balcon','balcón','balco n','balcony','terraza pequeña'],
+    'terraza':      ['terraza','roof top','rooftop','azotea','solarium'],
+    'ascensor':     ['ascensor','elevador','elevator'],
+    'gimnasio':     ['gimnasio','gym','fitness center'],
+    'parqueadero':  ['parqueadero','garaje','garage','estacionamiento','parking'],
+    'porteria':     ['portería','porteria','vigilancia','seguridad 24/7','seguridad','guardia'],
+    'bbq':          ['bbq','asador','zona bbq','barbecue'],
+    'jacuzzi':      ['jacuzzi','hot tub'],
+    'sauna':        ['sauna'],
+    'mascotas':     ['pet friendly','admite mascotas','mascotas','petfriendly'],
+    'amoblado':     ['amoblado','amoblada','amueblado','amueblada','furnished'],
+    'aire':         ['aire acondicionado','aire','a/a','air conditioning'],
+    'vista':        ['vista','panoramica','panorámica','city view']
+  };
+
+  // tipos de propiedad
+  const TYPE_SYNONYMS = {
+    'apartamento': ['apartamento','apartaestudio','apto','apartment','flat','aparta estudio'],
+    'casa':        ['casa','casaquinta','house','townhouse'],
+    'lote':        ['lote','terreno','parcel','lot'],
+    'oficina':     ['oficina','office'],
+  };
+
+  // transforma mapa de sinónimos en índice inverso -> canónico
+  function buildSynIndex(map) {
+    const idx = new Map();
+    Object.keys(map).forEach(canon => {
+      map[canon].forEach(v => idx.set(normalize(v), canon));
+      idx.set(normalize(canon), canon);
+    });
+    return idx;
+  }
+  const FEATURE_INDEX = buildSynIndex(FEATURE_SYNONYMS);
+  const TYPE_INDEX    = buildSynIndex(TYPE_SYNONYMS);
+
+  // Extrae tokens, preservando frases multi-palabra del vocabulario
+  function parseQuery(raw) {
+    const qNorm = normalize(raw);
+    const phrases = [];
+
+    // 1) detectar frases (características de varias palabras)
+    for (const canon of Object.keys(FEATURE_SYNONYMS)) {
+      const all = [canon, ...FEATURE_SYNONYMS[canon]];
+      for (const variant of all) {
+        const v = normalize(variant);
+        if (v.includes(' ')) {
+          if (qNorm.includes(v)) phrases.push({ type: 'feature', canon, match: v });
+        }
+      }
+    }
+    for (const canon of Object.keys(TYPE_SYNONYMS)) {
+      const all = [canon, ...TYPE_SYNONYMS[canon]];
+      for (const variant of all) {
+        const v = normalize(variant);
+        if (v.includes(' ') && qNorm.includes(v)) phrases.push({ type: 'type', canon, match: v });
+      }
+    }
+
+    // 2) eliminar frases del texto para tokenizar el resto
+    let rest = qNorm;
+    phrases.forEach(p => { rest = rest.replace(p.match, ' ').replace(/\s+/g,' ').trim(); });
+
+    // 3) tokens restantes
+    let tokens = rest.split(' ').filter(Boolean);
+
+    // 4) interpretar atajos numéricos: 3h / 2b / 1g / 3 hab / 2 baños / 1 garage
+    const constraints = { bedsMin:null, bathsMin:null, parkingMin:null, type:null, features: new Set() };
+
+    tokens = tokens.filter(tok => {
+      // num + letra
+      const m = tok.match(/^(\d+)(h|hab|habitación|habitaciones|b|ba|ban|baño|banos|g|gar|garage|park|parq|parqueadero)$/);
+      if (m) {
+        const n = parseInt(m[1],10);
+        const k = m[2][0]; // h/b/g
+        if (k === 'h') constraints.bedsMin = Math.max(constraints.bedsMin||0, n);
+        else if (k === 'b') constraints.bathsMin = Math.max(constraints.bathsMin||0, n);
+        else if (k === 'g') constraints.parkingMin = Math.max(constraints.parkingMin||0, n);
+        return false;
+      }
+      return true;
+    });
+
+    // mapear tokens a canónicos de feature/type cuando aplique
+    const mappedTokens = [];
+    tokens.forEach(tok => {
+      const canonF = FEATURE_INDEX.get(tok);
+      if (canonF) { constraints.features.add(canonF); phrases.push({type:'feature', canon:canonF, match:tok}); return; }
+      const canonT = TYPE_INDEX.get(tok);
+      if (canonT) { constraints.type = canonT; phrases.push({type:'type', canon:canonT, match:tok}); return; }
+      mappedTokens.push(tok);
+    });
+
+    return { phrases, tokens: mappedTokens, constraints };
+  }
+
   /* ---------- Scoring ---------- */
   const fieldText = p => ({
     title: normalize(p.title),
@@ -50,53 +149,123 @@
     id   : normalize(p.id),
     type : normalize(p.type),
     desc : normalize(p.description),
-    feats: normalize(Array.isArray(p.features)?p.features.join(' '):'')
+    feats: buildFeaturesIndex(p) // string con features + sinónimos
   });
-  const tokensHitStrong = (tokens, f) =>
-    tokens.every(tok => f.title.includes(tok) || f.hood.includes(tok) || f.city.includes(tok) || f.id.includes(tok));
-  const scoreProperty = (tokens, qStr, f) => {
-    let s=0;
-    tokens.forEach(t=>{
-      if(f.title.includes(t)) s+=50;
-      if(f.hood .includes(t)) s+=40;
-      if(f.city .includes(t)) s+=30;
-      if(f.id   .includes(t)) s+=35;
-      if(f.type .includes(t)) s+=10;
+
+  function buildFeaturesIndex(p) {
+    let parts = [];
+    // 1) array features declarado
+    if (Array.isArray(p.features)) parts = parts.concat(p.features.map(normalize));
+    // 2) booleans comunes → etiquetas si son true
+    const bools = {
+      'piscina': p.pool || p.hasPool || p.piscina,
+      'balcon': p.balcon || p.balcony || p.hasBalcony,
+      'ascensor': p.ascensor || p.elevator || p.hasElevator,
+      'gimnasio': p.gym || p.gimnasio || p.hasGym,
+      'parqueadero': p.parqueadero || p.garage || p.estacionamiento || p.parking || p.hasParking,
+      'terraza': p.terraza || p.rooftop || p.roof || p.hasTerrace,
+      'vista al mar': p.oceanView || p.seaView || p.vistaMar,
+      'amoblado': p.furnished || p.amoblado,
+      'mascotas': p.petFriendly || p.mascotas
+    };
+    Object.keys(bools).forEach(k => { if (bools[k]) parts.push(k); });
+
+    // 3) expandir a sinónimos para búsquedas por alias
+    const expanded = [];
+    parts.forEach(tag => {
+      const canon = FEATURE_INDEX.get(normalize(tag)) || normalize(tag);
+      expanded.push(canon);
+      const syns = FEATURE_SYNONYMS[canon];
+      if (syns) syns.forEach(s => expanded.push(normalize(s)));
     });
+
+    return expanded.join(' ');
+  }
+
+  function tokensHitStrong(tokens, f) {
+    // tokens “libres” deben pegar al menos en title/hood/city/id/type/features
+    return tokens.every(tok =>
+      f.title.includes(tok) || f.hood.includes(tok) || f.city.includes(tok) ||
+      f.id.includes(tok)    || f.type.includes(tok) || f.feats.includes(tok)
+    );
+  }
+
+  function scoreProperty(tokens, qStr, f, constraints, p) {
+    let s=0;
+
+    // 1) boosts por coincidencias exactas
+    tokens.forEach(t=>{
+      if(f.title.includes(t)) s+=55;
+      if(f.hood .includes(t)) s+=45;
+      if(f.city .includes(t)) s+=35;
+      if(f.id   .includes(t)) s+=40;
+      if(f.type .includes(t)) s+=15;
+      if(f.feats.includes(t)) s+=65; // FEATURES MUY RELEVANTES
+    });
+
+    // 2) boosts por frases (features/types del vocabulario)
+    constraints.features.forEach(canon => { if (f.feats.includes(canon)) s += 80; });
+    if (constraints.type && f.type.includes(constraints.type)) s += 50;
+
+    // 3) fuzzy sobre índice global
     const idx=[f.title,f.hood,f.city,f.id,f.type,f.desc,f.feats].join(' ');
     s += fuzzyScore(qStr, idx)*20;
+
+    // 4) ajustes por datos numéricos si hay constraints (mínimos)
+    const beds  = p.bedrooms ?? p.habitaciones ?? p.rooms ?? null;
+    const baths = p.bathrooms ?? p.banos ?? p.baños ?? null;
+    const park  = p.parking ?? p.parqueadero ?? p.garaje ?? p.garages ?? null;
+
+    if (constraints.bedsMin && beds != null) {
+      if (beds >= constraints.bedsMin) s += 25; else return -1; // descarta
+    }
+    if (constraints.bathsMin && baths != null) {
+      if (baths >= constraints.bathsMin) s += 20; else return -1;
+    }
+    if (constraints.parkingMin && park != null) {
+      if (park >= constraints.parkingMin) s += 15; else return -1;
+    }
+
     return s;
-  };
+  }
 
   async function searchProps(query){
     if(!query || query.length<MIN_CHARS) return [];
     const arr = toArrayData(await loadData());
-    const tokens = splitTokens(query);
-    const qStr   = tokens.join(' ');
-    let out = [];
+    const { phrases, tokens, constraints } = parseQuery(query);
+    const qStr = normalize(query);
 
-    for(const p of arr){
+    let out = [];
+    for (const p of arr) {
       const f = fieldText(p);
-      if(qStr.length>=3 && !tokensHitStrong(tokens, f)) continue;
-      const s = scoreProperty(tokens, qStr, f);
-      if(s>0) out.push({p,s});
+
+      // Regla estricta relajada (incluye feats)
+      if (qStr.length>=3 && !tokensHitStrong(tokens, f)) continue;
+
+      const s = scoreProperty(tokens, qStr, f, constraints, p);
+      if (s > 0) out.push({ p, s });
     }
-    if(out.length===0 && qStr.length>=3){
-      for(const p of arr){
+
+    // Si nada pasó, relajamos a “al menos 1 pegada”
+    if (out.length === 0 && qStr.length >= 3) {
+      for (const p of arr) {
         const f = fieldText(p);
-        const hasOne = tokens.some(t => f.title.includes(t)||f.hood.includes(t)||f.city.includes(t)||f.id.includes(t));
-        if(!hasOne) continue;
-        const s = scoreProperty(tokens, qStr, f);
-        if(s>0) out.push({p,s});
+        const hasOne = tokens.some(tok =>
+          f.title.includes(tok) || f.hood.includes(tok) || f.city.includes(tok) ||
+          f.id.includes(tok)    || f.type.includes(tok) || f.feats.includes(tok)
+        );
+        if (!hasOne) continue;
+        const s = scoreProperty(tokens, qStr, f, constraints, p);
+        if (s > 0) out.push({ p, s });
       }
     }
+
     return out.sort((a,b)=>b.s-a.s).slice(0,MAX_SUGGESTIONS).map(r=>r.p);
   }
 
-  /* ---------- Singleton Dropdown (mobile) ---------- */
+  /* ---------- Singleton Dropdown (estable PC/móvil) ---------- */
   const DD = (() => {
     let dd=null, activeInput=null, lockedWidth=null, bound=false;
-
     function ensure(){
       if(dd) return dd;
       dd = document.createElement('div');
@@ -109,27 +278,20 @@
         'border:1px solid rgba(0,0,0,.12)',
         'border-radius:12px',
         'box-shadow:0 12px 32px rgba(0,0,0,.18)',
-        'max-height:60vh',                 // más alto en móvil
+        'max-height:60vh',
         'overflow-y:auto',
-        'overscroll-behavior:contain',     // evita que “se lleve” al body
-        'touch-action:pan-y',              // permite scroll vertical
-        '-webkit-overflow-scrolling:touch',// scroll suave iOS
-        'z-index:2147483647',
-        'display:none'
+        'overscroll-behavior:contain',
+        'touch-action:pan-y',
+        '-webkit-overflow-scrolling:touch',
+        'z-index:2147483647','display:none'
       ].join(';');
-
-      // IMPORTANTE: en móvil NO bloqueamos touchstart del contenedor
-      // (para permitir iniciar el scroll). Solo evitamos blur con mouse.
+      // mouse: evitar blur; móvil: no bloqueamos touchstart (para scroll)
       dd.addEventListener('mousedown', e=>e.preventDefault());
-
       document.body.appendChild(dd);
       return dd;
     }
-
     function setActive(input, {lockWidth=false} = {}){
-      activeInput = input;
-      ensure();
-      position({lockWidth});
+      activeInput = input; ensure(); position({lockWidth});
       if(!bound){
         bound=true;
         window.addEventListener('resize', ()=>position());
@@ -137,7 +299,6 @@
         window.addEventListener('orientationchange', ()=>setTimeout(()=>position({lockWidth:true}), 250));
       }
     }
-
     function position({lockWidth=false} = {}){
       if(!dd || !activeInput) return;
       const r  = activeInput.getBoundingClientRect();
@@ -150,12 +311,10 @@
       dd.style.left  = (r.left + window.scrollX) + 'px';
       dd.style.width = lockedWidth + 'px';
     }
-
-    function show(){ dd.style.display='block'; }
-    function hide(){ dd.style.display='none'; lockedWidth=null; }
-    function isOpen(){ return dd && dd.style.display!=='none'; }
-    function el(){ return dd || ensure(); }
-
+    const show = ()=> dd.style.display='block';
+    const hide = ()=> { dd.style.display='none'; lockedWidth=null; };
+    const isOpen = ()=> dd && dd.style.display!=='none';
+    const el = ()=> dd || ensure();
     return { setActive, position, show, hide, isOpen, el };
   })();
 
@@ -194,36 +353,20 @@
     DD.show();
   }
 
-  /* ---------- Cierre por TAP (no por scroll) ---------- */
+  /* ---------- Tap-to-close inteligente (no por scroll) ---------- */
   function installTapToClose(input){
     let startY=null, startX=null, moved=false;
-    const onStart = (e)=>{
-      const t = e.touches ? e.touches[0] : e;
-      startX=t.clientX; startY=t.clientY; moved=false;
-    };
-    const onMove = (e)=>{
-      if(startY==null) return;
-      const t = e.touches ? e.touches[0] : e;
-      if (Math.abs(t.clientY-startY) > 10 || Math.abs(t.clientX-startX) > 10) moved=true; // scroll, no cerrar
-    };
-    const onEnd = (e)=>{
-      if(!DD.isOpen()) return;
-      const dd = DD.el();
-      const target = e.target;
-      if (moved) return; // fue scroll → no cerrar
-      if (!dd.contains(target) && target!==input) DD.hide(); // tap fuera → cerrar
-    };
+    const onStart = (e)=>{ const t=e.touches?e.touches[0]:e; startX=t.clientX; startY=t.clientY; moved=false; };
+    const onMove  = (e)=>{ if(startY==null) return; const t=e.touches?e.touches[0]:e; if(Math.abs(t.clientY-startY)>10||Math.abs(t.clientX-startX)>10) moved=true; };
+    const onEnd   = (e)=>{ if(!DD.isOpen()) return; const dd=DD.el(); const target=e.target; if(moved) return; if(!dd.contains(target) && target!==input) DD.hide(); };
     document.addEventListener('touchstart', onStart, {passive:true});
     document.addEventListener('touchmove',  onMove,  {passive:true});
     document.addEventListener('touchend',   onEnd,   {passive:true});
-    document.addEventListener('mousedown', (e)=>{
-      const dd=DD.el(); if(DD.isOpen() && !dd.contains(e.target) && e.target!==input) DD.hide();
-    });
+    document.addEventListener('mousedown', (e)=>{ const dd=DD.el(); if(DD.isOpen() && !dd.contains(e.target) && e.target!==input) DD.hide(); });
   }
 
   /* ---------- Prevención de ZOOM (iOS) ---------- */
   function enforceMobileInputStyles(input){
-    // Evita zoom de Safari al enfocar: mínimo 16px
     input.style.fontSize = '16px';
     input.style.lineHeight = '1.4';
     input.setAttribute('inputmode','search');
@@ -256,9 +399,9 @@
 
       input.addEventListener('input', run);
       input.addEventListener('focus', run);
-      installTapToClose(input);   // cierra solo con TAP real, no con scroll
+      installTapToClose(input);
 
-      // Teclado (opcional en móvil; útil en desktop)
+      // Teclado (desktop)
       let current=-1;
       const dd = DD.el();
       const items=()=>dd.querySelectorAll('.ss-item');
