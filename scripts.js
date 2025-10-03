@@ -451,6 +451,12 @@ document.addEventListener('DOMContentLoaded', function(){
       /* === ORDEN INTELIGENTE === */
       const ordered = smartOrder(arr);
       ordered.slice(0,8).forEach(function(p){ root.appendChild(buildCard(p, c.mode)); });
+      // >>> Favoritos: re-init seguro para home
+      if (window.AltorraFavoritos && typeof window.AltorraFavoritos.init === 'function') {
+        try { window.AltorraFavoritos.init(); } catch(_){}
+      }
+      try { document.dispatchEvent(new CustomEvent('altorra:properties-loaded')); } catch(_){}
+
     });
 
     // Refresco si hay revalidación del JSON
@@ -463,6 +469,12 @@ document.addEventListener('DOMContentLoaded', function(){
         root.innerHTML = '';
         const ordered = smartOrder(arr);
         ordered.slice(0,8).forEach(function(p){ root.appendChild(buildCard(p, c.mode)); });
+      // >>> Favoritos: re-init seguro para home
+      if (window.AltorraFavoritos && typeof window.AltorraFavoritos.init === 'function') {
+        try { window.AltorraFavoritos.init(); } catch(_){}
+      }
+      try { document.dispatchEvent(new CustomEvent('altorra:properties-loaded')); } catch(_){}
+
       });
     }, { once: true });
   });
