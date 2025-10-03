@@ -1,12 +1,11 @@
-/* =====================================================================
-   ALTORRA • Smart Search (V8 - Semantic Features & Mobile Ready)
-   - Semántica de amenities: piscina, balcón, vista al mar, ascensor, etc.
-   - Sinónimos ES/EN y tolerancia a acentos/plurales
-   - Reconoce 3h/2b/1g (habitaciones/baños/garajes) como mínimos
-   - Relevancia estricta por tokens + boost fuerte en features
-   - Singleton dropdown estable (PC/móvil), sin zoom iOS, con scroll fluido
-   ===================================================================== */
-
+/* ======================================================================
+   ALTORRA • Smart Search (V9 PRO)
+   - Typos (Damerau-Levenshtein <=1) sobre vocab dinàmico
+   - Rango de presupuesto: 350m, 0.35b, 250-400m, <=400m, >200m, MM/millones
+   - Features semánticos (ES/EN) + auto-aprendizaje desde JSON
+   - Re-ranking por popularidad (click feedback)
+   - Mobile-first: sin zoom iOS, scroll suave, dropdown estable (singleton)
+   ====================================================================== */
 (function () {
   'use strict';
 
@@ -18,11 +17,11 @@
 
   /* ---------- Utils ---------- */
   const debounce = (fn, wait) => { let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), wait); }; };
-  const escapeHtml = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
-  const normalize  = s => String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\w\s]/g,' ').replace(/\s+/g,' ').trim();
-  const clamp = (v, min, max)=>Math.max(min, Math.min(max, v));
-  const fuzzyScore = (n, h)=>{ n=n.toLowerCase(); let s=0,i=0,j=0; while(i<n.length && j<h.length){ if(n[i]===h[j]){s++;i++;} j++; } return i===n.length ? s/n.length : 0; };
-
+  const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+  const norm = s => String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\w\s]/g,' ').replace(/\s+/g,' ').trim();
+  const clamp = (v, a, b)=>Math.max(a, Math.min(b, v));
+  const uniq  = arr => Array.from(new Set(arr));
+  const fuzzyScore = (n, h)=>{ n=n.toLowerCase(); let s=0,i=0,j=0; while(i<n.length&&j<h.length){ if(n[i]===h[j]){s++;i++;} j++; } return i===n.length? s/n.length : 0; };
   const cacheBuster = ()=> (location.search ? '&' : '?') + 'v=' + Math.floor(Date.now()/(1000*60*30));
   async function fetchJSON(u){ const r=await fetch(u+cacheBuster(),{cache:'no-store'}); if(!r.ok) throw new Error(`HTTP ${r.status}@${u}`); return r.json(); }
   async function fetchWithFallback(paths){ let last; for(const p of paths){ try { return await fetchJSON(p); } catch(e){ last=e; } } throw last||new Error('No data.json'); }
@@ -41,17 +40,16 @@
   }
   const toArrayData = d => Array.isArray(d) ? d : (d && Array.isArray(d.properties) ? d.properties : Object.values(d||{}).find(Array.isArray) || []);
 
-  /* ---------- Vocabulario / Sinónimos ---------- */
-  // clave = canónico; valores = sinónimos/variantes
+  /* ---------- Vocab base (amenities/types con sinónimos) ---------- */
   const FEATURE_SYNONYMS = {
-    'vista al mar': ['vista al mar','frente al mar','vista mar','ocean view','sea view','vista al oceano','vista oceano','mar'],
+    'vista al mar': ['vista al mar','frente al mar','vista mar','ocean view','sea view','vista al oceano','vista oceano'],
     'piscina':      ['piscina','alberca','pileta','swimming pool','pool'],
-    'balcon':       ['balcon','balcón','balco n','balcony','terraza pequeña'],
+    'balcon':       ['balcon','balcón','balcony'],
     'terraza':      ['terraza','roof top','rooftop','azotea','solarium'],
     'ascensor':     ['ascensor','elevador','elevator'],
     'gimnasio':     ['gimnasio','gym','fitness center'],
     'parqueadero':  ['parqueadero','garaje','garage','estacionamiento','parking'],
-    'porteria':     ['portería','porteria','vigilancia','seguridad 24/7','seguridad','guardia'],
+    'porteria':     ['portería','porteria','vigilancia','seguridad 24/7','seguridad'],
     'bbq':          ['bbq','asador','zona bbq','barbecue'],
     'jacuzzi':      ['jacuzzi','hot tub'],
     'sauna':        ['sauna'],
@@ -60,210 +58,296 @@
     'aire':         ['aire acondicionado','aire','a/a','air conditioning'],
     'vista':        ['vista','panoramica','panorámica','city view']
   };
-
-  // tipos de propiedad
   const TYPE_SYNONYMS = {
     'apartamento': ['apartamento','apartaestudio','apto','apartment','flat','aparta estudio'],
     'casa':        ['casa','casaquinta','house','townhouse'],
     'lote':        ['lote','terreno','parcel','lot'],
     'oficina':     ['oficina','office'],
   };
-
-  // transforma mapa de sinónimos en índice inverso -> canónico
-  function buildSynIndex(map) {
+  const buildSynIndex = map => {
     const idx = new Map();
     Object.keys(map).forEach(canon => {
-      map[canon].forEach(v => idx.set(normalize(v), canon));
-      idx.set(normalize(canon), canon);
+      map[canon].forEach(v => idx.set(norm(v), canon));
+      idx.set(norm(canon), canon);
     });
     return idx;
-  }
-  const FEATURE_INDEX = buildSynIndex(FEATURE_SYNONYMS);
-  const TYPE_INDEX    = buildSynIndex(TYPE_SYNONYMS);
+  };
+  const FEATURE_INDEX_BASE = buildSynIndex(FEATURE_SYNONYMS);
+  const TYPE_INDEX         = buildSynIndex(TYPE_SYNONYMS);
 
-  // Extrae tokens, preservando frases multi-palabra del vocabulario
-  function parseQuery(raw) {
-    const qNorm = normalize(raw);
-    const phrases = [];
-
-    // 1) detectar frases (características de varias palabras)
-    for (const canon of Object.keys(FEATURE_SYNONYMS)) {
-      const all = [canon, ...FEATURE_SYNONYMS[canon]];
-      for (const variant of all) {
-        const v = normalize(variant);
-        if (v.includes(' ')) {
-          if (qNorm.includes(v)) phrases.push({ type: 'feature', canon, match: v });
+  /* ---------- Corrección de typos (Damerau-Levenshtein) ---------- */
+  function dlDist1(a,b){ // true si distancia <=1 (conmutación incluida)
+    if (a===b) return true;
+    const la=a.length, lb=b.length;
+    if (Math.abs(la-lb)>1) return false;
+    // sustitución / inserción / borrado
+    let i=0,j=0, edits=0;
+    while(i<la && j<lb){
+      if(a[i]===b[j]){ i++; j++; continue; }
+      if(++edits>1) return false;
+      if(la>lb) i++; else if(lb>la) j++; else { i++; j++; }
+    }
+    if (i<la || j<lb) edits++;
+    if (edits<=1) return true;
+    // transposición (ab <-> ba)
+    if (la===lb && la>1){
+      for (let k=0;k<la-1;k++){
+        if (a[k]!==b[k]){
+          const aa=a.slice(0,k)+a[k+1]+a[k]+a.slice(k+2);
+          return aa===b;
         }
       }
     }
-    for (const canon of Object.keys(TYPE_SYNONYMS)) {
-      const all = [canon, ...TYPE_SYNONYMS[canon]];
-      for (const variant of all) {
-        const v = normalize(variant);
-        if (v.includes(' ') && qNorm.includes(v)) phrases.push({ type: 'type', canon, match: v });
-      }
+    return false;
+  }
+
+  /* ---------- Parseo de presupuesto ---------- */
+  function parseMoneyToken(tok){
+    // soporta 350m, 0.35b, 350-500m, <=400m, >=200m, 400MM, 400 millones, 400000000
+    const t = tok.replace(/\s/g,'').toLowerCase();
+    const mult = t.includes('b') ? 1e9 : (t.includes('mm')||t.includes('mill')||t.includes('millones')||t.includes('m')) ? 1e6 : 1;
+    // rango a-b
+    const mR = t.match(/^(\d+(?:\.\d+)?)[-–](\d+(?:\.\d+)?)(m|mm|b|)$/);
+    if (mR) return { min: Number(mR[1])* (mR[3]==='b'?1e9:(mR[3]?1e6:1)), max: Number(mR[2])*(mR[3]==='b'?1e9:(mR[3]?1e6:1)) };
+    // <=N  /  >=N
+    const mLE = t.match(/^(<=|<=|≤)(\d+(?:\.\d+)?)(m|mm|b|)$/);
+    if (mLE) return { min: null, max: Number(mLE[2])*(mLE[3]==='b'?1e9:(mLE[3]?1e6:1)) };
+    const mGE = t.match(/^(>=|>=|≥)(\d+(?:\.\d+)?)(m|mm|b|)$/);
+    if (mGE) return { min: Number(mGE[2])*(mGE[3]==='b'?1e9:(mGE[3]?1e6:1)), max: null };
+    // simple N (con sufijo opcional)
+    const mN = t.match(/^(\d{1,3}(?:[\.\,]?\d{3})+|\d+(?:\.\d+)?)(m|mm|b|)$/) || t.match(/^(\d+)(?:)$/);
+    if (mN){
+      const raw = Number(String(mN[1]).replace(/[^\d.]/g,''));
+      return { min: raw*mult, max: raw*mult };
     }
+    return null;
+  }
 
-    // 2) eliminar frases del texto para tokenizar el resto
-    let rest = qNorm;
-    phrases.forEach(p => { rest = rest.replace(p.match, ' ').replace(/\s+/g,' ').trim(); });
+  /* ---------- Construcción de índice semántico dinámico ---------- */
+  function dynamicFeatureTerms(allProps){
+    const bag = new Set();
+    allProps.forEach(p=>{
+      if (Array.isArray(p.features)) p.features.forEach(f=>bag.add(norm(f)));
+      const bools = [
+        p.pool||p.piscina, p.balcon||p.balcony, p.ascensor||p.elevator,
+        p.gym||p.gimnasio, p.parqueadero||p.garage||p.estacionamiento||p.parking,
+        p.terraza||p.rooftop, p.oceanView||p.seaView||p.vistaMar, p.furnished||p.amoblado,
+        p.petFriendly||p.mascotas
+      ];
+      const names = ['piscina','balcon','ascensor','gimnasio','parqueadero','terraza','vista al mar','amoblado','mascotas'];
+      bools.forEach((v,i)=>{ if(v) bag.add(norm(names[i])); });
+    });
+    return Array.from(bag);
+  }
 
-    // 3) tokens restantes
+  function buildVocab(allProps){
+    const terms = new Set();
+    allProps.forEach(p=>{
+      [p.city, p.neighborhood, p.barrio, p.type, p.id].forEach(v=>{ if(v) terms.add(norm(v)); });
+      // palabras destacadas en títulos
+      String(p.title||'').split(/\s+/).forEach(w=>{ if(w.length>=4) terms.add(norm(w)); });
+    });
+    // features base + dinámicas
+    Object.keys(FEATURE_SYNONYMS).forEach(k=>{ terms.add(norm(k)); FEATURE_SYNONYMS[k].forEach(s=>terms.add(norm(s))); });
+    dynamicFeatureTerms(allProps).forEach(t=>terms.add(norm(t)));
+    // tipos
+    Object.keys(TYPE_SYNONYMS).forEach(k=>{ terms.add(norm(k)); TYPE_SYNONYMS[k].forEach(s=>terms.add(norm(s))); });
+    return Array.from(terms).filter(Boolean);
+  }
+
+  /* ---------- Parseo de consulta ---------- */
+  function parseQuery(raw, vocab){
+    const qN = norm(raw);
+    // frases multi-palabra de features/types
+    const phrases = [];
+    function addPhrase(type, canon, v){
+      phrases.push({ type, canon, match:v });
+    }
+    // features
+    Object.keys(FEATURE_SYNONYMS).forEach(canon=>{
+      [canon, ...FEATURE_SYNONYMS[canon]].forEach(v=>{
+        const vv=norm(v); if(vv.includes(' ') && qN.includes(vv)) addPhrase('feature', canon, vv);
+      });
+    });
+    // types
+    Object.keys(TYPE_SYNONYMS).forEach(canon=>{
+      [canon, ...TYPE_SYNONYMS[canon]].forEach(v=>{
+        const vv=norm(v); if(vv.includes(' ') && qN.includes(vv)) addPhrase('type', canon, vv);
+      });
+    });
+
+    // quitar frases del texto
+    let rest = qN;
+    phrases.forEach(p=>{ rest = rest.replace(p.match,' ').replace(/\s+/g,' ').trim(); });
+
+    // tokens
     let tokens = rest.split(' ').filter(Boolean);
 
-    // 4) interpretar atajos numéricos: 3h / 2b / 1g / 3 hab / 2 baños / 1 garage
-    const constraints = { bedsMin:null, bathsMin:null, parkingMin:null, type:null, features: new Set() };
+    // constraints
+    const constraints = { bedsMin:null, bathsMin:null, parkingMin:null, type:null, features:new Set(), priceMin:null, priceMax:null };
 
-    tokens = tokens.filter(tok => {
-      // num + letra
-      const m = tok.match(/^(\d+)(h|hab|habitación|habitaciones|b|ba|ban|baño|banos|g|gar|garage|park|parq|parqueadero)$/);
-      if (m) {
-        const n = parseInt(m[1],10);
-        const k = m[2][0]; // h/b/g
-        if (k === 'h') constraints.bedsMin = Math.max(constraints.bedsMin||0, n);
-        else if (k === 'b') constraints.bathsMin = Math.max(constraints.bathsMin||0, n);
-        else if (k === 'g') constraints.parkingMin = Math.max(constraints.parkingMin||0, n);
+    // atajos numéricos habitaciones/baños/garajes
+    tokens = tokens.filter(tok=>{
+      const m = tok.match(/^(\d+)(h|hab|habitaciones|b|ba|ban|banos|baños|g|gar|garage|park|parq|parqueadero)$/);
+      if(m){
+        const n=parseInt(m[1],10), k=m[2][0];
+        if(k==='h') constraints.bedsMin=Math.max(constraints.bedsMin||0,n);
+        else if(k==='b') constraints.bathsMin=Math.max(constraints.bathsMin||0,n);
+        else if(k==='g') constraints.parkingMin=Math.max(constraints.parkingMin||0,n);
+        return false;
+      }
+      // presupuesto
+      const money = parseMoneyToken(tok);
+      if(money){
+        if(money.min!=null) constraints.priceMin = Math.max(constraints.priceMin||0, money.min);
+        if(money.max!=null) constraints.priceMax = constraints.priceMax==null ? money.max : Math.min(constraints.priceMax, money.max);
         return false;
       }
       return true;
     });
 
-    // mapear tokens a canónicos de feature/type cuando aplique
-    const mappedTokens = [];
-    tokens.forEach(tok => {
-      const canonF = FEATURE_INDEX.get(tok);
-      if (canonF) { constraints.features.add(canonF); phrases.push({type:'feature', canon:canonF, match:tok}); return; }
-      const canonT = TYPE_INDEX.get(tok);
-      if (canonT) { constraints.type = canonT; phrases.push({type:'type', canon:canonT, match:tok}); return; }
-      mappedTokens.push(tok);
+    // mapear tokens a features/types (mono-palabra) o corregir typos contra vocab
+    const mapped=[];
+    tokens.forEach(tok=>{
+      const t = tok;
+      // features mono-palabra
+      const fCanon = FEATURE_INDEX_BASE.get(t);
+      if(fCanon){ constraints.features.add(fCanon); return; }
+      // type
+      const tCanon = TYPE_INDEX.get(t);
+      if(tCanon){ constraints.type=tCanon; return; }
+      // corrección de typo simple (si token largo y no numérico)
+      if (t.length>=4 && !/^\d+$/.test(t)) {
+        const candidate = vocab.find(v => dlDist1(t, v));
+        if (candidate) { mapped.push(candidate); return; }
+      }
+      mapped.push(t);
     });
 
-    return { phrases, tokens: mappedTokens, constraints };
+    return { phrases, tokens: mapped, constraints };
   }
 
-  /* ---------- Scoring ---------- */
-  const fieldText = p => ({
-    title: normalize(p.title),
-    city : normalize(p.city),
-    hood : normalize(p.neighborhood || p.barrio),
-    id   : normalize(p.id),
-    type : normalize(p.type),
-    desc : normalize(p.description),
-    feats: buildFeaturesIndex(p) // string con features + sinónimos
-  });
-
-  function buildFeaturesIndex(p) {
-    let parts = [];
-    // 1) array features declarado
-    if (Array.isArray(p.features)) parts = parts.concat(p.features.map(normalize));
-    // 2) booleans comunes → etiquetas si son true
+  /* ---------- Campos + índice de features por propiedad ---------- */
+  function featuresIndexFromProp(p){
+    const parts=[];
+    if(Array.isArray(p.features)) parts.push(...p.features.map(norm));
     const bools = {
-      'piscina': p.pool || p.hasPool || p.piscina,
-      'balcon': p.balcon || p.balcony || p.hasBalcony,
-      'ascensor': p.ascensor || p.elevator || p.hasElevator,
-      'gimnasio': p.gym || p.gimnasio || p.hasGym,
-      'parqueadero': p.parqueadero || p.garage || p.estacionamiento || p.parking || p.hasParking,
-      'terraza': p.terraza || p.rooftop || p.roof || p.hasTerrace,
-      'vista al mar': p.oceanView || p.seaView || p.vistaMar,
-      'amoblado': p.furnished || p.amoblado,
-      'mascotas': p.petFriendly || p.mascotas
+      'piscina': p.pool||p.hasPool||p.piscina,
+      'balcon': p.balcon||p.balcony||p.hasBalcony,
+      'ascensor': p.ascensor||p.elevator||p.hasElevator,
+      'gimnasio': p.gym||p.gimnasio||p.hasGym,
+      'parqueadero': p.parqueadero||p.garage||p.estacionamiento||p.parking||p.hasParking,
+      'terraza': p.terraza||p.rooftop||p.roof||p.hasTerrace,
+      'vista al mar': p.oceanView||p.seaView||p.vistaMar,
+      'amoblado': p.furnished||p.amoblado,
+      'mascotas': p.petFriendly||p.mascotas
     };
-    Object.keys(bools).forEach(k => { if (bools[k]) parts.push(k); });
-
-    // 3) expandir a sinónimos para búsquedas por alias
-    const expanded = [];
-    parts.forEach(tag => {
-      const canon = FEATURE_INDEX.get(normalize(tag)) || normalize(tag);
+    Object.keys(bools).forEach(k=>{ if(bools[k]) parts.push(k); });
+    // expandir a sinónimos
+    const expanded=[];
+    parts.forEach(tag=>{
+      const canon = FEATURE_INDEX_BASE.get(norm(tag)) || norm(tag);
       expanded.push(canon);
       const syns = FEATURE_SYNONYMS[canon];
-      if (syns) syns.forEach(s => expanded.push(normalize(s)));
+      if(syns) syns.forEach(s=>expanded.push(norm(s)));
     });
-
-    return expanded.join(' ');
+    return uniq(expanded).join(' ');
   }
 
-  function tokensHitStrong(tokens, f) {
-    // tokens “libres” deben pegar al menos en title/hood/city/id/type/features
+  const fieldText = p => ({
+    title: norm(p.title),
+    city : norm(p.city),
+    hood : norm(p.neighborhood || p.barrio),
+    id   : norm(p.id),
+    type : norm(p.type),
+    desc : norm(p.description),
+    feats: featuresIndexFromProp(p)
+  });
+
+  function tokensHitStrong(tokens, f){
     return tokens.every(tok =>
-      f.title.includes(tok) || f.hood.includes(tok) || f.city.includes(tok) ||
-      f.id.includes(tok)    || f.type.includes(tok) || f.feats.includes(tok)
+      f.title.includes(tok)||f.hood.includes(tok)||f.city.includes(tok)||
+      f.id.includes(tok)   ||f.type.includes(tok)||f.feats.includes(tok)
     );
   }
 
-  function scoreProperty(tokens, qStr, f, constraints, p) {
-    let s=0;
+  /* ---------- Re-ranking por feedback ---------- */
+  function readClicks(){ try{ return JSON.parse(localStorage.getItem('altorra:ssrc:clicks')||'{}'); }catch{ return {}; } }
+  function writeClicks(map){ try{ localStorage.setItem('altorra:ssrc:clicks', JSON.stringify(map)); }catch{} }
+  function boostByClicks(id){
+    const clicks = readClicks()[id]||0;
+    return Math.log(1+clicks)*8; // boost suave
+  }
+  function registerClick(id){
+    const map = readClicks(); map[id]=(map[id]||0)+1; writeClicks(map);
+  }
 
-    // 1) boosts por coincidencias exactas
+  function scoreProperty(tokens, qStr, f, constraints, p){
+    let s=0;
     tokens.forEach(t=>{
       if(f.title.includes(t)) s+=55;
       if(f.hood .includes(t)) s+=45;
       if(f.city .includes(t)) s+=35;
       if(f.id   .includes(t)) s+=40;
       if(f.type .includes(t)) s+=15;
-      if(f.feats.includes(t)) s+=65; // FEATURES MUY RELEVANTES
+      if(f.feats.includes(t)) s+=70; // features muy relevantes
     });
+    constraints.features.forEach(canon=>{ if(f.feats.includes(canon)) s+=85; });
+    if(constraints.type && f.type.includes(constraints.type)) s+=55;
 
-    // 2) boosts por frases (features/types del vocabulario)
-    constraints.features.forEach(canon => { if (f.feats.includes(canon)) s += 80; });
-    if (constraints.type && f.type.includes(constraints.type)) s += 50;
-
-    // 3) fuzzy sobre índice global
     const idx=[f.title,f.hood,f.city,f.id,f.type,f.desc,f.feats].join(' ');
-    s += fuzzyScore(qStr, idx)*20;
+    s += fuzzyScore(qStr, idx)*18;
 
-    // 4) ajustes por datos numéricos si hay constraints (mínimos)
+    // filtros duros + boosts numéricos
     const beds  = p.bedrooms ?? p.habitaciones ?? p.rooms ?? null;
     const baths = p.bathrooms ?? p.banos ?? p.baños ?? null;
     const park  = p.parking ?? p.parqueadero ?? p.garaje ?? p.garages ?? null;
+    const price = Number(p.price || p.precio || 0) || null;
 
-    if (constraints.bedsMin && beds != null) {
-      if (beds >= constraints.bedsMin) s += 25; else return -1; // descarta
-    }
-    if (constraints.bathsMin && baths != null) {
-      if (baths >= constraints.bathsMin) s += 20; else return -1;
-    }
-    if (constraints.parkingMin && park != null) {
-      if (park >= constraints.parkingMin) s += 15; else return -1;
-    }
+    if (constraints.bedsMin && beds != null)  { if(beds  < constraints.bedsMin)  return -1; else s+=22; }
+    if (constraints.bathsMin && baths != null){ if(baths < constraints.bathsMin) return -1; else s+=18; }
+    if (constraints.parkingMin && park != null){ if(park < constraints.parkingMin) return -1; else s+=14; }
+
+    if (constraints.priceMin!=null && price!=null && price < constraints.priceMin) return -1;
+    if (constraints.priceMax!=null && price!=null && price > constraints.priceMax) return -1;
+    if (constraints.priceMin!=null || constraints.priceMax!=null) s+=12;
+
+    // popularidad
+    s += boostByClicks(p.id);
 
     return s;
   }
 
-  async function searchProps(query){
+  async function searchProps(query, allProps, vocab){
     if(!query || query.length<MIN_CHARS) return [];
-    const arr = toArrayData(await loadData());
-    const { phrases, tokens, constraints } = parseQuery(query);
-    const qStr = normalize(query);
+    const { tokens, constraints } = parseQuery(query, vocab);
+    const qStr = norm(query);
+    const res = [];
 
-    let out = [];
-    for (const p of arr) {
+    for (const p of allProps){
       const f = fieldText(p);
-
-      // Regla estricta relajada (incluye feats)
-      if (qStr.length>=3 && !tokensHitStrong(tokens, f)) continue;
-
-      const s = scoreProperty(tokens, qStr, f, constraints, p);
-      if (s > 0) out.push({ p, s });
+      if(qStr.length>=3 && !tokensHitStrong(tokens, f)) continue;
+      const sc = scoreProperty(tokens, qStr, f, constraints, p);
+      if(sc>0) res.push({p, sc, f});
     }
 
-    // Si nada pasó, relajamos a “al menos 1 pegada”
-    if (out.length === 0 && qStr.length >= 3) {
-      for (const p of arr) {
+    if (res.length===0 && qStr.length>=3){
+      for (const p of allProps){
         const f = fieldText(p);
         const hasOne = tokens.some(tok =>
-          f.title.includes(tok) || f.hood.includes(tok) || f.city.includes(tok) ||
-          f.id.includes(tok)    || f.type.includes(tok) || f.feats.includes(tok)
+          f.title.includes(tok)||f.hood.includes(tok)||f.city.includes(tok)||
+          f.id.includes(tok)||f.type.includes(tok)||f.feats.includes(tok)
         );
-        if (!hasOne) continue;
-        const s = scoreProperty(tokens, qStr, f, constraints, p);
-        if (s > 0) out.push({ p, s });
+        if(!hasOne) continue;
+        const sc = scoreProperty(tokens, qStr, f, constraints, p);
+        if(sc>0) res.push({p, sc, f});
       }
     }
 
-    return out.sort((a,b)=>b.s-a.s).slice(0,MAX_SUGGESTIONS).map(r=>r.p);
+    return res.sort((a,b)=>b.sc-a.sc).slice(0,MAX_SUGGESTIONS).map(r=>r.p);
   }
 
-  /* ---------- Singleton Dropdown (estable PC/móvil) ---------- */
+  /* ---------- Dropdown singleton (estable PC/móvil) ---------- */
   const DD = (() => {
     let dd=null, activeInput=null, lockedWidth=null, bound=false;
     function ensure(){
@@ -283,15 +367,15 @@
         'overscroll-behavior:contain',
         'touch-action:pan-y',
         '-webkit-overflow-scrolling:touch',
-        'z-index:2147483647','display:none'
+        'z-index:2147483647',
+        'display:none'
       ].join(';');
-      // mouse: evitar blur; móvil: no bloqueamos touchstart (para scroll)
-      dd.addEventListener('mousedown', e=>e.preventDefault());
+      dd.addEventListener('mousedown', e=>e.preventDefault()); // evita blur en desktop
       document.body.appendChild(dd);
       return dd;
     }
     function setActive(input, {lockWidth=false} = {}){
-      activeInput = input; ensure(); position({lockWidth});
+      activeInput=input; ensure(); position({lockWidth});
       if(!bound){
         bound=true;
         window.addEventListener('resize', ()=>position());
@@ -300,11 +384,11 @@
       }
     }
     function position({lockWidth=false} = {}){
-      if(!dd || !activeInput) return;
-      const r  = activeInput.getBoundingClientRect();
-      const vw = Math.max(document.documentElement.clientWidth, window.innerWidth||0);
+      if(!dd||!activeInput) return;
+      const r = activeInput.getBoundingClientRect();
+      const vw= Math.max(document.documentElement.clientWidth, window.innerWidth||0);
       if(lockWidth || lockedWidth==null){
-        const desired = r.width;
+        const desired=r.width;
         lockedWidth = clamp(desired, MIN_W, Math.min(MAX_W, Math.floor(vw*VW_LIMIT)));
       }
       dd.style.top   = (r.top + window.scrollY + r.height + 6) + 'px';
@@ -318,8 +402,19 @@
     return { setActive, position, show, hide, isOpen, el };
   })();
 
+  /* ---------- Highlight seguro ---------- */
+  function highlight(text, terms){
+    let out = esc(text);
+    terms.forEach(t=>{
+      if(!t || t.length<2) return;
+      const re = new RegExp(`(${t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`,'gi');
+      out = out.replace(re,'<mark>$1</mark>');
+    });
+    return out;
+  }
+
   /* ---------- Render ---------- */
-  function renderList(results){
+  function renderList(results, queryTerms){
     const dd = DD.el();
     if(!results.length){
       dd.innerHTML = `<div style="padding:16px;text-align:center;color:#6b7280;font-size:.95rem">Sin resultados. Prueba con otra palabra.</div>`;
@@ -333,27 +428,31 @@
       row.style.cssText='display:flex;gap:12px;padding:12px 14px;cursor:pointer;align-items:center';
       row.onmouseenter=()=>row.style.background='#f9fafb';
       row.onmouseleave=()=>row.style.background='transparent';
+
+      const titleHTML = highlight(p.title||'Propiedad', queryTerms);
+      const subline = [p.city, p.neighborhood].filter(Boolean).join(' · ');
+      const subHTML = highlight(subline, queryTerms);
+
       row.innerHTML=`
-        <img src="${p.image || '/assets/placeholder.webp'}" alt="${escapeHtml(p.title||'Propiedad')}"
+        <img src="${p.image || '/assets/placeholder.webp'}" alt="${esc(p.title||'Propiedad')}"
              style="width:60px;height:60px;object-fit:cover;border-radius:8px;flex-shrink:0">
         <div style="flex:1;min-width:0">
-          <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-            ${escapeHtml(p.title||'Propiedad')}
-          </div>
-          <div style="color:#6b7280;font-size:.86rem">
-            ${escapeHtml(p.city||'')}${p.neighborhood?' · '+escapeHtml(p.neighborhood):''}
-          </div>
+          <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${titleHTML}</div>
+          <div style="color:#6b7280;font-size:.86rem">${subHTML}</div>
         </div>
         <div style="font-weight:900;color:#d4af37;white-space:nowrap">
           ${p.price?`$${Number(p.price).toLocaleString('es-CO')} COP`:''}
         </div>`;
-      row.addEventListener('click',()=>{ location.href=`detalle-propiedad.html?id=${encodeURIComponent(p.id)}`; });
+      row.addEventListener('click',()=>{
+        registerClick(p.id);
+        location.href=`detalle-propiedad.html?id=${encodeURIComponent(p.id)}`;
+      });
       dd.appendChild(row);
     });
     DD.show();
   }
 
-  /* ---------- Tap-to-close inteligente (no por scroll) ---------- */
+  /* ---------- Tap-to-close que no interrumpe scroll ---------- */
   function installTapToClose(input){
     let startY=null, startX=null, moved=false;
     const onStart = (e)=>{ const t=e.touches?e.touches[0]:e; startX=t.clientX; startY=t.clientY; moved=false; };
@@ -365,7 +464,7 @@
     document.addEventListener('mousedown', (e)=>{ const dd=DD.el(); if(DD.isOpen() && !dd.contains(e.target) && e.target!==input) DD.hide(); });
   }
 
-  /* ---------- Prevención de ZOOM (iOS) ---------- */
+  /* ---------- Evitar zoom iOS y mejorar teclado ---------- */
   function enforceMobileInputStyles(input){
     input.style.fontSize = '16px';
     input.style.lineHeight = '1.4';
@@ -374,12 +473,16 @@
     input.setAttribute('autocomplete','off');
   }
 
-  /* ---------- Wiring ---------- */
-  document.addEventListener('DOMContentLoaded', ()=>{
+  /* ---------- Init ---------- */
+  document.addEventListener('DOMContentLoaded', async ()=>{
     const inputs = document.querySelectorAll('#f-search, #f-city');
-    inputs.forEach(input=>{
-      enforceMobileInputStyles(input);
+    inputs.forEach(enforceMobileInputStyles);
 
+    const rawData = await loadData();
+    const props   = toArrayData(rawData);
+    const vocab   = buildVocab(props); // para typos y sinónimos emergentes
+
+    inputs.forEach(input=>{
       const run = debounce(async ()=>{
         const q = input.value.trim();
         if(q.length<MIN_CHARS){ DD.hide(); return; }
@@ -387,8 +490,9 @@
         DD.el().innerHTML = '<div style="padding:16px;text-align:center;color:#6b7280">Buscando…</div>';
         DD.show(); DD.position();
         try{
-          const results = await searchProps(q);
-          renderList(results);
+          const results = await searchProps(q, props, vocab);
+          const termsForHL = uniq(norm(q).split(' ').filter(Boolean));
+          renderList(results, termsForHL);
           DD.position();
         }catch(err){
           console.error('[smart-search]',err);
@@ -405,15 +509,15 @@
       let current=-1;
       const dd = DD.el();
       const items=()=>dd.querySelectorAll('.ss-item');
-      const highlight=i=>{
+      const highlightRow=i=>{
         items().forEach(el=>el.style.background='transparent');
         if(i>=0 && i<items().length){ items()[i].style.background='#eef2ff'; items()[i].scrollIntoView({block:'nearest'}); }
         current=i;
       };
       input.addEventListener('keydown',e=>{
         if(!DD.isOpen()) return; const list=items(); if(!list.length) return;
-        if(e.key==='ArrowDown'){ e.preventDefault(); highlight(Math.min(list.length-1,current+1)); }
-        else if(e.key==='ArrowUp'){ e.preventDefault(); highlight(Math.max(0,current-1)); }
+        if(e.key==='ArrowDown'){ e.preventDefault(); highlightRow(Math.min(list.length-1,current+1)); }
+        else if(e.key==='ArrowUp'){ e.preventDefault(); highlightRow(Math.max(0,current-1)); }
         else if(e.key==='Enter'){ if(current>=0){ e.preventDefault(); list[current].click(); } }
         else if(e.key==='Escape'){ DD.hide(); }
       });
