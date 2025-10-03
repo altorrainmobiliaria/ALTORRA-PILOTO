@@ -1,10 +1,10 @@
 /* =========================================================
-   ALTORRA • Smart Search (V6 - Singleton)
-   - Dropdown único para todos los inputs (PC/Móvil)
-   - Listeners únicos (scroll/resize) → sin “encogimiento”
-   - Relevancia estricta por tokens (title/hood/city/id)
-   - Fuzzy de apoyo (no cuela irrelevantes)
-   - Ancho bloqueado hasta cerrar, navegación ↑/↓/Enter
+   ALTORRA • Smart Search (V7 - Mobile First)
+   - Evita zoom de Safari (font-size 16px en inputs)
+   - No cierra al scrollear fuera (tap real para cerrar)
+   - Dropdown con scroll móvil fluido (iOS/Android)
+   - Relevancia por tokens (title/hood/city/id) + fuzzy apoyo
+   - Singleton dropdown (sin encogimientos)
    ========================================================= */
 
 (function () {
@@ -14,7 +14,7 @@
   const MIN_CHARS = 2;
   const MAX_SUGGESTIONS = 10;
   const DEBOUNCE_MS = 200;
-  const MIN_W = 360, MAX_W = 920, VW_LIMIT = 0.96; // clamp del ancho
+  const MIN_W = 360, MAX_W = 920, VW_LIMIT = 0.96;
 
   /* ---------- Utils ---------- */
   const debounce = (fn, wait) => { let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), wait); }; };
@@ -22,11 +22,11 @@
   const normalize  = s => String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\w\s]/g,' ').replace(/\s+/g,' ').trim();
   const splitTokens = s => normalize(s).split(' ').filter(Boolean);
   const clamp = (v, min, max)=>Math.max(min, Math.min(max, v));
-  const cacheBuster = ()=> (location.search ? '&' : '?') + 'v=' + Math.floor(Date.now()/(1000*60*30));
   const fuzzyScore = (n, h)=>{ n=n.toLowerCase(); let s=0,i=0,j=0; while(i<n.length && j<h.length){ if(n[i]===h[j]){s++;i++;} j++; } return i===n.length ? s/n.length : 0; };
 
+  const cacheBuster = ()=> (location.search ? '&' : '?') + 'v=' + Math.floor(Date.now()/(1000*60*30));
   async function fetchJSON(u){ const r=await fetch(u+cacheBuster(),{cache:'no-store'}); if(!r.ok) throw new Error(`HTTP ${r.status}@${u}`); return r.json(); }
-  async function fetchWithFallback(paths){ let last; for(const p of paths){ try{return await fetchJSON(p);}catch(e){last=e;} } throw last||new Error('No data.json'); }
+  async function fetchWithFallback(paths){ let last; for(const p of paths){ try { return await fetchJSON(p); } catch(e){ last=e; } } throw last||new Error('No data.json'); }
   async function loadData(){
     const paths = [
       new URL('properties/data.json', location.href).href,
@@ -52,10 +52,8 @@
     desc : normalize(p.description),
     feats: normalize(Array.isArray(p.features)?p.features.join(' '):'')
   });
-
   const tokensHitStrong = (tokens, f) =>
     tokens.every(tok => f.title.includes(tok) || f.hood.includes(tok) || f.city.includes(tok) || f.id.includes(tok));
-
   const scoreProperty = (tokens, qStr, f) => {
     let s=0;
     tokens.forEach(t=>{
@@ -83,7 +81,6 @@
       const s = scoreProperty(tokens, qStr, f);
       if(s>0) out.push({p,s});
     }
-
     if(out.length===0 && qStr.length>=3){
       for(const p of arr){
         const f = fieldText(p);
@@ -93,21 +90,17 @@
         if(s>0) out.push({p,s});
       }
     }
-
     return out.sort((a,b)=>b.s-a.s).slice(0,MAX_SUGGESTIONS).map(r=>r.p);
   }
 
-  /* ---------- Singleton Dropdown Manager ---------- */
+  /* ---------- Singleton Dropdown (mobile) ---------- */
   const DD = (() => {
-    let dd = null;
-    let activeInput = null;
-    let lockedWidth = null;
-    let boundScroll = false;
+    let dd=null, activeInput=null, lockedWidth=null, bound=false;
 
     function ensure(){
       if(dd) return dd;
       dd = document.createElement('div');
-      dd.id = 'smart-search-dropdown';
+      dd.id='smart-search-dropdown';
       dd.setAttribute('role','listbox');
       dd.setAttribute('aria-label','Sugerencias');
       dd.style.cssText = [
@@ -116,24 +109,32 @@
         'border:1px solid rgba(0,0,0,.12)',
         'border-radius:12px',
         'box-shadow:0 12px 32px rgba(0,0,0,.18)',
-        'max-height:420px','overflow-y:auto',
-        'z-index:2147483647','display:none'
+        'max-height:60vh',                 // más alto en móvil
+        'overflow-y:auto',
+        'overscroll-behavior:contain',     // evita que “se lleve” al body
+        'touch-action:pan-y',              // permite scroll vertical
+        '-webkit-overflow-scrolling:touch',// scroll suave iOS
+        'z-index:2147483647',
+        'display:none'
       ].join(';');
-      // Mantener abierto al interactuar
-      dd.addEventListener('mousedown', e=>e.preventDefault(), { passive:false });
-      dd.addEventListener('touchstart', e=>e.preventDefault(), { passive:false });
+
+      // IMPORTANTE: en móvil NO bloqueamos touchstart del contenedor
+      // (para permitir iniciar el scroll). Solo evitamos blur con mouse.
+      dd.addEventListener('mousedown', e=>e.preventDefault());
+
       document.body.appendChild(dd);
       return dd;
     }
 
     function setActive(input, {lockWidth=false} = {}){
       activeInput = input;
-      if(!dd) ensure();
+      ensure();
       position({lockWidth});
-      if(!boundScroll){
-        boundScroll = true;
+      if(!bound){
+        bound=true;
         window.addEventListener('resize', ()=>position());
         window.addEventListener('scroll',  ()=>position(), {passive:true});
+        window.addEventListener('orientationchange', ()=>setTimeout(()=>position({lockWidth:true}), 250));
       }
     }
 
@@ -150,12 +151,12 @@
       dd.style.width = lockedWidth + 'px';
     }
 
-    function show(){ if(dd) dd.style.display='block'; }
-    function hide(){ if(dd) dd.style.display='none'; lockedWidth=null; }
+    function show(){ dd.style.display='block'; }
+    function hide(){ dd.style.display='none'; lockedWidth=null; }
     function isOpen(){ return dd && dd.style.display!=='none'; }
     function el(){ return dd || ensure(); }
 
-    return { ensure, setActive, position, show, hide, isOpen, el };
+    return { setActive, position, show, hide, isOpen, el };
   })();
 
   /* ---------- Render ---------- */
@@ -193,32 +194,49 @@
     DD.show();
   }
 
-  function enableKeyboard(input){
-    const dd = DD.el();
-    let current=-1;
-    function items(){ return dd.querySelectorAll('.ss-item'); }
-    function highlight(i){
-      items().forEach(el=>el.style.background='transparent');
-      if(i>=0 && i<items().length){
-        items()[i].style.background='#eef2ff';
-        items()[i].scrollIntoView({block:'nearest'});
-      }
-      current=i;
-    }
-    input.addEventListener('keydown',e=>{
+  /* ---------- Cierre por TAP (no por scroll) ---------- */
+  function installTapToClose(input){
+    let startY=null, startX=null, moved=false;
+    const onStart = (e)=>{
+      const t = e.touches ? e.touches[0] : e;
+      startX=t.clientX; startY=t.clientY; moved=false;
+    };
+    const onMove = (e)=>{
+      if(startY==null) return;
+      const t = e.touches ? e.touches[0] : e;
+      if (Math.abs(t.clientY-startY) > 10 || Math.abs(t.clientX-startX) > 10) moved=true; // scroll, no cerrar
+    };
+    const onEnd = (e)=>{
       if(!DD.isOpen()) return;
-      const list=items(); if(!list.length) return;
-      if(e.key==='ArrowDown'){ e.preventDefault(); highlight(Math.min(list.length-1,current+1)); }
-      else if(e.key==='ArrowUp'){ e.preventDefault(); highlight(Math.max(0,current-1)); }
-      else if(e.key==='Enter'){ if(current>=0){ e.preventDefault(); list[current].click(); } }
-      else if(e.key==='Escape'){ DD.hide(); }
+      const dd = DD.el();
+      const target = e.target;
+      if (moved) return; // fue scroll → no cerrar
+      if (!dd.contains(target) && target!==input) DD.hide(); // tap fuera → cerrar
+    };
+    document.addEventListener('touchstart', onStart, {passive:true});
+    document.addEventListener('touchmove',  onMove,  {passive:true});
+    document.addEventListener('touchend',   onEnd,   {passive:true});
+    document.addEventListener('mousedown', (e)=>{
+      const dd=DD.el(); if(DD.isOpen() && !dd.contains(e.target) && e.target!==input) DD.hide();
     });
+  }
+
+  /* ---------- Prevención de ZOOM (iOS) ---------- */
+  function enforceMobileInputStyles(input){
+    // Evita zoom de Safari al enfocar: mínimo 16px
+    input.style.fontSize = '16px';
+    input.style.lineHeight = '1.4';
+    input.setAttribute('inputmode','search');
+    input.setAttribute('enterkeyhint','search');
+    input.setAttribute('autocomplete','off');
   }
 
   /* ---------- Wiring ---------- */
   document.addEventListener('DOMContentLoaded', ()=>{
     const inputs = document.querySelectorAll('#f-search, #f-city');
     inputs.forEach(input=>{
+      enforceMobileInputStyles(input);
+
       const run = debounce(async ()=>{
         const q = input.value.trim();
         if(q.length<MIN_CHARS){ DD.hide(); return; }
@@ -228,7 +246,7 @@
         try{
           const results = await searchProps(q);
           renderList(results);
-          DD.position(); // sólo reposiciona (no recalcula ancho)
+          DD.position();
         }catch(err){
           console.error('[smart-search]',err);
           DD.el().innerHTML = '<div style="padding:16px;text-align:center;color:#ef4444">Error de búsqueda</div>';
@@ -238,18 +256,24 @@
 
       input.addEventListener('input', run);
       input.addEventListener('focus', run);
+      installTapToClose(input);   // cierra solo con TAP real, no con scroll
 
-      // Cierre al hacer click fuera
-      document.addEventListener('mousedown', e=>{
-        const dd=DD.el();
-        if(DD.isOpen() && !dd.contains(e.target) && e.target!==input) DD.hide();
+      // Teclado (opcional en móvil; útil en desktop)
+      let current=-1;
+      const dd = DD.el();
+      const items=()=>dd.querySelectorAll('.ss-item');
+      const highlight=i=>{
+        items().forEach(el=>el.style.background='transparent');
+        if(i>=0 && i<items().length){ items()[i].style.background='#eef2ff'; items()[i].scrollIntoView({block:'nearest'}); }
+        current=i;
+      };
+      input.addEventListener('keydown',e=>{
+        if(!DD.isOpen()) return; const list=items(); if(!list.length) return;
+        if(e.key==='ArrowDown'){ e.preventDefault(); highlight(Math.min(list.length-1,current+1)); }
+        else if(e.key==='ArrowUp'){ e.preventDefault(); highlight(Math.max(0,current-1)); }
+        else if(e.key==='Enter'){ if(current>=0){ e.preventDefault(); list[current].click(); } }
+        else if(e.key==='Escape'){ DD.hide(); }
       });
-      document.addEventListener('touchstart', e=>{
-        const dd=DD.el();
-        if(DD.isOpen() && !dd.contains(e.target) && e.target!==input) DD.hide();
-      }, {passive:true});
-
-      enableKeyboard(input);
     });
   });
 })();
