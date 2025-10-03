@@ -1,5 +1,5 @@
 /* ========================================
-   ALTORRA - BÚSQUEDA INTELIGENTE
+   ALTORRA - BÚSQUEDA INTELIGENTE (FIXED)
    Sugerencias en tiempo real con fuzzy search
    ======================================== */
 
@@ -7,12 +7,11 @@
   'use strict';
 
   // ========== CONFIG ==========
-  const MIN_CHARS = 2; // Caracteres mínimos para empezar a buscar
-  const MAX_SUGGESTIONS = 5; // Máximo de sugerencias a mostrar
-  const DEBOUNCE_MS = 300; // Milisegundos de espera antes de buscar
+  const MIN_CHARS = 2;
+  const MAX_SUGGESTIONS = 5;
+  const DEBOUNCE_MS = 300;
 
   // ========== FUZZY SEARCH ==========
-  // Algoritmo simple pero efectivo para búsqueda tolerante a errores
   function fuzzyMatch(needle, haystack) {
     needle = needle.toLowerCase();
     haystack = haystack.toLowerCase();
@@ -29,7 +28,6 @@
       hIndex++;
     }
     
-    // Retorna true si encontró todas las letras en orden
     return nIndex === needle.length ? score / needle.length : 0;
   }
 
@@ -38,7 +36,7 @@
     return String(str || '')
       .toLowerCase()
       .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '') // Quita acentos
+      .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^\w\s]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
@@ -49,7 +47,6 @@
     if (!query || query.length < MIN_CHARS) return [];
     
     try {
-      // Obtener propiedades del caché
       const data = await window.getJSONCached('properties/data.json', {
         ttlMs: 1000 * 60 * 30,
         revalidate: false
@@ -61,7 +58,6 @@
       const results = [];
       
       data.forEach(prop => {
-        // Crear índice de búsqueda
         const searchIndex = normalize([
           prop.title,
           prop.description,
@@ -72,33 +68,26 @@
           prop.features ? prop.features.join(' ') : ''
         ].join(' '));
         
-        // Calcular puntuación
         let score = 0;
         
-        // Coincidencia exacta (mayor puntuación)
         if (searchIndex.includes(normalizedQuery)) {
           score += 100;
         }
         
-        // Fuzzy match (puntuación menor)
         const fuzzyScore = fuzzyMatch(normalizedQuery, searchIndex);
         score += fuzzyScore * 50;
         
-        // Bonus por coincidencia en título
         const titleMatch = normalize(prop.title).includes(normalizedQuery);
         if (titleMatch) score += 30;
         
-        // Bonus por coincidencia en ciudad
         const cityMatch = normalize(prop.city).includes(normalizedQuery);
         if (cityMatch) score += 20;
         
-        // Si hay puntuación, agregar a resultados
         if (score > 0) {
           results.push({ prop, score });
         }
       });
       
-      // Ordenar por puntuación y retornar top resultados
       return results
         .sort((a, b) => b.score - a.score)
         .slice(0, MAX_SUGGESTIONS)
@@ -121,7 +110,7 @@
     dropdown.setAttribute('role', 'listbox');
     dropdown.setAttribute('aria-label', 'Sugerencias de búsqueda');
     
-    // Estilos inline para que funcione sin CSS externo
+    // 🔧 FIX: z-index más alto
     Object.assign(dropdown.style, {
       position: 'absolute',
       top: '100%',
@@ -130,15 +119,14 @@
       background: '#fff',
       border: '1px solid rgba(0,0,0,0.12)',
       borderRadius: '0 0 12px 12px',
-      boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+      boxShadow: '0 12px 32px rgba(0,0,0,0.18)',
       maxHeight: '400px',
       overflowY: 'auto',
-      zIndex: '1000',
+      zIndex: '99999',  // ← FIX AQUÍ
       marginTop: '4px',
       display: 'none'
     });
     
-    // Insertar después del input
     const parent = inputEl.parentElement;
     parent.style.position = 'relative';
     parent.appendChild(dropdown);
@@ -171,24 +159,23 @@
       item.setAttribute('role', 'option');
       item.setAttribute('data-id', prop.id);
       
-      // Formatear precio
       const priceLabel = prop.price ? 
         `$${prop.price.toLocaleString('es-CO')} COP` : 
         'Precio a consultar';
       
-      // Resaltar coincidencias
-      const highlightedTitle = highlightMatch(prop.title, query);
+      // 🔧 FIX: Resaltado simple sin HTML complejo
+      const title = escapeHtml(prop.title || 'Propiedad');
       
       item.innerHTML = `
         <div style="display:flex;gap:12px;padding:12px;cursor:pointer;transition:background 0.15s ease" 
              onmouseenter="this.style.background='#f9fafb'" 
              onmouseleave="this.style.background='transparent'">
           <img src="${prop.image || 'https://i.postimg.cc/0yYb8Y6r/placeholder.png'}" 
-               alt="${escapeHtml(prop.title)}"
+               alt="${title}"
                style="width:60px;height:60px;object-fit:cover;border-radius:8px;flex-shrink:0">
           <div style="flex:1;min-width:0">
             <div style="font-weight:600;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-              ${highlightedTitle}
+              ${title}
             </div>
             <div style="font-size:0.85rem;color:#6b7280;margin-bottom:4px">
               ${prop.city} • ${capitalize(prop.type)}${prop.beds ? ` • ${prop.beds}H` : ''}${prop.baths ? ` ${prop.baths}B` : ''}
@@ -200,12 +187,10 @@
         </div>
       `;
       
-      // Click en sugerencia
       item.addEventListener('click', () => {
         window.location.href = `detalle-propiedad.html?id=${encodeURIComponent(prop.id)}`;
       });
       
-      // Navegación con teclado
       item.addEventListener('mouseenter', () => {
         document.querySelectorAll('.suggestion-item').forEach(el => {
           el.style.background = 'transparent';
@@ -230,22 +215,6 @@
     return String(str || '').charAt(0).toUpperCase() + String(str || '').slice(1);
   }
 
-  function highlightMatch(text, query) {
-    if (!query) return escapeHtml(text);
-    
-    const normalizedText = normalize(text);
-    const normalizedQuery = normalize(query);
-    const index = normalizedText.indexOf(normalizedQuery);
-    
-    if (index === -1) return escapeHtml(text);
-    
-    const before = text.substring(0, index);
-    const match = text.substring(index, index + query.length);
-    const after = text.substring(index + query.length);
-    
-    return `${escapeHtml(before)}<mark style="background:#fef3c7;padding:2px 4px;border-radius:3px;font-weight:700">${escapeHtml(match)}</mark>${escapeHtml(after)}`;
-  }
-
   // ========== DEBOUNCE ==========
   function debounce(func, wait) {
     let timeout;
@@ -261,7 +230,6 @@
 
   // ========== INICIALIZACIÓN ==========
   function init() {
-    // Buscar todos los inputs de búsqueda
     const searchInputs = document.querySelectorAll('#f-search, input[placeholder*="Buscar"]');
     
     searchInputs.forEach(inputEl => {
@@ -270,7 +238,6 @@
       
       const dropdown = createSuggestionsDropdown(inputEl);
       
-      // Búsqueda con debounce
       const performSearch = debounce(async () => {
         const query = inputEl.value.trim();
         
@@ -279,7 +246,6 @@
           return;
         }
         
-        // Mostrar loading
         dropdown.innerHTML = `
           <div style="padding:16px;text-align:center;color:#6b7280">
             <div style="display:inline-block;width:24px;height:24px;border:3px solid #e5e7eb;border-top-color:#d4af37;border-radius:50%;animation:spin 0.8s linear infinite"></div>
@@ -292,7 +258,6 @@
         renderSuggestions(results, dropdown, inputEl, query);
       }, DEBOUNCE_MS);
       
-      // Eventos
       inputEl.addEventListener('input', performSearch);
       
       inputEl.addEventListener('focus', () => {
@@ -301,14 +266,12 @@
         }
       });
       
-      // Cerrar dropdown al hacer clic fuera
       document.addEventListener('click', (e) => {
         if (!inputEl.contains(e.target) && !dropdown.contains(e.target)) {
           dropdown.style.display = 'none';
         }
       });
       
-      // Navegación con teclado (Escape para cerrar)
       inputEl.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
           dropdown.style.display = 'none';
@@ -317,7 +280,6 @@
       });
     });
     
-    // Agregar animación de spin
     if (!document.getElementById('smart-search-styles')) {
       const style = document.createElement('style');
       style.id = 'smart-search-styles';
@@ -343,14 +305,12 @@
     }
   }
 
-  // Inicializar cuando el DOM esté listo
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
   }
 
-  // Re-inicializar cuando se cargan propiedades
   document.addEventListener('altorra:properties-loaded', () => {
     setTimeout(init, 200);
   });
