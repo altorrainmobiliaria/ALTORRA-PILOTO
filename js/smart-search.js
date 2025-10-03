@@ -1,181 +1,111 @@
 /* =========================================================
-   ALTORRA • Smart Search (V5)
-   - Relevancia estricta por tokens (título/barrio/ciudad/ID)
+   ALTORRA • Smart Search (V6 - Singleton)
+   - Dropdown único para todos los inputs (PC/Móvil)
+   - Listeners únicos (scroll/resize) → sin “encogimiento”
+   - Relevancia estricta por tokens (title/hood/city/id)
    - Fuzzy de apoyo (no cuela irrelevantes)
-   - Panel estable: ancho bloqueado (clamp) hasta cerrar
-   - PC/Móvil, teclado ↑/↓/Enter, mantiene abierto en scroll
+   - Ancho bloqueado hasta cerrar, navegación ↑/↓/Enter
    ========================================================= */
 
 (function () {
   'use strict';
 
-  /* ------------------ Utilidades ------------------ */
-
+  /* ---------- Config ---------- */
   const MIN_CHARS = 2;
   const MAX_SUGGESTIONS = 10;
   const DEBOUNCE_MS = 200;
+  const MIN_W = 360, MAX_W = 920, VW_LIMIT = 0.96; // clamp del ancho
 
-  function debounce(fn, wait) {
-    let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn.apply(this,args), wait); };
-  }
+  /* ---------- Utils ---------- */
+  const debounce = (fn, wait) => { let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), wait); }; };
+  const escapeHtml = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+  const normalize  = s => String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\w\s]/g,' ').replace(/\s+/g,' ').trim();
+  const splitTokens = s => normalize(s).split(' ').filter(Boolean);
+  const clamp = (v, min, max)=>Math.max(min, Math.min(max, v));
+  const cacheBuster = ()=> (location.search ? '&' : '?') + 'v=' + Math.floor(Date.now()/(1000*60*30));
+  const fuzzyScore = (n, h)=>{ n=n.toLowerCase(); let s=0,i=0,j=0; while(i<n.length && j<h.length){ if(n[i]===h[j]){s++;i++;} j++; } return i===n.length ? s/n.length : 0; };
 
-  function escapeHtml(str) {
-    return String(str || '')
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-      .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
-  }
-
-  function normalize(str) {
-    return String(str || '')
-      .toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-      .replace(/[^\w\s]/g,' ').replace(/\s+/g,' ').trim();
-  }
-
-  function splitTokens(str) {
-    return normalize(str).split(' ').filter(Boolean);
-  }
-
-  // Fuzzy sencillo (subsecuencia)
-  function fuzzyScore(needle, haystack) {
-    needle = needle.toLowerCase();
-    let s = 0, i=0, j=0;
-    while (i<needle.length && j<haystack.length) {
-      if (needle[i]===haystack[j]) { s++; i++; }
-      j++;
-    }
-    return i===needle.length ? s/needle.length : 0;
-  }
-
-  function cacheBuster() {
-    const slot = Math.floor(Date.now() / (1000*60*30)); // 30 min
-    return (location.search ? '&' : '?') + 'v=' + slot;
-  }
-
-  async function fetchJSON(url) {
-    const res = await fetch(url + cacheBuster(), { cache:'no-store' });
-    if (!res.ok) throw new Error(`HTTP ${res.status} @ ${url}`);
-    return res.json();
-  }
-
-  async function fetchWithFallback(paths) {
-    let last;
-    for (const p of paths) { try { return await fetchJSON(p); } catch(e){ last=e; } }
-    throw last || new Error('No se pudo cargar data.json');
-  }
-
-  async function loadData() {
+  async function fetchJSON(u){ const r=await fetch(u+cacheBuster(),{cache:'no-store'}); if(!r.ok) throw new Error(`HTTP ${r.status}@${u}`); return r.json(); }
+  async function fetchWithFallback(paths){ let last; for(const p of paths){ try{return await fetchJSON(p);}catch(e){last=e;} } throw last||new Error('No data.json'); }
+  async function loadData(){
     const paths = [
       new URL('properties/data.json', location.href).href,
       location.origin + '/ALTORRA-PILOTO/properties/data.json',
       location.origin + '/PRUEBA-PILOTO/properties/data.json',
       location.origin + '/properties/data.json'
     ];
-    const key = 'altorra:ssrc:data';
-    const now = Date.now();
-    try {
-      const raw = localStorage.getItem(key);
-      if (raw) {
-        const obj = JSON.parse(raw);
-        if (obj && obj.exp > now) return obj.data;
-      }
-    } catch(_){}
-    const data = await fetchWithFallback(paths);
-    try { localStorage.setItem(key, JSON.stringify({ data, exp: now + 1000*60*20 })); } catch(_){}
+    const key='altorra:ssrc:data', now=Date.now();
+    try{ const raw=localStorage.getItem(key); if(raw){ const o=JSON.parse(raw); if(o && o.exp>now) return o.data; } }catch(_){}
+    const data=await fetchWithFallback(paths);
+    try{ localStorage.setItem(key, JSON.stringify({data, exp: now+1000*60*20})); }catch(_){}
     return data;
   }
+  const toArrayData = d => Array.isArray(d) ? d : (d && Array.isArray(d.properties) ? d.properties : Object.values(d||{}).find(Array.isArray) || []);
 
-  function toArrayData(data) {
-    if (Array.isArray(data)) return data;
-    if (data && Array.isArray(data.properties)) return data.properties;
-    for (const k in data) if (Array.isArray(data[k])) return data[k];
-    return [];
-  }
+  /* ---------- Scoring ---------- */
+  const fieldText = p => ({
+    title: normalize(p.title),
+    city : normalize(p.city),
+    hood : normalize(p.neighborhood || p.barrio),
+    id   : normalize(p.id),
+    type : normalize(p.type),
+    desc : normalize(p.description),
+    feats: normalize(Array.isArray(p.features)?p.features.join(' '):'')
+  });
 
-  /* ------------------ Búsqueda inteligente ------------------ */
+  const tokensHitStrong = (tokens, f) =>
+    tokens.every(tok => f.title.includes(tok) || f.hood.includes(tok) || f.city.includes(tok) || f.id.includes(tok));
 
-  function fieldText(p) {
-    const title = normalize(p.title);
-    const city  = normalize(p.city);
-    const hood  = normalize(p.neighborhood || p.barrio);
-    const id    = normalize(p.id);
-    const type  = normalize(p.type);
-    const desc  = normalize(p.description);
-    const feats = normalize(Array.isArray(p.features) ? p.features.join(' ') : '');
-    return { title, city, hood, id, type, desc, feats };
-  }
-
-  // Relevancia por tokens: todos los tokens deben aparecer al menos en algún campo fuerte (title/hood/city/id)
-  function tokensHitStrong(tokens, fields) {
-    // Un token cuenta si aparece en title o hood o city o id
-    return tokens.every(tok =>
-      fields.title.includes(tok) ||
-      fields.hood.includes(tok)  ||
-      fields.city.includes(tok)  ||
-      fields.id.includes(tok)
-    );
-  }
-
-  function scoreProperty(tokens, qStr, fields) {
-    let score = 0;
-
-    // Pesos fuertes por coincidencias exactas en campos clave
-    tokens.forEach(tok => {
-      if (fields.title.includes(tok)) score += 50;
-      if (fields.hood.includes(tok))  score += 40;
-      if (fields.city.includes(tok))  score += 30;
-      if (fields.id.includes(tok))    score += 35;
-      if (fields.type.includes(tok))  score += 10;
+  const scoreProperty = (tokens, qStr, f) => {
+    let s=0;
+    tokens.forEach(t=>{
+      if(f.title.includes(t)) s+=50;
+      if(f.hood .includes(t)) s+=40;
+      if(f.city .includes(t)) s+=30;
+      if(f.id   .includes(t)) s+=35;
+      if(f.type .includes(t)) s+=10;
     });
+    const idx=[f.title,f.hood,f.city,f.id,f.type,f.desc,f.feats].join(' ');
+    s += fuzzyScore(qStr, idx)*20;
+    return s;
+  };
 
-    // Apoyo con fuzzy sobre un índice global (sin permitir irrelevantes)
-    const idx = [fields.title, fields.hood, fields.city, fields.id, fields.type, fields.desc, fields.feats].join(' ');
-    score += fuzzyScore(qStr, idx) * 20;
-
-    return score;
-  }
-
-  async function searchProps(query) {
-    if (!query || query.length < MIN_CHARS) return [];
-    const data = await loadData();
-    const arr  = toArrayData(data);
-
+  async function searchProps(query){
+    if(!query || query.length<MIN_CHARS) return [];
+    const arr = toArrayData(await loadData());
     const tokens = splitTokens(query);
     const qStr   = tokens.join(' ');
+    let out = [];
 
-    const results = [];
-    for (const p of arr) {
+    for(const p of arr){
       const f = fieldText(p);
-
-      // Regla estricta: si el usuario escribió >=3 chars,
-      // todos los tokens deben aparecer al menos en un campo fuerte.
-      if (qStr.length >= 3 && !tokensHitStrong(tokens, f)) continue;
-
+      if(qStr.length>=3 && !tokensHitStrong(tokens, f)) continue;
       const s = scoreProperty(tokens, qStr, f);
-      if (s > 0) results.push({ p, s });
+      if(s>0) out.push({p,s});
     }
 
-    // Si no pasó nadie por la regla estricta (caso muy raro), relajar a "al menos 1 token en campos fuertes"
-    if (results.length === 0 && qStr.length >= 3) {
-      for (const p of arr) {
+    if(out.length===0 && qStr.length>=3){
+      for(const p of arr){
         const f = fieldText(p);
-        const hasOne = tokens.some(tok =>
-          f.title.includes(tok) || f.hood.includes(tok) || f.city.includes(tok) || f.id.includes(tok)
-        );
-        if (!hasOne) continue;
+        const hasOne = tokens.some(t => f.title.includes(t)||f.hood.includes(t)||f.city.includes(t)||f.id.includes(t));
+        if(!hasOne) continue;
         const s = scoreProperty(tokens, qStr, f);
-        if (s > 0) results.push({ p, s });
+        if(s>0) out.push({p,s});
       }
     }
 
-    return results.sort((a,b)=>b.s-a.s).slice(0, MAX_SUGGESTIONS).map(r=>r.p);
+    return out.sort((a,b)=>b.s-a.s).slice(0,MAX_SUGGESTIONS).map(r=>r.p);
   }
 
-  /* ------------------ UI: dropdown con ancho bloqueado ------------------ */
+  /* ---------- Singleton Dropdown Manager ---------- */
+  const DD = (() => {
+    let dd = null;
+    let activeInput = null;
+    let lockedWidth = null;
+    let boundScroll = false;
 
-  function ensureDropdown(input) {
-    let dd = document.getElementById('smart-search-dropdown');
-    if (!dd) {
+    function ensure(){
+      if(dd) return dd;
       dd = document.createElement('div');
       dd.id = 'smart-search-dropdown';
       dd.setAttribute('role','listbox');
@@ -189,140 +119,137 @@
         'max-height:420px','overflow-y:auto',
         'z-index:2147483647','display:none'
       ].join(';');
-      document.body.appendChild(dd);
-
       // Mantener abierto al interactuar
       dd.addEventListener('mousedown', e=>e.preventDefault(), { passive:false });
       dd.addEventListener('touchstart', e=>e.preventDefault(), { passive:false });
+      document.body.appendChild(dd);
+      return dd;
     }
 
-    let lockedWidth = null;
-
-    function clamp(val, min, max){ return Math.max(min, Math.min(max, val)); }
-
-    function position({ lockWidth = false } = {}) {
-      const r = input.getBoundingClientRect();
-      const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-      const desired = r.width;
-      if (lockedWidth == null || lockWidth) {
-        // min 360px, máx 920px, y nunca más que 96vw
-        lockedWidth = clamp(desired, 360, Math.min(920, Math.floor(vw * 0.96)));
+    function setActive(input, {lockWidth=false} = {}){
+      activeInput = input;
+      if(!dd) ensure();
+      position({lockWidth});
+      if(!boundScroll){
+        boundScroll = true;
+        window.addEventListener('resize', ()=>position());
+        window.addEventListener('scroll',  ()=>position(), {passive:true});
       }
-      dd.style.top  = (r.top + window.scrollY + r.height + 6) + 'px';
-      dd.style.left = (r.left + window.scrollX) + 'px';
+    }
+
+    function position({lockWidth=false} = {}){
+      if(!dd || !activeInput) return;
+      const r  = activeInput.getBoundingClientRect();
+      const vw = Math.max(document.documentElement.clientWidth, window.innerWidth||0);
+      if(lockWidth || lockedWidth==null){
+        const desired = r.width;
+        lockedWidth = clamp(desired, MIN_W, Math.min(MAX_W, Math.floor(vw*VW_LIMIT)));
+      }
+      dd.style.top   = (r.top + window.scrollY + r.height + 6) + 'px';
+      dd.style.left  = (r.left + window.scrollX) + 'px';
       dd.style.width = lockedWidth + 'px';
     }
 
-    // Al primer render bloqueamos el ancho
-    position({ lockWidth: true });
+    function show(){ if(dd) dd.style.display='block'; }
+    function hide(){ if(dd) dd.style.display='none'; lockedWidth=null; }
+    function isOpen(){ return dd && dd.style.display!=='none'; }
+    function el(){ return dd || ensure(); }
 
-    window.addEventListener('resize', () => position());
-    window.addEventListener('scroll',  () => position(), { passive:true });
+    return { ensure, setActive, position, show, hide, isOpen, el };
+  })();
 
-    return { dd, position, lockWidth: ()=>position({ lockWidth:true }) };
-  }
-
-  function renderList(results, dd) {
-    if (!results.length) {
-      dd.innerHTML = `
-        <div style="padding:16px;text-align:center;color:#6b7280;font-size:0.95rem">
-          Sin resultados. Prueba con otra palabra.
-        </div>`;
-      dd.style.display = 'block';
-      return;
+  /* ---------- Render ---------- */
+  function renderList(results){
+    const dd = DD.el();
+    if(!results.length){
+      dd.innerHTML = `<div style="padding:16px;text-align:center;color:#6b7280;font-size:.95rem">Sin resultados. Prueba con otra palabra.</div>`;
+      DD.show(); return;
     }
-    dd.innerHTML = '';
-    results.forEach((p, i) => {
-      const row = document.createElement('div');
-      row.className = 'ss-item';
+    dd.innerHTML='';
+    results.forEach(p=>{
+      const row=document.createElement('div');
+      row.className='ss-item';
       row.setAttribute('role','option');
-      row.setAttribute('data-id', p.id);
-      row.setAttribute('data-idx', i);
-      row.style.cssText = 'display:flex;gap:12px;padding:12px 14px;cursor:pointer;align-items:center';
-      row.onmouseenter = ()=> row.style.background = '#f9fafb';
-      row.onmouseleave = ()=> row.style.background = 'transparent';
-
-      row.innerHTML = `
-        <img src="${p.image || '/assets/placeholder.webp'}"
-             alt="${escapeHtml(p.title || 'Propiedad')}"
+      row.style.cssText='display:flex;gap:12px;padding:12px 14px;cursor:pointer;align-items:center';
+      row.onmouseenter=()=>row.style.background='#f9fafb';
+      row.onmouseleave=()=>row.style.background='transparent';
+      row.innerHTML=`
+        <img src="${p.image || '/assets/placeholder.webp'}" alt="${escapeHtml(p.title||'Propiedad')}"
              style="width:60px;height:60px;object-fit:cover;border-radius:8px;flex-shrink:0">
         <div style="flex:1;min-width:0">
           <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-            ${escapeHtml(p.title || 'Propiedad')}
+            ${escapeHtml(p.title||'Propiedad')}
           </div>
           <div style="color:#6b7280;font-size:.86rem">
-            ${escapeHtml(p.city || '')}${p.neighborhood ? ' · ' + escapeHtml(p.neighborhood) : ''}
+            ${escapeHtml(p.city||'')}${p.neighborhood?' · '+escapeHtml(p.neighborhood):''}
           </div>
         </div>
         <div style="font-weight:900;color:#d4af37;white-space:nowrap">
-          ${p.price ? `$${Number(p.price).toLocaleString('es-CO')} COP` : ''}
-        </div>
-      `;
-      row.addEventListener('click', () => {
-        location.href = `detalle-propiedad.html?id=${encodeURIComponent(p.id)}`;
-      });
+          ${p.price?`$${Number(p.price).toLocaleString('es-CO')} COP`:''}
+        </div>`;
+      row.addEventListener('click',()=>{ location.href=`detalle-propiedad.html?id=${encodeURIComponent(p.id)}`; });
       dd.appendChild(row);
     });
-    dd.style.display = 'block';
+    DD.show();
   }
 
-  function enableKeyboard(input, dd) {
-    let current = -1;
-    function highlight(idx) {
-      const items = dd.querySelectorAll('.ss-item');
-      items.forEach(el => el.style.background = 'transparent');
-      if (idx>=0 && idx<items.length){
-        items[idx].style.background = '#eef2ff';
-        items[idx].scrollIntoView({ block:'nearest' });
+  function enableKeyboard(input){
+    const dd = DD.el();
+    let current=-1;
+    function items(){ return dd.querySelectorAll('.ss-item'); }
+    function highlight(i){
+      items().forEach(el=>el.style.background='transparent');
+      if(i>=0 && i<items().length){
+        items()[i].style.background='#eef2ff';
+        items()[i].scrollIntoView({block:'nearest'});
       }
-      current = idx;
+      current=i;
     }
-    input.addEventListener('keydown', (e)=>{
-      if (dd.style.display === 'none') return;
-      const items = dd.querySelectorAll('.ss-item');
-      if (!items.length) return;
-      if (e.key === 'ArrowDown') { e.preventDefault(); highlight(Math.min(items.length-1, current+1)); }
-      else if (e.key === 'ArrowUp') { e.preventDefault(); highlight(Math.max(0, current-1)); }
-      else if (e.key === 'Enter') { if (current>=0) { e.preventDefault(); items[current].click(); } }
-      else if (e.key === 'Escape') { dd.style.display='none'; }
+    input.addEventListener('keydown',e=>{
+      if(!DD.isOpen()) return;
+      const list=items(); if(!list.length) return;
+      if(e.key==='ArrowDown'){ e.preventDefault(); highlight(Math.min(list.length-1,current+1)); }
+      else if(e.key==='ArrowUp'){ e.preventDefault(); highlight(Math.max(0,current-1)); }
+      else if(e.key==='Enter'){ if(current>=0){ e.preventDefault(); list[current].click(); } }
+      else if(e.key==='Escape'){ DD.hide(); }
     });
   }
 
-  /* ------------------ Init y wiring ------------------ */
-
-  document.addEventListener('DOMContentLoaded', () => {
+  /* ---------- Wiring ---------- */
+  document.addEventListener('DOMContentLoaded', ()=>{
     const inputs = document.querySelectorAll('#f-search, #f-city');
-    inputs.forEach((input) => {
-      const { dd, position, lockWidth } = ensureDropdown(input);
-
-      const run = debounce(async () => {
+    inputs.forEach(input=>{
+      const run = debounce(async ()=>{
         const q = input.value.trim();
-        if (q.length < MIN_CHARS) { dd.style.display='none'; return; }
-        dd.innerHTML = '<div style="padding:16px;text-align:center;color:#6b7280">Buscando…</div>';
-        dd.style.display = 'block';
-        lockWidth(); // bloquea ancho al primer render
-        position();
-        try {
+        if(q.length<MIN_CHARS){ DD.hide(); return; }
+        DD.setActive(input, {lockWidth:true});
+        DD.el().innerHTML = '<div style="padding:16px;text-align:center;color:#6b7280">Buscando…</div>';
+        DD.show(); DD.position();
+        try{
           const results = await searchProps(q);
-          renderList(results, dd);
-          position();
-        } catch (e) {
-          console.error('[smart-search]', e);
-          dd.innerHTML = '<div style="padding:16px;text-align:center;color:#ef4444">Error de búsqueda</div>';
+          renderList(results);
+          DD.position(); // sólo reposiciona (no recalcula ancho)
+        }catch(err){
+          console.error('[smart-search]',err);
+          DD.el().innerHTML = '<div style="padding:16px;text-align:center;color:#ef4444">Error de búsqueda</div>';
+          DD.show();
         }
       }, DEBOUNCE_MS);
 
       input.addEventListener('input', run);
       input.addEventListener('focus', run);
 
-      document.addEventListener('mousedown', (e)=>{
-        if (!dd.contains(e.target) && e.target !== input) dd.style.display='none';
+      // Cierre al hacer click fuera
+      document.addEventListener('mousedown', e=>{
+        const dd=DD.el();
+        if(DD.isOpen() && !dd.contains(e.target) && e.target!==input) DD.hide();
       });
-      document.addEventListener('touchstart', (e)=>{
-        if (!dd.contains(e.target) && e.target !== input) dd.style.display='none';
-      }, { passive:true });
+      document.addEventListener('touchstart', e=>{
+        const dd=DD.el();
+        if(DD.isOpen() && !dd.contains(e.target) && e.target!==input) DD.hide();
+      }, {passive:true});
 
-      enableKeyboard(input, dd);
+      enableKeyboard(input);
     });
   });
 })();
