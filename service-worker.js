@@ -1,112 +1,101 @@
-/* Altorra - Service Worker (Fase 2) */
-const VERSION = 'v2.0.0-2025-09-30';
-const STATIC_CACHE = 'altorra-static-' + VERSION;
-const RUNTIME_CACHE = 'altorra-runtime-' + VERSION;
+/* ===========================================
+   service-worker.js — ALTORRA-PILOTO
+   Objetivo:
+   - Evitar que necesites editar ?v=... en <script>
+   - HTML y JS siempre "frescos" (network-first + cache:'reload')
+   - Recarga automática 1 sola vez cuando hay SW nuevo
+   - Mantener CSS/IMG rápidos con caché
+   =========================================== */
 
-const CORE_ASSETS = [
-  './',
-  './index.html',
-  './style.css',
-  './scripts.js',
-  './header-footer.js',
-  './header.html',
-  './footer.html',
-  './manifest.json',
-  './js/favoritos.js',
-  './js/listado-propiedades.js'
-];
+const CACHE_NAME = 'altorra-pwa-v1'; // Sube el nombre si alguna vez cambias la estrategia
+const ORIGIN = self.location.origin;
 
-self.addEventListener('install', event => {
-  console.log('[SW] Instalando versión:', VERSION);
-  event.waitUntil(
-    caches.open(STATIC_CACHE)
-      .then(cache => cache.addAll(CORE_ASSETS))
-      .then(() => self.skipWaiting())
-  );
+// Toma control inmediatamente al instalar
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
+  event.waitUntil(Promise.resolve());
 });
 
-self.addEventListener('activate', event => {
-  console.log('[SW] Activando versión:', VERSION);
-  event.waitUntil(
-    caches.keys().then(keys => {
-      console.log('[SW] Limpiando cachés antiguos...');
-      return Promise.all(
-        keys
-          .filter(k => k.startsWith('altorra-') && ![STATIC_CACHE, RUNTIME_CACHE].includes(k))
-          .map(k => {
-            console.log('[SW] Eliminando caché:', k);
-            return caches.delete(k);
-          })
-      );
-    }).then(() => self.clients.claim())
-  );
+// Activa, limpia cachés viejos y toma control de todas las pestañas
+self.addEventListener('activate', (event) => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k => (k !== CACHE_NAME ? caches.delete(k) : null)));
+    await self.clients.claim();
+
+    // Recarga 1 vez todas las pestañas controladas para que vean la versión nueva
+    const clientsList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    clientsList.forEach((client) => {
+      // Forzamos una navegación a la misma URL (recarga suave)
+      client.navigate(client.url).catch(() => {});
+    });
+  })());
 });
 
-/* Strategy:
-   - HTML: network-first (fallback cache)
-   - JSON: network-first (siempre actualizado)
-   - CSS/JS: stale-while-revalidate
-   - Imágenes: cache-first
-*/
-self.addEventListener('fetch', event => {
+// Helper: ¿solicitud dentro del mismo origen?
+function isSameOrigin(url) {
+  return url.origin === ORIGIN;
+}
+
+self.addEventListener('fetch', (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // Solo GET
-  if (req.method !== 'GET') return;
+  // Solo manejamos recursos del mismo origen (GitHub Pages del sitio)
+  if (!isSameOrigin(url)) return;
 
-  // JSON siempre fresco
-  if (url.pathname.endsWith('.json')) {
-    event.respondWith(
-      fetch(req, { cache: 'no-store' })
-        .then(res => {
-          const resClone = res.clone();
-          caches.open(RUNTIME_CACHE).then(cache => cache.put(req, resClone));
-          return res;
-        })
-        .catch(() => caches.match(req))
-    );
-    return;
-  }
+  const isHTML = req.mode === 'navigate' || url.pathname.endsWith('.html');
+  const isJS   = url.pathname.endsWith('.js');
+  const isCSS  = url.pathname.endsWith('.css') || url.pathname.endsWith('.woff2') || url.pathname.endsWith('.woff');
+  const isImg  = /\.(png|jpg|jpeg|webp|gif|svg)$/i.test(url.pathname);
 
-  // HTML: network-first
-  if (req.headers.get('accept')?.includes('text/html')) {
-    event.respondWith(
-      fetch(req)
-        .then(res => {
-          const resClone = res.clone();
-          caches.open(RUNTIME_CACHE).then(cache => cache.put(req, resClone));
-          return res;
-        })
-        .catch(() => caches.match(req).then(cached => cached || caches.match('./index.html')))
-    );
-    return;
-  }
-
-  // Imágenes: cache-first
-  if (req.headers.get('accept')?.includes('image') || /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url.pathname)) {
-    event.respondWith(
-      caches.match(req).then(cached => {
+  // === HTML y JS: siempre pedir en red primero y revalidar (evita versiones viejas) ===
+  if (isHTML || isJS) {
+    event.respondWith((async () => {
+      try {
+        // Fuerza a ir a la red (evita caché intermedio)
+        const freshReq = new Request(req, { cache: 'reload' });
+        const net = await fetch(freshReq);
+        const copy = net.clone();
+        const cache = await caches.open(CACHE_NAME);
+        cache.put(req, copy);
+        return net;
+      } catch (e) {
+        // Si no hay red, cae a caché (modo offline)
+        const cached = await caches.match(req);
         if (cached) return cached;
-        return fetch(req).then(networkRes => {
-          const resClone = networkRes.clone();
-          caches.open(RUNTIME_CACHE).then(cache => cache.put(req, resClone));
-          return networkRes;
-        });
-      })
-    );
+        throw e;
+      }
+    })());
     return;
   }
 
-  // Otros assets: stale-while-revalidate
-  event.respondWith(
-    caches.match(req).then(cached => {
-      const fetchPromise = fetch(req).then(networkRes => {
-        const resClone = networkRes.clone();
-        caches.open(RUNTIME_CACHE).then(cache => cache.put(req, resClone));
-        return networkRes;
-      }).catch(() => cached);
-      return cached || fetchPromise;
-    })
-  );
+  // === CSS/Fonts: stale-while-revalidate (rápido y actualiza en segundo plano) ===
+  if (isCSS) {
+    event.respondWith((async () => {
+      const cache = await caches.open(CACHE_NAME);
+      const cached = await cache.match(req);
+      const fetchPromise = fetch(req).then((net) => {
+        cache.put(req, net.clone());
+        return net;
+      }).catch(() => null);
+      return cached || (await fetchPromise);
+    })());
+    return;
+  }
+
+  // === Imágenes: cache-first (rápidas, y si no hay, va a red y guarda) ===
+  if (isImg) {
+    event.respondWith((async () => {
+      const cache = await caches.open(CACHE_NAME);
+      const cached = await cache.match(req);
+      if (cached) return cached;
+      const net = await fetch(req);
+      cache.put(req, net.clone());
+      return net;
+    })());
+    return;
+  }
+
+  // Otros: dejar pasar por defecto
 });
