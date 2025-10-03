@@ -1,6 +1,6 @@
 /* ========================================
-   ALTORRA - BÚSQUEDA INTELIGENTE (FIXED)
-   Sugerencias en tiempo real con fuzzy search
+   ALTORRA - BÚSQUEDA INTELIGENTE (FIXED V2)
+   Dropdown se agrega al body para evitar z-index issues
    ======================================== */
 
 (function() {
@@ -99,37 +99,45 @@
     }
   }
 
-  // ========== UI - CREAR DROPDOWN ==========
+  // ========== UI - CREAR DROPDOWN (AGREGADO AL BODY) ==========
   function createSuggestionsDropdown(inputEl) {
-    const existing = document.getElementById('smart-search-dropdown');
-    if (existing) return existing;
+    let dropdown = document.getElementById('smart-search-dropdown');
     
-    const dropdown = document.createElement('div');
-    dropdown.id = 'smart-search-dropdown';
-    dropdown.className = 'smart-search-dropdown';
-    dropdown.setAttribute('role', 'listbox');
-    dropdown.setAttribute('aria-label', 'Sugerencias de búsqueda');
+    if (!dropdown) {
+      dropdown = document.createElement('div');
+      dropdown.id = 'smart-search-dropdown';
+      dropdown.className = 'smart-search-dropdown';
+      dropdown.setAttribute('role', 'listbox');
+      dropdown.setAttribute('aria-label', 'Sugerencias de búsqueda');
+      
+      // 🔧 FIX: Se agrega al body, no al parent del input
+      document.body.appendChild(dropdown);
+    }
     
-    // 🔧 FIX: z-index más alto
-    Object.assign(dropdown.style, {
-      position: 'absolute',
-      top: '100%',
-      left: '0',
-      right: '0',
-      background: '#fff',
-      border: '1px solid rgba(0,0,0,0.12)',
-      borderRadius: '0 0 12px 12px',
-      boxShadow: '0 12px 32px rgba(0,0,0,0.18)',
-      maxHeight: '400px',
-      overflowY: 'auto',
-      zIndex: '99999',  // ← FIX AQUÍ
-      marginTop: '4px',
-      display: 'none'
-    });
+    // Posicionar el dropdown relativo al input
+    function positionDropdown() {
+      const rect = inputEl.getBoundingClientRect();
+      Object.assign(dropdown.style, {
+        position: 'fixed',
+        top: rect.bottom + 4 + 'px',
+        left: rect.left + 'px',
+        width: rect.width + 'px',
+        background: '#fff',
+        border: '1px solid rgba(0,0,0,0.12)',
+        borderRadius: '0 0 12px 12px',
+        boxShadow: '0 12px 32px rgba(0,0,0,0.18)',
+        maxHeight: '400px',
+        overflowY: 'auto',
+        zIndex: '999999',
+        display: 'none'
+      });
+    }
     
-    const parent = inputEl.parentElement;
-    parent.style.position = 'relative';
-    parent.appendChild(dropdown);
+    positionDropdown();
+    
+    // Reposicionar al hacer scroll o resize
+    window.addEventListener('scroll', positionDropdown, true);
+    window.addEventListener('resize', positionDropdown);
     
     return dropdown;
   }
@@ -163,7 +171,6 @@
         `$${prop.price.toLocaleString('es-CO')} COP` : 
         'Precio a consultar';
       
-      // 🔧 FIX: Resaltado simple sin HTML complejo
       const title = escapeHtml(prop.title || 'Propiedad');
       
       item.innerHTML = `
