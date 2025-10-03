@@ -54,6 +54,18 @@
         <p>Seguridad • Legalidad • Confianza</p>
 
         <form id="quickSearch" class="search-box" aria-label="Buscador rápido">
+          <!-- 🆕 NUEVO: Campo de búsqueda principal con sugerencias inteligentes -->
+          <label class="visually-hidden" for="f-search">Buscar propiedad</label>
+          <input 
+            id="f-search" 
+            name="search" 
+            placeholder="🔍 Buscar por ciudad, barrio, código o característica..." 
+            aria-label="Buscar propiedad" 
+            inputmode="text"
+            style="grid-column: 1 / -1;"
+            autocomplete="off"
+          />
+
           <label class="visually-hidden" for="op">Operación</label>
           <select id="op" name="op" aria-label="Operación">
             <option value="comprar">Comprar</option>
@@ -177,6 +189,7 @@
   </svg>
 </a>
   <script defer src="js/favoritos.js"></script>
+  <!-- 🆕 NUEVO: Script de búsqueda inteligente -->
   <script defer src="js/smart-search.js"></script>
 
 </body>
