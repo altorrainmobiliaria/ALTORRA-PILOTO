@@ -1,35 +1,33 @@
-/* ========================================
-   ALTORRA - BÚSQUEDA INTELIGENTE (FIXED V2)
-   Dropdown se agrega al body para evitar z-index issues
-   ======================================== */
+/* =========================================================
+   ALTORRA • Smart Search (V3 estable)
+   - Mantiene abierto el dropdown al hacer scroll/touch
+   - Soporta PC y móvil
+   - Sin dependencias externas
+   - Con caché local (TTL) y rutas de fallback para GH Pages
+   ========================================================= */
 
-(function() {
+(function () {
   'use strict';
 
-  // ========== CONFIG ==========
-  const MIN_CHARS = 2;
-  const MAX_SUGGESTIONS = 5;
-  const DEBOUNCE_MS = 300;
+  /* ------------------ Utilidades ------------------ */
 
-  // ========== FUZZY SEARCH ==========
-  function fuzzyMatch(needle, haystack) {
-    needle = needle.toLowerCase();
-    let score = 0;
-    let nIndex = 0;
-    let hIndex = 0;
-
-    while (nIndex < needle.length && hIndex < haystack.length) {
-      if (needle[nIndex] === haystack[hIndex]) {
-        score++;
-        nIndex++;
-      }
-      hIndex++;
-    }
-
-    return nIndex === needle.length ? score / needle.length : 0;
+  function debounce(fn, wait) {
+    let t;
+    return function (...args) {
+      clearTimeout(t);
+      t = setTimeout(() => fn.apply(this, args), wait);
+    };
   }
 
-  // ========== NORMALIZACIÓN DE TEXTO ==========
+  function escapeHtml(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
   function normalize(str) {
     return String(str || '')
       .toLowerCase()
@@ -40,198 +38,248 @@
       .trim();
   }
 
-  // ========== BÚSQUEDA EN PROPIEDADES ==========
+  async function fetchJSON(url) {
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status} en ${url}`);
+    return res.json();
+  }
+
+  // Intenta varias rutas (según tu propio patrón de fallback)
+  async function fetchWithFallback(paths) {
+    let lastErr;
+    for (const p of paths) {
+      try {
+        return await fetchJSON(p);
+      } catch (e) {
+        lastErr = e;
+      }
+    }
+    throw lastErr || new Error('No se pudo cargar JSON');
+  }
+
+  // Caché sencilla con TTL usando localStorage
+  async function getJSONCached(paths, ttlMs = 1000 * 60 * 30) {
+    const key = 'altorra:ssrc:datajson';
+    const now = Date.now();
+
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const obj = JSON.parse(raw);
+        if (obj && obj.expires > now && obj.data) {
+          return obj.data;
+        }
+      }
+    } catch (_) {}
+
+    const data = await fetchWithFallback(paths);
+    try {
+      localStorage.setItem(
+        key,
+        JSON.stringify({ data, expires: now + ttlMs })
+      );
+    } catch (_) {}
+    return data;
+  }
+
+  /* ------------------ Búsqueda ------------------ */
+
+  const MIN_CHARS = 2;
+  const MAX_SUGGESTIONS = 8;
+  const DEBOUNCE_MS = 220;
+
+  function fuzzyMatch(needle, haystack) {
+    needle = needle.toLowerCase();
+    let score = 0, ni = 0, hi = 0;
+    while (ni < needle.length && hi < haystack.length) {
+      if (needle[ni] === haystack[hi]) {
+        score++; ni++;
+      }
+      hi++;
+    }
+    return ni === needle.length ? score / needle.length : 0;
+  }
+
   async function searchProperties(query) {
     if (!query || query.length < MIN_CHARS) return [];
-    
-    try {
-      const data = await window.getJSONCached('properties/data.json', {
-        ttlMs: 1000 * 60 * 30,
-        revalidate: false
-      });
 
-      const normalizedQuery = normalize(query);
-      const results = [];
+    // Fallbacks según tu estructura (repositorio piloto / raíz)
+    const data = await getJSONCached(
+      [
+        'properties/data.json',
+        '/ALTORRA-PILOTO/properties/data.json',
+        '/PRUEBA-PILOTO/properties/data.json',
+        '/properties/data.json'
+      ],
+      1000 * 60 * 20 // 20 min
+    );
 
-      data.properties.forEach(prop => {
-        const searchIndex = normalize(
-          [
-            prop.title,
-            prop.description,
-            prop.city,
-            prop.neighborhood,
-            prop.type,
-            prop.id,
-            prop.features ? prop.features.join(' ') : ''
-          ].join(' ')
-        );
+    const normalizedQuery = normalize(query);
+    const results = [];
 
-        let score = 0;
-        if (searchIndex.includes(normalizedQuery)) {
-          score += 100;
-        }
+    (data.properties || []).forEach((prop) => {
+      const idx = normalize(
+        [
+          prop.title,
+          prop.description,
+          prop.city,
+          prop.neighborhood,
+          prop.type,
+          prop.id,
+          Array.isArray(prop.features) ? prop.features.join(' ') : ''
+        ].join(' ')
+      );
 
-        const fuzzyScore = fuzzyMatch(normalizedQuery, searchIndex);
-        score += fuzzyScore * 50;
+      let score = 0;
 
-        const titleMatch = normalize(prop.title).includes(normalizedQuery);
-        if (titleMatch) score += 30;
+      if (idx.includes(normalizedQuery)) score += 100;
+      score += fuzzyMatch(normalizedQuery, idx) * 50;
+      if (normalize(prop.title).includes(normalizedQuery)) score += 30;
+      if (normalize(prop.city).includes(normalizedQuery)) score += 20;
 
-        const cityMatch = normalize(prop.city).includes(normalizedQuery);
-        if (cityMatch) score += 20;
+      if (score > 0) results.push({ prop, score });
+    });
 
-        if (score > 0) {
-          results.push({ prop, score });
-        }
-      });
-
-      return results
-        .sort((a, b) => b.score - a.score)
-        .slice(0, MAX_SUGGESTIONS)
-        .map(r => r.prop);
-    } catch (err) {
-      console.error('[Smart Search] Error:', err);
-      return [];
-    }
+    return results
+      .sort((a, b) => b.score - a.score)
+      .slice(0, MAX_SUGGESTIONS)
+      .map((r) => r.prop);
   }
 
-  // ========== UI - CREAR DROPDOWN (AGREGADO AL BODY) ==========
-  function createSuggestionsDropdown(inputEl) {
-    let dropdown = document.getElementById('smart-search-dropdown');
-    if (!dropdown) {
-      dropdown = document.createElement('div');
-      dropdown.id = 'smart-search-dropdown';
-      dropdown.className = 'smart-search-dropdown';
-      dropdown.setAttribute('role', 'listbox');
-      dropdown.setAttribute('aria-label', 'Sugerencias de búsqueda');
-      document.body.appendChild(dropdown);
+  /* ------------------ UI: dropdown ------------------ */
+
+  function ensureDropdown(inputEl) {
+    let dd = document.getElementById('smart-search-dropdown');
+    if (!dd) {
+      dd = document.createElement('div');
+      dd.id = 'smart-search-dropdown';
+      dd.setAttribute('role', 'listbox');
+      dd.setAttribute('aria-label', 'Sugerencias de búsqueda');
+      dd.style.cssText = [
+        'position:fixed',
+        'top:0',
+        'left:0',
+        'width:0',
+        'background:#fff',
+        'border:1px solid rgba(0,0,0,.12)',
+        'border-radius:0 0 12px 12px',
+        'box-shadow:0 12px 32px rgba(0,0,0,.18)',
+        'max-height:420px',
+        'overflow-y:auto',
+        'z-index:999999',
+        'display:none'
+      ].join(';');
+      document.body.appendChild(dd);
+
+      // No cerrar por interacciones dentro del panel
+      dd.addEventListener('mousedown', (e) => e.preventDefault(), { passive: false });
+      dd.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
     }
 
-    // Posicionar el dropdown relativo al input
-    function positionDropdown() {
-      const rect = inputEl.getBoundingClientRect();
-      Object.assign(dropdown.style, {
-        position: 'fixed',
-        top: rect.bottom + 4 + 'px',
-        left: rect.left + 'px',
-        width: rect.width + 'px',
-        background: '#fff',
-        border: '1px solid rgba(0,0,0,0.12)',
-        borderRadius: '0 0 12px 12px',
-        boxShadow: '0 12px 32px rgba(0,0,0,0.18)',
-        maxHeight: '400px',
-        overflowY: 'auto',
-        zIndex: '999999',
-        display: 'none'
-      });
+    function position() {
+      const r = inputEl.getBoundingClientRect();
+      dd.style.top = r.bottom + 4 + 'px';
+      dd.style.left = r.left + 'px';
+      dd.style.width = r.width + 'px';
     }
-    
-    positionDropdown();
+    position();
 
-    // Evitar que al interactuar con el panel de resultados se cierre la búsqueda
-      dropdown.addEventListener('mousedown', e => e.preventDefault());
-      dropdown.addEventListener('touchstart', e => e.preventDefault());
+    window.addEventListener('resize', position);
+    window.addEventListener('scroll', position);
 
-    // Reposicionar al hacer scroll o resize
-    window.addEventListener('scroll', positionDropdown);
-    window.addEventListener('resize', positionDropdown);
-    
-    return dropdown;
+    return dd;
   }
 
-  // ========== UI - RENDERIZAR SUGERENCIAS ==========
-  function renderSuggestions(results, dropdown, inputEl, query) {
-    if (results.length === 0) {
-      dropdown.innerHTML = `
-        <div style="padding:16px;text-align:center;color:#6b7280">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin:0 auto 8px">
-            <circle cx="11" cy="11" r="8"></circle>
-            <path d="m21 21-4.35-4.35"></path>
-          </svg>
-          <div style="font-weight:600;margin-bottom:4px">No se encontraron resultados</div>
-          <div style="font-size:0.9rem">Intenta con otra búsqueda</div>
-        </div>
-      `;
-      dropdown.style.display = 'block';
+  function render(results, dd) {
+    if (!results.length) {
+      dd.innerHTML = `
+        <div style="padding:14px;text-align:center;color:#6b7280">
+          Sin resultados. Prueba con otra palabra.
+        </div>`;
+      dd.style.display = 'block';
       return;
     }
 
-    dropdown.innerHTML = '';
-    
-    results.forEach((prop, index) => {
-      const item = document.createElement('div');
-      item.className = 'suggestion-item';
-      item.setAttribute('role', 'option');
-      item.setAttribute('data-id', prop.id);
-      item.innerHTML = `
-        <div style="display:flex;gap:12px;padding:12px;cursor:pointer;transition:background 0.15s ease" 
-             onmouseenter="this.style.background='#f9fafb'" 
-             onmouseleave="this.style.background='transparent'">
-          <img src="${prop.image || 'https://i.postimg.cc/0yYb8Y6r/placeholder.png'}" 
-               alt="${prop.title || 'Propiedad'}"
-               style="width:60px;height:60px;object-fit:cover;border-radius:8px;flex-shrink:0">
-          <div style="flex:1;min-width:0">
-            <div style="font-weight:600;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-              ${escapeHtml(prop.title || 'Propiedad')}
-            </div>
-            <div style="font-size:0.85rem;color:#6b7280;margin-bottom:4px">
-              ${prop.city ? escapeHtml(prop.city) : ''}
-            </div>
-            <div style="font-weight:900;color:#d4af37;font-size:0.95rem">
-              ${prop.price ? `$${prop.price.toLocaleString('es-CO')} COP` : 'Precio a consultar'}
-            </div>
+    dd.innerHTML = '';
+    results.forEach((p) => {
+      const el = document.createElement('div');
+      el.className = 'ss-item';
+      el.setAttribute('role', 'option');
+      el.style.cssText =
+        'display:flex;gap:12px;padding:10px 12px;cursor:pointer;align-items:center';
+      el.onmouseenter = () => (el.style.background = '#f9fafb');
+      el.onmouseleave = () => (el.style.background = 'transparent');
+      el.innerHTML = `
+        <img src="${p.image || '/assets/placeholder.webp'}"
+             alt="${escapeHtml(p.title || 'Propiedad')}"
+             style="width:56px;height:56px;object-fit:cover;border-radius:8px;flex-shrink:0">
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+            ${escapeHtml(p.title || 'Propiedad')}
           </div>
+          <div style="color:#6b7280;font-size:.86rem">${escapeHtml(p.city || '')}</div>
+        </div>
+        <div style="font-weight:900;color:#d4af37;white-space:nowrap">
+          ${p.price ? `$${Number(p.price).toLocaleString('es-CO')} COP` : ''}
         </div>
       `;
-      item.addEventListener('click', () => {
-        window.location.href = `detalle-propiedad.html?id=${encodeURIComponent(prop.id)}`;
+      el.addEventListener('click', () => {
+        location.href = `detalle-propiedad.html?id=${encodeURIComponent(p.id)}`;
       });
-      dropdown.appendChild(item);
+      dd.appendChild(el);
     });
 
-    dropdown.style.display = 'block';
+    dd.style.display = 'block';
   }
 
-  // ========== MAIN - ADJUNTAR BÚSQUEDA A INPUT ==========
-  function attachSearch(inputEl) {
-    const dropdown = createSuggestionsDropdown(inputEl);
-    
-    // Desbounced search
-    const performSearch = debounce(async () => {
-      const query = inputEl.value.trim();
-      if (query.length < MIN_CHARS) {
-        dropdown.style.display = 'none';
+  function wireInput(inputEl) {
+    const dd = ensureDropdown(inputEl);
+
+    const doSearch = debounce(async () => {
+      const q = inputEl.value.trim();
+      if (q.length < MIN_CHARS) {
+        dd.style.display = 'none';
         return;
       }
 
-      dropdown.innerHTML = `
-        <div style="padding:16px;text-align:center;color:#6b7280">
-          <div style="display:inline-block;width:24px;height:24px;border:4px solid var(--muted);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite"></div>
-          <div style="margin-top:8px;font-size:0.9rem">Buscando...</div>
-        </div>
-      `;
-      dropdown.style.display = 'block';
+      dd.innerHTML =
+        '<div style="padding:14px;text-align:center;color:#6b7280">Buscando…</div>';
+      dd.style.display = 'block';
 
-      const results = await searchProperties(query);
-      renderSuggestions(results, dropdown, inputEl, query);
+      try {
+        const results = await searchProperties(q);
+        render(results, dd);
+      } catch (e) {
+        console.error('[smart-search] error:', e);
+        dd.innerHTML =
+          '<div style="padding:14px;text-align:center;color:#ef4444">Error de búsqueda</div>';
+        dd.style.display = 'block';
+      }
     }, DEBOUNCE_MS);
 
-    inputEl.addEventListener('input', performSearch);
-    inputEl.addEventListener('focus', () => {
-      if (inputEl.value.trim().length >= MIN_CHARS) {
-        performSearch();
-      }
-    });
+    inputEl.addEventListener('input', doSearch);
+    inputEl.addEventListener('focus', doSearch);
     inputEl.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        dropdown.style.display = 'none';
-        inputEl.blur();
+      if (e.key === 'Escape') dd.style.display = 'none';
+    });
+
+    // Cerrar cuando se hace click/tap fuera del input y del dropdown
+    document.addEventListener('mousedown', (e) => {
+      if (!dd.contains(e.target) && e.target !== inputEl) {
+        dd.style.display = 'none';
       }
     });
+    document.addEventListener('touchstart', (e) => {
+      if (!dd.contains(e.target) && e.target !== inputEl) {
+        dd.style.display = 'none';
+      }
+    }, { passive: true });
   }
 
+  /* ------------------ Init ------------------ */
   document.addEventListener('DOMContentLoaded', () => {
+    // En tu home hay 1 input grande; ids habituales: f-search (y a veces f-city)
     const inputs = document.querySelectorAll('#f-search, #f-city');
-    inputs.forEach(input => attachSearch(input));
+    inputs.forEach(wireInput);
   });
 })();
