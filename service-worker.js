@@ -1,5 +1,5 @@
 /* ===========================================
-   service-worker.js — ALTORRA-PILOTO
+   // service-worker.js — ALTORRA (producción)
    Objetivo:
    - Evitar que necesites editar ?v=... en <script>
    - HTML y JS siempre "frescos" (network-first + cache:'reload')
