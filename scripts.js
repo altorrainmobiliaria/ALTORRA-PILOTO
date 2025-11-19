@@ -266,7 +266,7 @@ document.addEventListener('DOMContentLoaded', function(){
     window.location.href = url;
   });
 });
- /* ============== 5) Miniaturas home → properties/data.json (con caché) ============== */
+ //* ============== 5) Miniaturas home → properties/data.json (con caché) ============== */
 (function(){
   const cfg = [
     {operation:'comprar', targetId:'carouselVenta',    mode:'venta'},
