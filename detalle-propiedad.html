@@ -601,6 +601,19 @@ document.addEventListener('DOMContentLoaded', init);
   <!-- SEO JSON-LD -->
   <div style="display:none"><?php /* placeholder for GH Pages */ ?></div>
   <!--#include file="snippets/inject-jsonld.html" -->
+  <script src="js/utils.js"></script>
+<script src="js/analytics.js"></script>
+<script>
+  // Track cuando alguien ve una propiedad
+  const urlParams = new URLSearchParams(window.location.search);
+  const propId = urlParams.get('id');
+  if (propId) {
+    AltorraAnalytics.track('property_view', {
+      id: propId,
+      title: document.querySelector('h1')?.textContent || 'Sin título'
+    });
+  }
+</script>
 </body>
 <script>
 /* Inject JSON-LD for SEO using loaded property 'prop' */
