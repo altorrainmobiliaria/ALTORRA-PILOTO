@@ -236,6 +236,8 @@ document.addEventListener('DOMContentLoaded', function(){
   if(!form) return;
   form.addEventListener('submit', async function(ev){
     ev.preventDefault();
+        return; // duplicate handler disabled
+    
     const op = (document.getElementById('op')?.value || 'comprar').toLowerCase();
     const city = document.getElementById('f-city')?.value || '';
     const type = document.getElementById('f-type')?.value || '';
@@ -246,8 +248,8 @@ document.addEventListener('DOMContentLoaded', function(){
     if(code){
       try{
         let data; try{ data = await getJSONCached('properties/data.json', { ttlMs: 1000*60*60*6, revalidate:false }); }
-        catch(_){ try{ data = await getJSONCached('/PRUEBA-PILOTO/properties/data.json', { ttlMs: 1000*60*60*6, revalidate:false }); }
-        catch(__){ data = await getJSONCached('/properties/data.json', { ttlMs: 1000*60*60*6, revalidate:false }); }}
+        catch(_){ try{ data = await getJSONCached('properties/data.json', { ttlMs: 1000*60*60*6, revalidate:false }); }
+        catch(__){ data = await getJSONCached('properties/data.json', { ttlMs: 1000*60*60*6, revalidate:false }); }}
         const hit = (Array.isArray(data)?data:[]).find(function(p){ return String(p.id||'').toLowerCase() === code.toLowerCase(); });
         if(hit){ window.location.href = 'detalle-propiedad.html?id=' + encodeURIComponent(code); return; }
         // si no existe, seguimos a la página de la operación con el code para que muestre mensaje
@@ -264,8 +266,7 @@ document.addEventListener('DOMContentLoaded', function(){
     window.location.href = url;
   });
 });
-
-/* ============== 5) Miniaturas home ← properties/data.json (con caché) ============== */
+* ============= 5) Miniaturas home ← properties/data.json (con caché) ============== */
 (function(){
   const cfg = [
     {operation:'comprar', targetId:'carouselVenta',    mode:'venta'},
@@ -420,7 +421,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
   async function fetchByOperation(op){
     try{
-      let data; try{ data = await getJSONCached('properties/data.json', { ttlMs: 1000*60*60*6, revalidate: true }); }catch(_){ try{ data = await getJSONCached('/PRUEBA-PILOTO/properties/data.json', { ttlMs: 1000*60*60*6, revalidate: true }); }catch(__){ data = await getJSONCached('/properties/data.json', { ttlMs: 1000*60*60*6, revalidate: true }); }}
+      let data; try{ data = await getJSONCached('properties/data.json', { ttlMs: 1000*60*60*6, revalidate: true }); }catch(_){ try{ data = await getJSONCached('properties/data.json', { ttlMs: 1000*60*60*6, revalidate: true }); }catch(__){ data = await getJSONCached('properties/data.json', { ttlMs: 1000*60*60*6, revalidate: true }); }}
       if(!Array.isArray(data)) throw new Error('Formato inválido');
       return data.filter(function(it){ return String(it.operation).toLowerCase() === String(op).toLowerCase(); });
     }catch(e){
@@ -495,7 +496,7 @@ if('serviceWorker' in navigator){
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "ALTORRA Inmobiliaria",
-      "url": "https://altorrainmobiliaria.github.io/ALTORRA-PILOTO/",
+      "url": "https://altorrainmobiliaria.github.io/",
       "logo": "https://i.postimg.cc/SsPmBFXt/Chat-GPT-Image-9-altorra-logo-2025-10-31-20.png",
       "sameAs": ["https://www.instagram.com/altorrainmobiliaria", "https://www.facebook.com/share/16MEXCeAB4/?mibextid=wwXIfr", "https://www.tiktok.com/@altorrainmobiliaria"]
     };
