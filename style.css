@@ -112,3 +112,85 @@
     right: 16px;
   }
 }
+/* ========================================
+   NUEVOS ESTILOS - PERFORMANCE & UX
+   ======================================== */
+
+/* Loading spinner */
+.altorra-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  min-height: 200px;
+}
+
+/* Lazy images */
+img[data-src] {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+img[data-src].loaded {
+  opacity: 1;
+}
+
+/* Slow connection mode */
+.slow-connection * {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Toast mejorado */
+.toast {
+  font-family: 'Poppins', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toast::before {
+  content: '';
+  width: 4px;
+  height: 24px;
+  background: currentColor;
+  opacity: 0.6;
+  border-radius: 2px;
+}
+
+/* Skeleton loading (para futuro) */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 4px;
+}
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Mejorar contraste (WCAG AA) */
+:root {
+  --gold: #b8960f; /* Antes: #d4af37 - Nuevo: mejor contraste */
+  --gold-light: #d4af37; /* Usar para backgrounds */
+}
+
+/* Focus visible mejorado */
+*:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Reducir movimiento para usuarios con preferencias */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
