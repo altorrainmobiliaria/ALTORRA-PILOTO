@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Política de Privacidad | Altorra Inmobiliaria</title>
   <meta name="description" content="Tratamiento de datos personales conforme a la Ley 1581 de 2012 y Decreto 1377 de 2013 en Colombia." />
-  <link rel="canonical" href="https://altorrainmobiliaria.github.io/ALTORRA-PILOTO/privacidad.html" />
+  <link rel="canonical" href="https://altorrainmobiliaria.github.io/privacidad.html" />
   <meta name="robots" content="index,follow" />
   <meta property="og:title" content="Política de Privacidad | Altorra Inmobiliaria" />
   <meta property="og:description" content="Conozca cómo recopilamos, usamos y protegemos sus datos personales. Seguridad • Legalidad • Confianza." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://altorrainmobiliaria.github.io/ALTORRA-PILOTO/privacidad.html" />
+  <meta property="og:url" content="https://altorrainmobiliaria.github.io/privacidad.html" />
   <meta property="og:site_name" content="Altorra Inmobiliaria" />
 
   <!-- Tipografía -->
@@ -27,8 +27,8 @@
     "@context":"https://schema.org",
     "@type":"PrivacyPolicy",
     "name":"Política de Privacidad - Altorra Inmobiliaria",
-    "url":"https://altorrainmobiliaria.github.io/ALTORRA-PILOTO/privacidad.html",
-    "publisher":{"@type":"Organization","name":"Altorra Inmobiliaria","url":"https://altorrainmobiliaria.github.io/ALTORRA-PILOTO"},
+    "url":"https://altorrainmobiliaria.github.io/privacidad.html",
+    "publisher":{"@type":"Organization","name":"Altorra Inmobiliaria","url":"https://altorrainmobiliaria.github.io"},
     "inLanguage":"es-CO"
   }
   </script>
@@ -60,7 +60,7 @@
       .wrap{ max-width:var(--maxw); margin:auto; display:grid; grid-template-columns:290px 1fr; gap:24px; padding:28px 20px }
       @media (max-width:992px){
         .wrap{ grid-template-columns:1fr }
-        .toc{ position:static; display:none !important; }
+        .toc{ position:static; display:none !important; } /* ocultar TOC en móvil */
       }
 
       .hero{ grid-column:1/-1; border:1px solid var(--border); border-radius:var(--radius); padding:28px;
@@ -82,7 +82,7 @@
         background:var(--card);
         padding:22px;
         margin-bottom:16px;
-        scroll-margin-top: var(--offset, 120px);
+        scroll-margin-top: var(--offset, 120px); /* offset anclas */
       }
       .card h2{ margin:0 0 6px 0; font-size:22px }
       .card p{ color:#374151 }
@@ -192,7 +192,7 @@
 
         <article class="card" id="conservacion">
           <h2>6. Conservación</h2>
-          <p>Conservamos los datos por el tiempo necesario para la finalidad, relación contractual y plazos legales. Luego se suprimen o anonimizan.</p>
+          <p>Conservamos los datos por el tiempo necesario para la finalidad, relación contractual y plazos legales. Luego se suprimirán o anonimizarán.</p>
         </article>
 
         <article class="card" id="comparticion">
@@ -250,7 +250,8 @@
         </div>
       </section>
     </div>
-  <
+  </template>
+
   <script>
     // Montar el Shadow DOM
     (function mount(){
@@ -290,9 +291,9 @@
             const target = doc.getElementById(id);
             if(!target) return;
 
-            const rect = target.getBoundingClientRect();
-            const y = window.scrollY + rect.top - getOffset();
-            window.scrollTo({ top: y, behavior:'smooth' });
+            const rect = target.getBoundingClientRect();          // posición dentro del viewport
+            const y = window.scrollY + rect.top - getOffset();     // posición en el documento, menos el header
+            window.scrollTo({ top: y, behavior: 'smooth' });
 
             if (history.replaceState) history.replaceState(null, '', '#' + id);
           });
@@ -333,9 +334,9 @@
       function apply(){
         const h = getHeaderEl();
         const hh = h ? Math.ceil(h.getBoundingClientRect().height) : 96;
-        host.style.marginTop = (hh + 16) + 'px';
+        host.style.marginTop = (hh + 16) + 'px'; // debajo del header
         const shadow = host.shadowRoot;
-        if (shadow) shadow.host.style.setProperty('--offset', (hh + 24) + 'px');
+        if (shadow) shadow.host.style.setProperty('--offset', (hh + 24) + 'px'); // compensación de anclas
       }
 
       window.addEventListener('load', apply);
@@ -347,4 +348,3 @@
   </script>
 </body>
 </html>
-
