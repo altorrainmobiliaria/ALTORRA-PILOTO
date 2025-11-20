@@ -298,7 +298,45 @@
       crespo: 'Cerca al aeropuerto, zona residencial tranquila.',
       castillogrande: 'Exclusiva y familiar, cerca a la playa.',
       cabrero: 'Zona céntrica con buena valorización.',
-      laguito: 'Zona turística con edificios frente al mar.'
+      laguito: 'Zona turística con edificios frente al mar.',
+      country: 'El Country, zona residencial exclusiva y familiar con excelentes colegios.',
+      piedelapopa: 'Pie de la Popa, tradicional con vistas a la ciudad.',
+      torices: 'Barrio residencial con buena conectividad.',
+      ternera: 'Zona en crecimiento con proyectos nuevos.',
+      boquilla: 'La Boquilla, cerca a la playa con ambiente local.',
+      marbella: 'Zona residencial tranquila y familiar.',
+      sandiego: 'San Diego, dentro del Centro Histórico con encanto.',
+      getsemani: 'Getsemaní, bohemio y artístico, ideal para turismo.',
+      chambacú: 'Cerca al centro, en desarrollo.',
+      losalpes: 'Los Alpes, residencial de estrato medio.',
+      sanfernando: 'San Fernando, tradicional y familiar.',
+      chino: 'Barrio Chino, céntrico y comercial.',
+      bosque: 'El Bosque, zona comercial y residencial.',
+      espinal: 'El Espinal, residencial accesible.',
+      daniellemaitre: 'Daniel Lemaitre, tradicional.',
+      olayaherrera: 'Olaya Herrera, popular y comercial.'
+    },
+    // Variaciones y sinónimos de zonas para mejor detección
+    zoneAliases: {
+      'el country': 'country',
+      'country club': 'country',
+      'pie de la popa': 'piedelapopa',
+      'pie la popa': 'piedelapopa',
+      'la popa': 'piedelapopa',
+      'centro historico': 'centro',
+      'centro histórico': 'centro',
+      'ciudad amurallada': 'centro',
+      'la boquilla': 'boquilla',
+      'castillo grande': 'castillogrande',
+      'san diego': 'sandiego',
+      'getsemani': 'getsemani',
+      'los alpes': 'losalpes',
+      'san fernando': 'sanfernando',
+      'barrio chino': 'chino',
+      'el bosque': 'bosque',
+      'el espinal': 'espinal',
+      'daniel lemaitre': 'daniellemaitre',
+      'olaya': 'olayaherrera'
     },
     propertyTypes: ['apartamento', 'casa', 'lote', 'oficina', 'local', 'bodega', 'finca'],
     // Servicios para PROPIETARIOS que quieren arrendar (administración)
@@ -821,6 +859,36 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
         botReply(RESPONSES.propietarioArriendos);
         break;
 
+      case 'ver_ambas':
+        // Mostrar propiedades tanto en venta como arriendo según el contexto
+        addMessage('Ver ambas opciones', false);
+        const ctx = conversationContext;
+        const criteria = {
+          type: ctx.propertyType,
+          zone: ctx.zone
+        };
+
+        const comprar = smartSearchProperties({ ...criteria, operation: 'comprar' });
+        const arrendar = smartSearchProperties({ ...criteria, operation: 'arrendar' });
+
+        let ambasHtml = '';
+        if (comprar.length > 0) {
+          ambasHtml += `<b>🏡 En Venta:</b>`;
+          comprar.forEach(p => { ambasHtml += createPropertyCard(p); });
+          ambasHtml += '<br>';
+        }
+        if (arrendar.length > 0) {
+          ambasHtml += `<b>🔑 En Arriendo:</b>`;
+          arrendar.forEach(p => { ambasHtml += createPropertyCard(p); });
+        }
+        if (ambasHtml) {
+          ambasHtml += '<br><br>¿Te interesa alguna propiedad? Puedo darte más información o agendar una visita.';
+        } else {
+          ambasHtml = 'No encontré propiedades con esos criterios. ¿Te gustaría explorar otras zonas?';
+        }
+        botReply(ambasHtml);
+        break;
+
       default:
         // Manejar respuestas de consultoría (set_field_value)
         if (action.startsWith('set_')) {
@@ -1013,7 +1081,26 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     return { intent: bestIntent, score: bestScore };
   }
 
-  // Extraer criterios de búsqueda del mensaje
+  // Función inteligente para detectar zona con aliases y variaciones
+  function detectZone(msg) {
+    // Primero buscar en aliases (frases compuestas)
+    for (const [alias, zoneKey] of Object.entries(SITE_KNOWLEDGE.zoneAliases)) {
+      if (msg.includes(alias)) {
+        return zoneKey;
+      }
+    }
+
+    // Luego buscar directamente en las zonas
+    for (const zone of Object.keys(SITE_KNOWLEDGE.zones)) {
+      if (msg.includes(zone)) {
+        return zone;
+      }
+    }
+
+    return null;
+  }
+
+  // Extraer criterios de búsqueda del mensaje - MEJORADO
   function extractSearchCriteria(msg) {
     const criteria = {
       operation: null,
@@ -1025,24 +1112,39 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
       minPrice: null
     };
 
-    // Detectar operación
-    if (msg.match(/comprar|compra|venta|vender|inversión|inversion/i)) {
+    // Detectar operación - mejorado con más patrones
+    if (msg.match(/comprar|compra|venta|vender|inversión|inversion|adquirir|busco.*para.*comprar|quiero.*comprar|necesito.*comprar/i)) {
       criteria.operation = 'comprar';
-    } else if (msg.match(/arrendar|arriendo|alquiler|rentar|renta/i)) {
+    } else if (msg.match(/arrendar|arriendo|alquiler|alquilar|rentar|renta|busco.*arriendo|necesito.*arrendar|mensual/i)) {
       criteria.operation = 'arrendar';
-    } else if (msg.match(/días|dias|alojamiento|hospedaje|vacaciones|temporal/i)) {
+    } else if (msg.match(/días|dias|alojamiento|hospedaje|vacaciones|temporal|por.*noche|semana.*santa|fin.*semana/i)) {
       criteria.operation = 'dias';
     }
 
-    // Detectar tipo de propiedad
+    // Inferir operación por contexto de precio si no se detectó
+    if (!criteria.operation) {
+      const priceMatch = msg.match(/(\d+)\s*(millon|millón)/i);
+      if (priceMatch) {
+        const price = parseInt(priceMatch[1]) * 1000000;
+        // Si el precio es menor a 10 millones, probablemente es arriendo
+        if (price < 10000000) {
+          criteria.operation = 'arrendar';
+        } else if (price >= 50000000) {
+          // Si es mayor a 50 millones, probablemente es compra
+          criteria.operation = 'comprar';
+        }
+      }
+    }
+
+    // Detectar tipo de propiedad - mejorado
     const typePatterns = {
-      'apartamento': /apartamento|apto|aparta/i,
-      'casa': /casa/i,
-      'lote': /lote|terreno/i,
+      'apartamento': /apartamento|apto|aparta|depa|departamento/i,
+      'casa': /\bcasa\b|casita|vivienda/i,
+      'lote': /\blote\b|terreno|predio/i,
       'oficina': /oficina/i,
-      'local': /local comercial|local/i,
-      'bodega': /bodega/i,
-      'finca': /finca|parcela/i
+      'local': /local\s*comercial|\blocal\b/i,
+      'bodega': /bodega|almacén|almacen/i,
+      'finca': /finca|parcela|hacienda|granja/i
     };
     for (const [type, pattern] of Object.entries(typePatterns)) {
       if (msg.match(pattern)) {
@@ -1051,70 +1153,124 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
       }
     }
 
-    // Detectar zona
-    for (const zone of Object.keys(SITE_KNOWLEDGE.zones)) {
-      if (msg.includes(zone)) {
-        criteria.zone = zone;
-        break;
-      }
-    }
+    // Detectar zona usando la función inteligente
+    criteria.zone = detectZone(msg);
 
-    // Detectar número de habitaciones
-    const bedsMatch = msg.match(/(\d+)\s*(habitacion|cuarto|alcoba|dormitorio|hab)/i);
+    // Detectar número de habitaciones - mejorado
+    const bedsMatch = msg.match(/(\d+)\s*(habitacion|habitaciones|cuarto|cuartos|alcoba|alcobas|dormitorio|dormitorios|hab|recamara|recamaras)/i);
     if (bedsMatch) {
       criteria.beds = parseInt(bedsMatch[1]);
     }
 
     // Detectar número de baños
-    const bathsMatch = msg.match(/(\d+)\s*(baño|bano|sanitario)/i);
+    const bathsMatch = msg.match(/(\d+)\s*(baño|baños|bano|banos|sanitario|sanitarios)/i);
     if (bathsMatch) {
       criteria.baths = parseInt(bathsMatch[1]);
     }
 
-    // Detectar precio
-    const priceMatch = msg.match(/(\d+)\s*(millon|millón)/i);
+    // Detectar precio - mejorado con más formatos
+    let priceMatch = msg.match(/(\d+)\s*(millon|millón|millones)/i);
     if (priceMatch) {
       const price = parseInt(priceMatch[1]) * 1000000;
-      if (msg.match(/hasta|máximo|maximo|menos de|no más de/i)) {
+      if (msg.match(/hasta|máximo|maximo|menos\s*de|no\s*más\s*de|tope|limite/i)) {
         criteria.maxPrice = price;
-      } else if (msg.match(/desde|mínimo|minimo|más de|mayor a/i)) {
+      } else if (msg.match(/desde|mínimo|minimo|más\s*de|mayor\s*a|a\s*partir/i)) {
         criteria.minPrice = price;
       } else {
-        criteria.maxPrice = price * 1.2; // 20% de tolerancia
+        // Sin indicador, asumir es el máximo con tolerancia
+        criteria.maxPrice = price * 1.2;
       }
+    }
+
+    // Detectar precios en formato corto (ej: "200m", "1.5m")
+    const shortPriceMatch = msg.match(/(\d+(?:\.\d+)?)\s*m(?:illones)?(?!\w)/i);
+    if (shortPriceMatch && !priceMatch) {
+      const price = parseFloat(shortPriceMatch[1]) * 1000000;
+      criteria.maxPrice = price * 1.2;
     }
 
     return criteria;
   }
 
-  // Búsqueda inteligente de propiedades
+  // Búsqueda inteligente de propiedades - MEJORADA
   function smartSearchProperties(criteria) {
     let results = [...properties];
 
+    // Filtrar por operación
     if (criteria.operation) {
       results = results.filter(p => p.operation === criteria.operation);
     }
+
+    // Filtrar por tipo
     if (criteria.type) {
       results = results.filter(p => p.type === criteria.type);
     }
+
+    // Filtrar por zona - búsqueda flexible
     if (criteria.zone) {
-      results = results.filter(p =>
-        (p.neighborhood && p.neighborhood.toLowerCase().includes(criteria.zone)) ||
-        (p.city && p.city.toLowerCase().includes(criteria.zone))
-      );
+      const zoneKey = criteria.zone.toLowerCase();
+      results = results.filter(p => {
+        const neighborhood = (p.neighborhood || '').toLowerCase();
+        const city = (p.city || '').toLowerCase();
+        const address = (p.address || '').toLowerCase();
+
+        // Buscar coincidencia directa
+        if (neighborhood.includes(zoneKey) || city.includes(zoneKey) || address.includes(zoneKey)) {
+          return true;
+        }
+
+        // Buscar variaciones comunes
+        const zoneVariations = {
+          'country': ['country', 'el country', 'country club'],
+          'piedelapopa': ['pie de la popa', 'popa', 'pie la popa'],
+          'centro': ['centro', 'histórico', 'historico', 'amurallada'],
+          'sandiego': ['san diego', 'diego'],
+          'castillogrande': ['castillo grande', 'castillogrande'],
+          'getsemani': ['getsemaní', 'getsemani'],
+          'boquilla': ['boquilla', 'la boquilla']
+        };
+
+        const variations = zoneVariations[zoneKey] || [zoneKey];
+        return variations.some(v =>
+          neighborhood.includes(v) || city.includes(v) || address.includes(v)
+        );
+      });
     }
+
+    // Filtrar por habitaciones
     if (criteria.beds) {
       results = results.filter(p => p.beds >= criteria.beds);
     }
+
+    // Filtrar por baños
     if (criteria.baths) {
       results = results.filter(p => p.baths >= criteria.baths);
     }
+
+    // Filtrar por precio máximo
     if (criteria.maxPrice) {
       results = results.filter(p => p.price <= criteria.maxPrice);
     }
+
+    // Filtrar por precio mínimo
     if (criteria.minPrice) {
       results = results.filter(p => p.price >= criteria.minPrice);
     }
+
+    // Ordenar por relevancia (propiedades con más coincidencias primero)
+    results.sort((a, b) => {
+      let scoreA = 0, scoreB = 0;
+
+      // Dar más peso a coincidencias exactas
+      if (criteria.type && a.type === criteria.type) scoreA += 2;
+      if (criteria.type && b.type === criteria.type) scoreB += 2;
+
+      // Propiedades con más fotos tienden a ser mejores
+      if (a.images && a.images.length > 3) scoreA += 1;
+      if (b.images && b.images.length > 3) scoreB += 1;
+
+      return scoreB - scoreA;
+    });
 
     return results.slice(0, 3);
   }
@@ -1132,6 +1288,46 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     const hasCriteria = criteria.operation || criteria.type || criteria.zone || criteria.beds || criteria.maxPrice;
 
     if (hasCriteria) {
+      // Si no se especificó operación pero tenemos tipo o zona, preguntar inteligentemente
+      if (!criteria.operation && (criteria.type || criteria.zone)) {
+        // Buscar en todas las operaciones
+        const comprarResults = smartSearchProperties({ ...criteria, operation: 'comprar' });
+        const arrendarResults = smartSearchProperties({ ...criteria, operation: 'arrendar' });
+
+        let description = '';
+        if (criteria.type) description += `<b>${criteria.type}s</b> `;
+        if (criteria.zone) {
+          const zoneName = criteria.zone.charAt(0).toUpperCase() + criteria.zone.slice(1);
+          description += `en <b>${zoneName}</b>`;
+        }
+
+        let html = `Entiendo que buscas ${description}.<br><br>`;
+
+        // Mostrar opciones disponibles
+        if (comprarResults.length > 0 || arrendarResults.length > 0) {
+          html += '¿Qué operación te interesa?<br><br>';
+
+          if (comprarResults.length > 0) {
+            html += `• <b>Comprar:</b> ${comprarResults.length} propiedad${comprarResults.length > 1 ? 'es' : ''} disponible${comprarResults.length > 1 ? 's' : ''}<br>`;
+          }
+          if (arrendarResults.length > 0) {
+            html += `• <b>Arrendar:</b> ${arrendarResults.length} propiedad${arrendarResults.length > 1 ? 'es' : ''} disponible${arrendarResults.length > 1 ? 's' : ''}<br>`;
+          }
+
+          // Actualizar contexto
+          conversationContext.propertyType = criteria.type;
+          conversationContext.zone = criteria.zone;
+
+          const options = [];
+          if (comprarResults.length > 0) options.push({ text: 'Para comprar', action: 'comprar' });
+          if (arrendarResults.length > 0) options.push({ text: 'Para arrendar', action: 'arrendar' });
+          options.push({ text: 'Ver ambas opciones', action: 'ver_ambas' });
+
+          botReply(html, options);
+          return;
+        }
+      }
+
       const results = smartSearchProperties(criteria);
 
       if (results.length > 0) {
@@ -1152,13 +1348,30 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
         if (followUp) {
           html += `<br><br>${followUp}`;
         } else {
-          html += '<br>Haz clic en cualquiera para ver detalles. ¿Te gustaría agendar una visita o ajustar los criterios?';
+          html += '<br><br>Haz clic en cualquiera para ver detalles. ¿Te gustaría agendar una visita o ajustar los criterios?';
         }
         botReply(html);
         return;
       } else {
         // No hay resultados pero sí criterios - dar sugerencias inteligentes
-        let suggestion = 'No encontré propiedades exactas con esos criterios.<br><br>';
+        let suggestion = '';
+        let description = '';
+        if (criteria.type) description += `${criteria.type}s `;
+        if (criteria.zone) description += `en ${criteria.zone.charAt(0).toUpperCase() + criteria.zone.slice(1)} `;
+
+        suggestion += `No encontré ${description}con esos criterios exactos.<br><br>`;
+
+        // Buscar alternativas
+        const alternativeResults = smartSearchProperties({
+          operation: criteria.operation,
+          type: criteria.type
+        });
+
+        if (alternativeResults.length > 0 && criteria.zone) {
+          suggestion += `Pero tenemos ${alternativeResults.length} ${criteria.type || 'propiedades'} en otras zonas:<br>`;
+          alternativeResults.slice(0, 2).forEach(p => { suggestion += createPropertyCard(p); });
+          suggestion += '<br>';
+        }
 
         // Sugerir según el contexto
         if (conversationContext.purpose === 'inversion') {
@@ -1171,8 +1384,10 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
           suggestion += '👉 <a href="propiedades-arrendar.html" style="color:#d4af37;font-weight:600;">Ver todas las propiedades en arriendo</a>';
         } else if (criteria.operation === 'dias') {
           suggestion += '👉 <a href="propiedades-alojamientos.html" style="color:#d4af37;font-weight:600;">Ver todos los alojamientos</a>';
+        } else {
+          suggestion += '👉 <a href="index.html" style="color:#d4af37;font-weight:600;">Ver todas las propiedades</a>';
         }
-        suggestion += '<br><br>¿Te gustaría que ajuste los criterios o prefieres hablar con un asesor?';
+        suggestion += '<br><br>¿Te gustaría ajustar los criterios o hablar con un asesor?';
         botReply(suggestion);
         return;
       }
