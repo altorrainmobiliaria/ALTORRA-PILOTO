@@ -2,6 +2,20 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-XXXXXXXXXX', {
+      'anonymize_ip': true,
+      'allow_google_signals': false,
+      'allow_ad_personalization_signals': false,
+      'cookie_flags': 'SameSite=None;Secure'
+    });
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Comparar Propiedades | Altorra Inmobiliaria</title>
   <meta name="description" content="Compara propiedades lado a lado para encontrar la mejor opción en Cartagena." />

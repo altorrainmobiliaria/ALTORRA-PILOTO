@@ -225,12 +225,12 @@
 
 ## 📊 Resumen de la Semana 1
 
-**Tareas completadas**: 7 de 10 (70%)
-**Archivos creados**: 6 (config.js + 3 páginas de servicios + breadcrumbs.js + breadcrumbs.css)
-**Archivos modificados**: 21 (7 originales + 14 con breadcrumbs)
-**Líneas de código agregadas**: ~1,600
+**Tareas completadas**: 8 de 10 (80%)
+**Archivos creados**: 8 (config.js + 3 páginas de servicios + breadcrumbs.js + breadcrumbs.css + ga4-script.html + GA4-SETUP.md)
+**Archivos modificados**: 40 (7 originales + 14 con breadcrumbs + 19 con GA4)
+**Líneas de código agregadas**: ~2,100+
 **Líneas de código eliminadas**: ~35
-**Commits realizados**: 5
+**Commits realizados**: 6 (pendiente 1)
 **Branch**: `claude/claude-md-mi73c11i9bdd5od9-01XitTMhnwzfwRHEiyJPtWut`
 
 **Áreas de impacto**:
@@ -239,6 +239,7 @@
 - ✅ Mantenibilidad (configuración centralizada)
 - ✅ Calidad de código (eliminación de duplicados)
 - ✅ Bugs críticos (chatbot rígido, bucle con "gracias")
+- ✅ Analytics (GA4 + local tracking, 13 eventos personalizados, GDPR compliance)
 
 ---
 
@@ -364,11 +365,158 @@ window.AltorraBreadcrumbs.init();
 **Archivo a crear**: `js/exit-intent.js`
 **Estimado**: 2 horas
 
-### ⏳ TAREA 10: Integrar Google Analytics 4
-**Estado**: Pendiente
-**Descripción**: Setup completo de GA4 con eventos personalizados
-**Archivos a modificar**: `js/analytics.js`, todas las páginas HTML
-**Estimado**: 3 horas
+### ✅ TAREA 10: Integrar Google Analytics 4
+**Estado**: ✅ Completada (20 Nov 2025)
+**Descripción**: Sistema dual de analytics (local + GA4) con GDPR compliance
+
+**Archivos modificados**:
+1. `js/analytics.js` (273 líneas - enhanced con GA4)
+2. 19 páginas HTML (todas con snippet de GA4)
+
+**Archivos creados**:
+1. `snippets/ga4-script.html` (snippet reutilizable)
+2. `docs/GA4-SETUP.md` (guía completa de configuración)
+
+**Funcionalidades implementadas**:
+
+**1. js/analytics.js - Sistema dual (Local + GA4)**:
+- ✅ Configuración GA4 en objeto CONFIG (líneas 16-21)
+- ✅ Función `isGA4Available()` - verifica si gtag está cargado
+- ✅ Función `sendToGA4(eventName, params)` - envía eventos a GA4
+  - Normaliza nombres de eventos a snake_case
+  - Agrega metadata automática (page_path, page_title, timestamp)
+  - Logging opcional con debug mode
+- ✅ Función `configureGA4()` - configura GA4 con GDPR compliance
+  - anonymize_ip: true
+  - allow_google_signals: false
+  - allow_ad_personalization_signals: false
+- ✅ Función `track()` mejorada - envía a AMBOS sistemas:
+  - localStorage (analytics local, sin cookies)
+  - Google Analytics 4 (cloud analytics)
+- ✅ API pública extendida: `sendToGA4`, `configureGA4`, `enableGA4`, `disableGA4`, `setGA4Debug`
+
+**2. Snippet GA4 (snippets/ga4-script.html)**:
+```html
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-XXXXXXXXXX', {
+    'anonymize_ip': true,
+    'allow_google_signals': false,
+    'allow_ad_personalization_signals': false,
+    'cookie_flags': 'SameSite=None;Secure'
+  });
+</script>
+```
+
+**3. Páginas HTML integradas (19 archivos)**:
+- ✅ index.html
+- ✅ detalle-propiedad.html
+- ✅ propiedades-comprar.html
+- ✅ propiedades-arrendar.html
+- ✅ propiedades-alojamientos.html
+- ✅ comparar.html
+- ✅ favoritos.html
+- ✅ contacto.html
+- ✅ quienes-somos.html
+- ✅ publicar-propiedad.html
+- ✅ privacidad.html
+- ✅ gracias.html
+- ✅ 404.html
+- ✅ limpiar-cache.html
+- ✅ servicios-administracion.html
+- ✅ servicios-juridicos.html
+- ✅ servicios-contables.html
+- ✅ servicios-mantenimiento.html
+- ✅ servicios-mudanzas.html
+
+Cada página tiene el snippet GA4 en el `<head>` después de `<meta charset>` y antes de otros scripts.
+
+**4. Eventos personalizados rastreados (13 eventos)**:
+1. `page_view` - Vista de página (automático)
+2. `property_view` - Vista de propiedad específica
+3. `external_click` - Click en enlace externo
+4. `whatsapp_click` - Click en botón de WhatsApp
+5. `time_on_page` - Tiempo en página (al salir)
+6. `search` - Búsqueda realizada
+7. `favorite_added` - Propiedad agregada a favoritos
+8. `favorite_removed` - Propiedad removida de favoritos
+9. `property_compare_add` - Propiedad agregada al comparador
+10. `form_submit` - Envío de formulario
+11. `calculator_use` - Uso de calculadora hipotecaria
+12. `chatbot_message` - Mensaje enviado al chatbot
+13. `breadcrumb_click` - Click en breadcrumb
+
+**5. Documentación completa (docs/GA4-SETUP.md)**:
+- ✅ Paso 1: Crear propiedad de GA4
+- ✅ Paso 2: Configurar código en el sitio
+- ✅ Paso 3: Verificar instalación (3 métodos)
+- ✅ Tabla de eventos personalizados con parámetros
+- ✅ Guía de configuración de conversiones
+- ✅ Sección GDPR y privacidad
+- ✅ Debugging y troubleshooting
+- ✅ Métricas clave a monitorear (KPIs)
+- ✅ Referencias y links útiles
+
+**GDPR Compliance**:
+```javascript
+gtag('config', 'G-XXXXXXXXXX', {
+  'anonymize_ip': true,                           // ✅ IPs anonimizadas
+  'allow_google_signals': false,                   // ✅ No cross-device tracking
+  'allow_ad_personalization_signals': false,       // ✅ No personalización de ads
+  'cookie_flags': 'SameSite=None;Secure'          // ✅ Cookies seguras
+});
+```
+
+**Testing**:
+```javascript
+// Activar modo debug en consola
+AltorraAnalytics.setGA4Debug(true);
+
+// Enviar evento de prueba
+AltorraAnalytics.track('test_event', { test: 'value' });
+
+// Ver estadísticas locales
+console.table(AltorraAnalytics.getStats());
+```
+
+**Conversiones recomendadas para marcar en GA4**:
+1. `whatsapp_click` (Impacto: Alto) - Contacto directo
+2. `form_submit` (Impacto: Alto) - Lead capturado
+3. `property_view` (Impacto: Medio) - Interés en propiedad
+4. `calculator_use` (Impacto: Medio) - Usuario evaluando compra
+
+**Métricas clave a monitorear**:
+- Usuarios activos y páginas vistas
+- Engagement (tiempo en página, páginas por sesión)
+- Conversiones (WhatsApp clicks, formularios enviados)
+- Propiedades populares (más vistas, más favoritadas)
+- Búsquedas (términos populares, tasa de éxito)
+
+**Próximos pasos** (requiere acción manual del usuario):
+1. Crear cuenta de Google Analytics 4
+2. Obtener Measurement ID (formato: G-XXXXXXXXXX)
+3. Reemplazar placeholder 'G-XXXXXXXXXX' en:
+   - js/analytics.js línea 18
+   - Todas las páginas HTML (snippet en <head>)
+4. Validar instalación con Google Tag Assistant
+5. Marcar eventos como conversiones en GA4
+6. Configurar audiencias personalizadas
+
+**Impacto**:
+- ✅ Analytics profesional con insights en tiempo real
+- ✅ Tracking de 13 eventos personalizados
+- ✅ GDPR compliant (cumple con regulaciones de privacidad)
+- ✅ Sistema dual (datos locales + cloud)
+- ✅ Sin dependencias de cookies para analytics local
+- ✅ Debugging fácil con modo debug
+- ✅ Documentación completa para implementación
+
+**Commit**: Pendiente
 
 ---
 
