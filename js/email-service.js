@@ -20,19 +20,21 @@
   };
 
   // ===== GENERADOR DE RADICADOS =====
+  // Formato: ALT + 7 caracteres alfanuméricos = 10 caracteres totales
   function generateRadicado() {
     const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
 
-    // Generar código aleatorio de 4 caracteres
-    const randomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
+    // Convertir timestamp a base36 para comprimir
+    const timestamp = now.getTime();
+    const base36 = timestamp.toString(36).toUpperCase();
 
-    return `ALTORRA-${year}${month}${day}-${hours}${minutes}${seconds}-${randomCode}`;
+    // Tomar los últimos 7 caracteres del timestamp en base36
+    // Esto da un código único y corto
+    const code = base36.slice(-7);
+
+    // Formato: ALT + 7 caracteres = 10 caracteres totales
+    // Ejemplo: ALTM8K5X2P
+    return `ALT${code}`;
   }
 
   // ===== FORMATEAR FECHA =====
@@ -113,7 +115,9 @@
       fecha: data.fecha
     });
 
-    // Enviar autorespuesta al usuario
+    // ⏸️ AUTORESPUESTA DESACTIVADA TEMPORALMENTE
+    // (Activar cuando se cree el template altorra_confirmacion en EmailJS)
+    /*
     if (result.success) {
       await sendEmail(EMAILJS_CONFIG.templates.autorespuesta, {
         radicado: data.radicado,
@@ -121,6 +125,7 @@
         to_email: data.Email || data.email || ''
       });
     }
+    */
 
     return {
       success: result.success,
@@ -148,7 +153,9 @@
       fecha: data.fecha
     });
 
-    // Enviar autorespuesta al usuario
+    // ⏸️ AUTORESPUESTA DESACTIVADA TEMPORALMENTE
+    // (Activar cuando se cree el template altorra_confirmacion en EmailJS)
+    /*
     if (result.success) {
       await sendEmail(EMAILJS_CONFIG.templates.autorespuesta, {
         radicado: data.radicado,
@@ -156,6 +163,7 @@
         to_email: data.Email || data.email || ''
       });
     }
+    */
 
     return {
       success: result.success,
@@ -180,7 +188,9 @@
       fecha: data.fecha
     });
 
-    // Enviar autorespuesta al usuario
+    // ⏸️ AUTORESPUESTA DESACTIVADA TEMPORALMENTE
+    // (Activar cuando se cree el template altorra_confirmacion en EmailJS)
+    /*
     if (result.success) {
       await sendEmail(EMAILJS_CONFIG.templates.autorespuesta, {
         radicado: data.radicado,
@@ -188,6 +198,7 @@
         to_email: data.email || ''
       });
     }
+    */
 
     return {
       success: result.success,
