@@ -408,28 +408,34 @@
       // Agregar opción de contacto con contexto completo
       intro += '<br><br>¿Te gustaría agendar una visita?';
 
-      // Crear mensaje de WhatsApp con todo el contexto
-      const waSummary = encodeURIComponent(
-        `Hola Altorra, estoy interesado en una propiedad:\n` +
-        `• Operación: ${ctx.interest === 'comprar'
-          ? 'Compra'
-          : ctx.interest === 'arrendar'
-          ? 'Arriendo'
-          : ctx.interest === 'dias'
-          ? 'Alojamiento por días'
-          : ctx.interest || 'No definido'}\n` +
-        `• Tipo: ${ctx.propertyType || 'No definido'}\n` +
-        `• Zona: ${ctx.zone ? ctx.zone.charAt(0).toUpperCase() + ctx.zone.slice(1) : 'No definida'}\n` +
-        `• Presupuesto: ${ctx.budget ? formatPrice(ctx.budget) : 'No definido'}\n` +
-        `• Habitaciones: ${ctx.beds || 'No definido'}\n` +
-        `• Personas: ${ctx.guests || 'No definido'}\n` +
-        `• Fechas: ${ctx.stayDates || 'No definidas'}\n` +
-        `• Propósito: ${ctx.purpose === 'vivienda'
-          ? 'Para vivir'
-          : ctx.purpose === 'inversion'
-          ? 'Inversión'
-          : ctx.purpose || 'No definido'}`
-      );
+      // Crear mensaje de WhatsApp con las propiedades específicas
+      let waText = `Hola Altorra, me interesan estas propiedades:\n\n`;
+
+      // Agregar las propiedades recomendadas
+      results.forEach((p, i) => {
+        const priceStr = p.price ? `$${(p.price/1000000).toFixed(0)}M` : '';
+        waText += `${i + 1}. ${p.title}\n`;
+        waText += `   ${priceStr} • ${p.beds || 0}H • ${p.baths || 0}B • ${p.sqm || 0}m²\n`;
+        if (p.neighborhood) waText += `   Zona: ${p.neighborhood}\n`;
+        waText += `\n`;
+      });
+
+      // Agregar contexto de búsqueda resumido
+      waText += `Mi perfil:\n`;
+      const opName = ctx.interest === 'comprar' ? 'Comprar' :
+                     ctx.interest === 'arrendar' ? 'Arrendar' : 'Alojamiento';
+      waText += `• ${opName} ${ctx.propertyType || 'propiedad'}`;
+      if (ctx.zone && ctx.zone !== 'otra') waText += ` en ${ctx.zone}`;
+      waText += `\n`;
+      if (ctx.purpose) {
+        const purposeText = ctx.purpose === 'vivienda' ? 'Para vivir' :
+                           ctx.purpose === 'inversion' ? 'Para inversión' : ctx.purpose;
+        waText += `• ${purposeText}\n`;
+      }
+      if (ctx.budget) waText += `• Presupuesto: ${formatPrice(ctx.budget)}\n`;
+      if (ctx.beds) waText += `• ${ctx.beds}+ habitaciones\n`;
+
+      const waSummary = encodeURIComponent(waText);
 
       intro += `
         <br><br>
@@ -2264,19 +2270,19 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     }
 
     // Cambiar explícitamente de modo principal, aunque esté en medio de otro flujo
-    if (/^quiero arrendar\b|^busco arriendo\b/i.test(msg)) {
+    if (/^quiero arrendar|^busco arriendo|arrendar (una |un )?(propiedad|casa|apartamento|apto)/i.test(msg)) {
       resetConversation();
       handleOption('arrendar');
       return;
     }
 
-    if (/^quiero comprar\b|^busco comprar\b|^busco.*para comprar\b/i.test(msg)) {
+    if (/^quiero comprar|^busco comprar|^busco.*para comprar|comprar (una |un )?(propiedad|casa|apartamento|apto|lote|oficina)/i.test(msg)) {
       resetConversation();
       handleOption('comprar');
       return;
     }
 
-    if (/^alojamiento por d[ií]as\b|^quiero alojamiento\b|^busco alojamiento\b/i.test(msg)) {
+    if (/^alojamiento|^quiero alojamiento|^busco alojamiento|alojamiento por d[ií]as|hospedaje|por d[ií]as/i.test(msg)) {
       resetConversation();
       handleOption('alojamiento');
       return;
