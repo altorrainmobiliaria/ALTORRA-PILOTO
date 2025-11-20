@@ -244,15 +244,8 @@
       <h2 id="t-contacto">Envíanos un mensaje</h2>
       <p class="muted">Te responderemos en el menor tiempo posible.</p>
 
-      <form class="contact-form" id="contactForm" action="https://formsubmit.co/altorrainmobiliaria@gmail.com" method="POST" accept-charset="UTF-8" aria-label="Formulario de contacto" novalidate>
-        <!-- Config FormSubmit -->
-        <input type="hidden" name="_subject" value="Nuevo contacto desde la web - Altorra Inmobiliaria" />
-        <input type="hidden" name="_next" value="https://altorrainmobiliaria.github.io/gracias.html" />
-        <input type="hidden" name="_captcha" value="false" />
-        <input type="hidden" name="_template" value="box" />
-        <input type="hidden" name="_autoresponse" value="Gracias por contactar a Altorra Inmobiliaria. Hemos recibido tu mensaje y te responderemos pronto." />
-
-        <!-- Honeypot mejorado (anti-spam) - DIFERENTE nombre para no confundir FormSubmit -->
+      <form class="contact-form" id="contactForm" aria-label="Formulario de contacto" novalidate>
+        <!-- Honeypot para anti-spam -->
         <input type="text" name="_gotcha" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" tabindex="-1" autocomplete="off" aria-hidden="true" />
 
         <!-- Timestamp para validación -->
