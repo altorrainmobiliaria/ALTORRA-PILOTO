@@ -49,6 +49,23 @@
       return false;
     }
 
+    // Verificar que el tipo de operación coincida
+    if (list.length > 0) {
+      const existingOperation = list[0].operation;
+      if (property.operation !== existingOperation) {
+        const operationNames = {
+          'comprar': 'Venta',
+          'arrendar': 'Arriendo',
+          'dias': 'Alojamiento',
+          'alojar': 'Alojamiento'
+        };
+        const currentType = operationNames[existingOperation] || existingOperation;
+        const newType = operationNames[property.operation] || property.operation;
+        alert(`Solo puedes comparar propiedades del mismo tipo.\n\nActualmente tienes propiedades de "${currentType}".\nEsta propiedad es de "${newType}".\n\nLimpia la comparación para agregar propiedades de otro tipo.`);
+        return false;
+      }
+    }
+
     // Guardar solo los datos necesarios
     list.push({
       id: property.id,
@@ -208,6 +225,17 @@
     return btn;
   }
 
+  // Formatear tipo de operación
+  function formatOperation(op) {
+    const operations = {
+      'comprar': '🏷️ Venta',
+      'arrendar': '🔑 Arriendo',
+      'dias': '🌴 Por días',
+      'alojar': '🌴 Por días'
+    };
+    return operations[op] || op || '-';
+  }
+
   // Renderizar página de comparación
   function renderComparePage(containerId) {
     const container = document.getElementById(containerId);
@@ -229,6 +257,7 @@
 
     // Definir filas de comparación
     const rows = [
+      { label: 'Operación', key: 'operation', format: formatOperation },
       { label: 'Precio', key: 'price', format: formatPrice },
       { label: 'Ciudad', key: 'city' },
       { label: 'Barrio', key: 'neighborhood' },
@@ -242,8 +271,15 @@
       { label: 'Año construcción', key: 'year_built' }
     ];
 
-    // Construir grid
-    let html = `<div class="compare-grid" style="--compare-cols: ${list.length}">`;
+    // Construir grid con wrapper para scroll en móvil
+    let html = '';
+
+    // Indicador de scroll para móvil
+    if (list.length >= 2) {
+      html += '<div class="compare-scroll-hint">👆 Desliza horizontalmente para ver todas las propiedades</div>';
+    }
+
+    html += `<div class="compare-grid-wrapper"><div class="compare-grid" style="--compare-cols: ${list.length}">`;
 
     // Header con fotos y títulos
     html += '<div class="compare-header">';
@@ -329,6 +365,7 @@
 
     html += '</div>';
     html += '</div>';
+    html += '</div>'; // Cerrar compare-grid-wrapper
 
     // Botón limpiar
     html += `

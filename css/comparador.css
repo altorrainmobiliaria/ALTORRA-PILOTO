@@ -294,22 +294,40 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  /* Contenedor con scroll horizontal */
+  .compare-page {
+    padding: 20px 8px 60px;
+  }
+
+  .compare-grid-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -8px;
+    padding: 0 8px;
+  }
+
   .compare-grid {
-    grid-template-columns: 120px repeat(var(--compare-cols, 2), 1fr);
-    font-size: 0.85rem;
+    grid-template-columns: 100px repeat(var(--compare-cols, 2), minmax(140px, 1fr));
+    font-size: 0.8rem;
+    min-width: max-content;
   }
 
   .compare-header-cell img {
-    height: 100px;
+    height: 90px;
   }
 
   .compare-header-cell h3 {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
+  }
+
+  .compare-header-cell .price {
+    font-size: 0.85rem;
   }
 
   .compare-label,
   .compare-value {
-    padding: 10px 12px;
+    padding: 8px 10px;
+    font-size: 0.78rem;
   }
 
   .compare-badge {
@@ -318,18 +336,65 @@
     padding: 10px 14px;
     font-size: 0.85rem;
   }
+
+  .compare-action-cell .btn {
+    padding: 8px 12px;
+    font-size: 0.75rem;
+  }
 }
 
 @media (max-width: 480px) {
   .compare-grid {
-    grid-template-columns: 100px repeat(var(--compare-cols, 2), 1fr);
+    grid-template-columns: 90px repeat(var(--compare-cols, 2), minmax(120px, 1fr));
   }
 
   .compare-header-cell {
-    padding: 12px 8px;
+    padding: 10px 6px;
   }
 
   .compare-header-cell img {
-    height: 80px;
+    height: 70px;
+  }
+
+  .compare-header-cell h3 {
+    font-size: 0.7rem;
+    line-height: 1.2;
+  }
+
+  .compare-header-cell .price {
+    font-size: 0.8rem;
+  }
+
+  .compare-header-cell .remove-btn {
+    font-size: 0.65rem;
+    padding: 3px 6px;
+  }
+
+  .compare-label {
+    font-size: 0.7rem;
+    padding: 6px 8px;
+  }
+
+  .compare-value {
+    font-size: 0.72rem;
+    padding: 6px 8px;
+  }
+}
+
+/* Indicador de scroll en móvil */
+.compare-scroll-hint {
+  display: none;
+  text-align: center;
+  padding: 8px;
+  font-size: 0.75rem;
+  color: #6b7280;
+  background: #f3f4f6;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 768px) {
+  .compare-scroll-hint {
+    display: block;
   }
 }
