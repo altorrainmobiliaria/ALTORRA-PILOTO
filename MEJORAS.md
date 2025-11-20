@@ -225,29 +225,132 @@
 
 ## 📊 Resumen de la Semana 1
 
-**Tareas completadas**: 6 de 10 (60%)
-**Archivos creados**: 4 (config.js + 3 páginas de servicios)
-**Archivos modificados**: 7
-**Líneas de código agregadas**: ~1,200
+**Tareas completadas**: 7 de 10 (70%)
+**Archivos creados**: 6 (config.js + 3 páginas de servicios + breadcrumbs.js + breadcrumbs.css)
+**Archivos modificados**: 21 (7 originales + 14 con breadcrumbs)
+**Líneas de código agregadas**: ~1,600
 **Líneas de código eliminadas**: ~35
-**Commits realizados**: 3
-**Branch**: `claude/claude-md-mi6zuro4x1tte7hq-01JiK9EiTzwPQnRfsBCUYfP5`
+**Commits realizados**: 5
+**Branch**: `claude/claude-md-mi73c11i9bdd5od9-01XitTMhnwzfwRHEiyJPtWut`
 
 **Áreas de impacto**:
-- ✅ SEO (meta tags dinámicos, 3 páginas nuevas)
-- ✅ UX (loading states, toast notifications)
+- ✅ SEO (meta tags dinámicos, 3 páginas nuevas, breadcrumbs con schema markup)
+- ✅ UX (loading states, toast notifications, navegación breadcrumbs)
 - ✅ Mantenibilidad (configuración centralizada)
 - ✅ Calidad de código (eliminación de duplicados)
+- ✅ Bugs críticos (chatbot rígido, bucle con "gracias")
 
 ---
 
 ## 📝 Tareas Pendientes - Semana 1
 
-### ⏳ TAREA 7: Implementar breadcrumbs con schema markup
-**Estado**: Pendiente
-**Descripción**: Agregar breadcrumbs de navegación con JSON-LD schema.org
-**Archivos a modificar**: Páginas de propiedades, servicios, detalle
-**Estimado**: 1 hora
+### ✅ TAREA 7: Implementar breadcrumbs con schema markup
+**Estado**: ✅ Completada (20 Nov 2025)
+**Descripción**: Sistema completo de breadcrumbs con JSON-LD schema.org para SEO y navegación
+
+**Archivos creados**:
+1. `js/breadcrumbs.js` (272 líneas)
+2. `css/breadcrumbs.css` (127 líneas)
+
+**Archivos modificados**: 14 páginas HTML
+
+**Funcionalidades implementadas**:
+- ✅ Generación automática de breadcrumbs según la página
+- ✅ Schema markup JSON-LD para Google Rich Results
+- ✅ Configuración centralizada de 35+ rutas
+- ✅ Detección dinámica de título en detalle-propiedad.html
+- ✅ Estilos responsive con animaciones fade-in
+- ✅ Separador customizable (›, →, /)
+- ✅ Dark mode support
+- ✅ Truncado en mobile para breadcrumbs largos (max 150px/200px)
+- ✅ API pública: `window.AltorraBreadcrumbs`
+
+**Páginas integradas (14)**:
+- Propiedades: detalle-propiedad.html, propiedades-comprar.html, propiedades-arrendar.html, propiedades-alojamientos.html
+- Herramientas: comparar.html, favoritos.html
+- Institucional: contacto.html, quienes-somos.html, publicar-propiedad.html
+- Servicios: servicios-administracion.html, servicios-juridicos.html, servicios-contables.html, servicios-mantenimiento.html, servicios-mudanzas.html
+
+**Estructura HTML agregada**:
+```html
+<!-- En <head> -->
+<link href="css/breadcrumbs.css" rel="stylesheet"/>
+
+<!-- Después de header -->
+<div style="max-width: var(--page-max); margin: 0 auto; padding: 0 16px;">
+  <div id="breadcrumb-container"></div>
+</div>
+
+<!-- Antes de </body> -->
+<script defer src="js/breadcrumbs.js"></script>
+```
+
+**Schema markup generado**:
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Inicio",
+      "item": "https://altorrainmobiliaria.github.io/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Propiedades",
+      "item": "https://altorrainmobiliaria.github.io/propiedades-comprar.html"
+    }
+  ]
+}
+```
+
+**Configuración destacada** (`js/breadcrumbs.js`):
+```javascript
+const BREADCRUMB_CONFIG = {
+  'propiedades-comprar.html': [
+    { name: 'Inicio', url: '/' },
+    { name: 'Propiedades en Venta', url: '/propiedades-comprar.html' }
+  ],
+  'detalle-propiedad.html': [
+    { name: 'Inicio', url: '/' },
+    { name: 'Propiedades', url: '/propiedades-comprar.html' },
+    { name: 'Detalle de Propiedad', url: null } // Actualizado dinámicamente
+  ],
+  // ... 35+ rutas configuradas
+};
+```
+
+**Estilos responsive**:
+- Desktop: breadcrumbs completos, underline hover effect
+- Mobile (<560px): truncado con ellipsis, padding reducido
+- Separador: › (configurable a →, /)
+- Colores: #6b7280 (normal), #d4af37 (hover), #111827 (activo)
+- Animación: fadeIn 0.3s con translateY
+
+**API pública**:
+```javascript
+window.AltorraBreadcrumbs.render('breadcrumb-container');
+window.AltorraBreadcrumbs.generateSchema(breadcrumbs);
+window.AltorraBreadcrumbs.init();
+```
+
+**Impacto SEO**:
+- ✅ Google Rich Snippets con breadcrumbs visibles en SERPs
+- ✅ Mejora CTR (click-through rate) en resultados de búsqueda
+- ✅ Mejor comprensión de estructura del sitio por crawlers
+- ✅ Reduce bounce rate con navegación clara
+- ✅ Mejora usabilidad y accesibilidad (aria-label, aria-current)
+
+**Testing recomendado**:
+1. Verificar breadcrumbs en todas las páginas
+2. Validar schema markup en [Google Rich Results Test](https://search.google.com/test/rich-results)
+3. Comprobar responsive en mobile (<560px)
+4. Verificar navegación funcional (clicks en links)
+
+**Commit**: `909d9e8`
 
 ### ⏳ TAREA 8: Agregar elementos de urgencia/escasez
 **Estado**: Pendiente
