@@ -22,9 +22,9 @@
       message: 'El nombre solo puede contener letras y espacios'
     },
     security: {
-      minFormTime: 1000,           // Minimum 1 second on page before submit
-      rateLimitWindow: 30 * 60 * 1000,  // 30 minutes
-      maxSubmissions: 20           // Max 20 submissions per window (for testing)
+      minFormTime: 3000,           // Minimum 3 seconds on page before submit
+      rateLimitWindow: 10 * 60 * 1000,  // 10 minutes
+      maxSubmissions: 3            // Max 3 submissions per window
     }
   };
 
@@ -535,73 +535,6 @@
 
           // Record this submission for rate limiting
           recordSubmission(formId);
-
-          // ===== ENVÍO CON EMAILJS =====
-          e.preventDefault(); // Prevenir envío tradicional
-
-          // Mostrar loading
-          showLoading(form);
-
-          // Detectar tipo de formulario y enviar con EmailJS
-          if (window.AltorraEmailService && window.AltorraEmailService.isConfigured()) {
-            let sendPromise;
-
-            if (formId === 'contactForm' || form.closest('.page-contact')) {
-              sendPromise = window.AltorraEmailService.processContactForm(form);
-            } else if (formId === 'publishForm' || form.action.includes('publicar')) {
-              sendPromise = window.AltorraEmailService.processPublishForm(form);
-            } else {
-              sendPromise = window.AltorraEmailService.processDetailForm(form);
-            }
-
-            sendPromise
-              .then(result => {
-                hideLoading(form);
-
-                if (result.success) {
-                  showToast(`✓ ¡Enviado correctamente! Radicado: ${result.radicado}`, 'success');
-
-                  // Limpiar formulario
-                  form.reset();
-                  form.querySelectorAll('.field-success, .field-error').forEach(el => {
-                    el.classList.remove('field-success', 'field-error');
-                  });
-
-                  // Disparar evento de éxito
-                  document.dispatchEvent(new CustomEvent('altorra:form-success', {
-                    detail: { formId, radicado: result.radicado }
-                  }));
-
-                  // Analytics
-                  if (window.AltorraAnalytics) {
-                    window.AltorraAnalytics.track('form_submit_success', {
-                      form: formId,
-                      radicado: result.radicado
-                    });
-                  }
-                } else {
-                  throw new Error(result.error || 'Error desconocido');
-                }
-              })
-              .catch(error => {
-                hideLoading(form);
-                console.error('Error al enviar formulario:', error);
-                showToast('✕ Error al enviar. Por favor intenta nuevamente.', 'error');
-
-                // Analytics
-                if (window.AltorraAnalytics) {
-                  window.AltorraAnalytics.track('form_submit_error', {
-                    form: formId,
-                    error: error.message
-                  });
-                }
-              });
-          } else {
-            // EmailJS no configurado - mostrar error
-            hideLoading(form);
-            showToast('⚠️ Servicio de email no configurado. Contacta al administrador.', 'error');
-            console.error('EmailJS no está configurado correctamente. Verifica js/email-service.js');
-          }
         }
       });
     });
@@ -663,46 +596,40 @@
     }, 4000);
   }
 
-  // ===== EMAIL SERVICE INTEGRATION =====
+  // ===== AJAX FORM SUBMISSION =====
 
   /**
-   * Submit form using EmailJS (NO FormSubmit)
+   * Submit form via AJAX instead of full page reload
    * @param {HTMLFormElement} form - The form to submit
    * @returns {Promise<boolean>} - Success status
    */
   async function submitFormAjax(form) {
     try {
-      // Check if EmailJS service is available
-      if (!window.AltorraEmailService) {
-        console.error('❌ AltorraEmailService not loaded');
-        throw new Error('Sistema de correo no disponible');
-      }
-
       // Create FormData from form
       const formData = new FormData(form);
 
-      // Determine form type based on ID
-      let formType = 'contactForm';
-      if (form.id === 'publishForm') {
-        formType = 'publishForm';
-      } else if (form.id === 'detailContactForm' || form.classList.contains('detail-contact')) {
-        formType = 'detailForm';
-      }
+      // Get form action URL
+      const actionUrl = form.action;
 
-      // Process form with EmailJS
-      console.log('📧 Enviando formulario con EmailJS...');
-      const result = await window.AltorraEmailService.processForm(formData, formType);
+      // Send via fetch with JSON accept header for FormSubmit.co
+      const response = await fetch(actionUrl, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Accept': 'application/json'  // FormSubmit.co returns JSON with this header
+        }
+      });
 
-      // Check result
-      if (result.success) {
+      // Check response
+      if (response.ok) {
         // Success!
-        console.log('✅ Form submitted successfully:', result.radicado);
+        console.log('✅ Form submitted successfully via AJAX');
 
         // Announce to screen readers
         announceToScreenReader('Formulario enviado correctamente. Gracias por contactarnos.', form);
 
-        // Show success modal with radicado
-        showSuccessModal(result.radicado, result.data);
+        // Show success message
+        showToast('¡Mensaje enviado correctamente! Te contactaremos pronto.', 'success');
 
         // Reset form
         form.reset();
@@ -717,29 +644,29 @@
           el.removeAttribute('aria-invalid');
         });
 
-        // Dispatch custom event for form success
-        document.dispatchEvent(new CustomEvent('altorra:form-success', {
-          detail: {
-            formId: form.id,
-            radicado: result.radicado
-          }
-        }));
-
         // Track analytics if available
         if (window.AltorraAnalytics) {
           window.AltorraAnalytics.track('form_submit', {
             form: form.id || 'unknown',
-            radicado: result.radicado,
-            method: 'emailjs'
+            method: 'ajax'
           });
         }
 
         return true;
       } else {
         // Error response
-        console.error('❌ Form submission failed:', result.error);
+        console.error('❌ Form submission failed:', response.status, response.statusText);
 
-        const errorMessage = result.error || 'Error al enviar el formulario. Por favor intenta nuevamente.';
+        // Try to parse error message
+        let errorMessage = 'Error al enviar el formulario. Por favor intenta nuevamente.';
+        try {
+          const errorData = await response.json();
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } catch (e) {
+          // Couldn't parse JSON, use default message
+        }
 
         // Announce to screen readers
         announceToScreenReader(errorMessage, form);
@@ -765,169 +692,6 @@
     }
   }
 
-  /**
-   * Muestra modal de confirmación con número de radicado
-   * @param {string} radicado - Número de radicado
-   * @param {Object} data - Datos del formulario
-   */
-  function showSuccessModal(radicado, data) {
-    // Remove existing modal if any
-    const existingModal = document.querySelector('.altorra-success-modal');
-    if (existingModal) existingModal.remove();
-
-    // Create modal overlay
-    const modal = document.createElement('div');
-    modal.className = 'altorra-success-modal';
-    modal.setAttribute('role', 'dialog');
-    modal.setAttribute('aria-labelledby', 'modalTitle');
-    modal.setAttribute('aria-modal', 'true');
-
-    modal.innerHTML = `
-      <div class="modal-overlay" aria-hidden="true"></div>
-      <div class="modal-content">
-        <div class="modal-icon">
-          <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-            <circle cx="32" cy="32" r="32" fill="#10b981" opacity="0.1"/>
-            <circle cx="32" cy="32" r="24" fill="#10b981" opacity="0.2"/>
-            <path d="M20 32l8 8 16-16" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <h2 id="modalTitle" class="modal-title">¡Mensaje enviado correctamente!</h2>
-        <div class="modal-radicado">
-          <strong>Número de radicado:</strong>
-          <div class="radicado-number">${radicado}</div>
-        </div>
-        <p class="modal-text">
-          Hemos recibido tu solicitud. Un asesor de Altorra se pondrá en contacto contigo pronto.<br>
-          <small style="color: #6b7280; margin-top: 8px; display: block;">
-            Revisa tu correo electrónico (${data.Email || data.email || ''}) para ver la confirmación.
-          </small>
-        </p>
-        <button class="modal-close-btn" onclick="this.closest('.altorra-success-modal').remove()" aria-label="Cerrar modal">
-          Entendido
-        </button>
-      </div>
-    `;
-
-    // Add styles for modal
-    const style = document.createElement('style');
-    style.textContent = `
-      .altorra-success-modal {
-        position: fixed;
-        inset: 0;
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 16px;
-        animation: fadeIn 0.3s ease;
-      }
-      .altorra-success-modal .modal-overlay {
-        position: absolute;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(4px);
-      }
-      .altorra-success-modal .modal-content {
-        position: relative;
-        background: white;
-        border-radius: 16px;
-        padding: 32px;
-        max-width: 480px;
-        width: 100%;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        text-align: center;
-        animation: slideUp 0.3s ease;
-      }
-      .altorra-success-modal .modal-icon {
-        margin: 0 auto 24px;
-        width: 64px;
-        height: 64px;
-      }
-      .altorra-success-modal .modal-title {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #111827;
-        margin: 0 0 16px;
-      }
-      .altorra-success-modal .modal-radicado {
-        background: #f3f4f6;
-        border-radius: 12px;
-        padding: 16px;
-        margin: 16px 0;
-      }
-      .altorra-success-modal .radicado-number {
-        font-family: 'Courier New', monospace;
-        font-size: 1.125rem;
-        font-weight: 700;
-        color: var(--gold, #d4af37);
-        margin-top: 8px;
-        letter-spacing: 0.5px;
-      }
-      .altorra-success-modal .modal-text {
-        color: #6b7280;
-        line-height: 1.6;
-        margin: 16px 0 24px;
-      }
-      .altorra-success-modal .modal-close-btn {
-        background: var(--gold, #d4af37);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        padding: 12px 32px;
-        font-size: 1rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: transform 0.2s, box-shadow 0.2s;
-      }
-      .altorra-success-modal .modal-close-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-      }
-      @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-      }
-      @keyframes slideUp {
-        from { transform: translateY(20px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-      }
-      @media (max-width: 640px) {
-        .altorra-success-modal .modal-content {
-          padding: 24px;
-        }
-        .altorra-success-modal .modal-title {
-          font-size: 1.25rem;
-        }
-        .altorra-success-modal .radicado-number {
-          font-size: 1rem;
-        }
-      }
-    `;
-
-    document.head.appendChild(style);
-    document.body.appendChild(modal);
-
-    // Focus trap
-    const closeBtn = modal.querySelector('.modal-close-btn');
-    closeBtn.focus();
-
-    // Close on ESC
-    const handleEsc = (e) => {
-      if (e.key === 'Escape') {
-        modal.remove();
-        document.removeEventListener('keydown', handleEsc);
-      }
-    };
-    document.addEventListener('keydown', handleEsc);
-
-    // Close on overlay click
-    modal.querySelector('.modal-overlay').addEventListener('click', () => {
-      modal.remove();
-      document.removeEventListener('keydown', handleEsc);
-    });
-  }
-
   // Interceptar envío de formularios para AJAX + loading states
   function interceptFormSubmit() {
     document.addEventListener('submit', async (e) => {
@@ -937,10 +701,45 @@
       if (form.id === 'quickSearch' || form.classList.contains('search-box')) return;
       if (form.hasAttribute('data-no-intercept')) return;
 
-      // SIEMPRE prevenir envío normal (NO más FormSubmit)
-      e.preventDefault();
+      // IMPORTANTE: FormSubmit.co necesita POST tradicional, NO AJAX
+      // Si el action contiene formsubmit.co, dejar envío normal
+      const action = form.action || '';
+      if (action.includes('formsubmit.co')) {
+        console.log('📤 FormSubmit.co detected - using traditional POST');
 
-      console.log('📧 Intercepting form submit for EmailJS...');
+        // Validar pero no prevenir default
+        if (!validateForm(form)) {
+          e.preventDefault();
+          return;
+        }
+
+        // Agregar número de caso único
+        const caseNumber = 'CASO-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+
+        // Crear campo oculto para número de caso
+        let caseInput = form.querySelector('input[name="NumeroCaso"]');
+        if (!caseInput) {
+          caseInput = document.createElement('input');
+          caseInput.type = 'hidden';
+          caseInput.name = 'NumeroCaso';
+          form.appendChild(caseInput);
+        }
+        caseInput.value = caseNumber;
+
+        // Mostrar loading y dejar que se envíe normalmente
+        showLoading(form);
+
+        // Guardar número de caso para mostrarlo después (si vuelven)
+        try {
+          sessionStorage.setItem('lastCaseNumber', caseNumber);
+        } catch(e) {}
+
+        // NO prevenir default - dejar que el form se envíe normalmente
+        return;
+      }
+
+      // Para otros formularios (API custom), usar AJAX
+      e.preventDefault();
 
       // Solo continuar si el formulario es válido
       if (!validateForm(form)) {
@@ -950,7 +749,7 @@
       // Show loading state
       showLoading(form);
 
-      // Submit via EmailJS
+      // Submit via AJAX
       const success = await submitFormAjax(form);
 
       // Hide loading state
