@@ -19,13 +19,13 @@
   let hasGreeted = false;
   let welcomeBubbleShown = false;
 
-  // Conocimiento completo del sitio web
+  // Conocimiento completo del sitio web y negocio
   const SITE_KNOWLEDGE = {
     pages: {
       inicio: { url: 'index.html', desc: 'Página principal con todas las propiedades destacadas' },
       comprar: { url: 'propiedades-comprar.html', desc: 'Propiedades en venta en Cartagena' },
       arrendar: { url: 'propiedades-arrendar.html', desc: 'Propiedades en arriendo mensual' },
-      alojamiento: { url: 'propiedades-alojamiento.html', desc: 'Alojamientos por días para vacaciones' },
+      alojamiento: { url: 'propiedades-alojamientos.html', desc: 'Alojamientos por días para vacaciones' },
       publicar: { url: 'publicar-propiedad.html', desc: 'Formulario para publicar tu propiedad' },
       contacto: { url: 'contacto.html', desc: 'Información de contacto y formulario' },
       nosotros: { url: 'quienes-somos.html', desc: 'Información sobre Altorra Inmobiliaria' },
@@ -48,10 +48,37 @@
       laguito: 'Zona turística con edificios frente al mar.'
     },
     propertyTypes: ['apartamento', 'casa', 'lote', 'oficina', 'local', 'bodega', 'finca'],
-    features: {
-      comprar: 'Inversión a largo plazo, valorización, patrimonio propio',
-      arrendar: 'Flexibilidad, sin compromiso de compra, incluye administración',
-      alojamiento: 'Ideal para vacaciones, amoblado, servicios incluidos'
+    // Servicios para PROPIETARIOS que quieren arrendar (administración)
+    servicioAdministracion: {
+      honorarios: '10% + IVA sobre el canon integral (arriendo + administración de copropiedad)',
+      beneficios: [
+        'Publicidad y marketing profesional en portales, Google y Meta',
+        'Atención a interesados y coordinación de visitas',
+        'Selección rigurosa de arrendatarios con validación integral',
+        'Contratos claros con respaldo legal',
+        'Administración transparente de pagos y cobros',
+        'Inspecciones periódicas al inmueble',
+        'Orientación jurídica ante incumplimientos',
+        'Opción de póliza de arrendamiento (canon, administración, servicios)'
+      ]
+    },
+    // Servicios para PROPIETARIOS que quieren vender
+    servicioVenta: {
+      honorarios: '3% sobre valor de venta (urbano) / 10% (rural)',
+      beneficios: [
+        'Marketing digital en portales, redes, web y Google Ads',
+        'Gestión personalizada: atención, visitas y negociación',
+        'Respaldo jurídico y notarial completo'
+      ],
+      infoRequerida: [
+        'Precio del inmueble',
+        'Fotos o videos actualizados',
+        'Área (m²) y dirección',
+        'Valor de administración (si aplica)',
+        'Habitaciones, baños y parqueadero',
+        'Información de la propiedad y amenidades',
+        'Certificado de libertad y tradición'
+      ]
     }
   };
 
@@ -76,7 +103,42 @@
     ayuda: '🤖 <b>Soy Altorra IA</b><br><br>Puedo ayudarte con:<br>• 🏠 Buscar propiedades (compra, arriendo, días)<br>• 📍 Información de zonas de Cartagena<br>• 💰 Filtrar por precio<br>• 📋 Explicar servicios<br>• 💬 Conectarte con asesor<br>• 🔄 Usar el comparador<br><br>Solo escribe tu pregunta o usa los botones rápidos.',
     publicar: '📝 <b>Publica tu Propiedad</b><br><br>¿Tienes una propiedad para vender o arrendar?<br><br>Completa nuestro formulario y un asesor te contactará en menos de 24 horas.<br><br>👉 <a href="publicar-propiedad.html" style="color:#d4af37;font-weight:600;">Ir al formulario de publicación</a>',
     comparar: '🔄 <b>Comparador de Propiedades</b><br><br>Puedes comparar hasta 3 propiedades lado a lado para ver:<br>• Precios<br>• Características<br>• Ubicación<br>• Amenidades<br><br>Agrega propiedades con el botón "Comparar" en cada tarjeta.<br><br>👉 <a href="comparar.html" style="color:#d4af37;font-weight:600;">Ver comparación actual</a>',
-    nosotros: '🏢 <b>Sobre Altorra Inmobiliaria</b><br><br>Somos una empresa inmobiliaria en Cartagena de Indias con experiencia en:<br>• Compra y venta<br>• Arriendos<br>• Alojamientos turísticos<br>• Asesoría legal y contable<br><br>👉 <a href="quienes-somos.html" style="color:#d4af37;font-weight:600;">Conocer nuestra historia</a>'
+    nosotros: '🏢 <b>Sobre Altorra Inmobiliaria</b><br><br>Somos una empresa inmobiliaria en Cartagena de Indias con experiencia en:<br>• Compra y venta<br>• Arriendos<br>• Alojamientos turísticos<br>• Asesoría legal y contable<br><br>👉 <a href="quienes-somos.html" style="color:#d4af37;font-weight:600;">Conocer nuestra historia</a>',
+    // Respuestas para PROPIETARIOS
+    propietarioArriendos: `🏠 <b>Administración y Arriendo de Inmuebles</b><br><br>
+En ALTORRA administramos tu propiedad para arrendarla de forma segura y sin complicaciones.<br><br>
+<b>Te ofrecemos:</b><br>
+✅ Publicidad profesional en portales y redes<br>
+✅ Selección rigurosa de arrendatarios<br>
+✅ Contratos con respaldo legal<br>
+✅ Administración de pagos y cobros<br>
+✅ Inspecciones periódicas<br>
+✅ Orientación jurídica ante incumplimientos<br>
+🔐 Opción de póliza de arrendamiento<br><br>
+<b>Honorarios:</b> 10% + IVA sobre el canon integral<br><br>
+👉 <a href="publicar-propiedad.html" style="color:#d4af37;font-weight:600;">Registrar mi propiedad</a><br>
+📞 <a href="https://wa.me/573002439810?text=Hola%20Altorra%2C%20tengo%20una%20propiedad%20para%20arrendar" target="_blank" style="color:#d4af37;font-weight:600;">Hablar con un asesor</a>`,
+    propietarioVenta: `🏡 <b>Venta de Inmuebles</b><br><br>
+Somos referentes en venta de inmuebles con proceso ágil, seguro e integral.<br><br>
+<b>Te ofrecemos:</b><br>
+✅ Marketing digital en portales, redes y Google Ads<br>
+✅ Gestión personalizada de visitas y negociación<br>
+✅ Respaldo jurídico y notarial completo<br><br>
+<b>Información requerida:</b><br>
+• Precio, fotos/videos y área (m²)<br>
+• Habitaciones, baños, parqueadero<br>
+• Certificado de libertad y tradición<br><br>
+📸 Podemos visitar tu inmueble para tomar fotos profesionales<br><br>
+<b>Honorarios:</b> 3% urbano / 10% rural<br><br>
+👉 <a href="publicar-propiedad.html" style="color:#d4af37;font-weight:600;">Registrar mi propiedad</a><br>
+📞 <a href="https://wa.me/573002439810?text=Hola%20Altorra%2C%20quiero%20vender%20mi%20propiedad" target="_blank" style="color:#d4af37;font-weight:600;">Hablar con un asesor</a>`,
+    propietarioGeneral: `📋 <b>¿Eres Propietario?</b><br><br>
+En ALTORRA te ayudamos a vender o arrendar tu inmueble con respaldo profesional.<br><br>
+<b>¿Qué deseas hacer?</b><br>
+• 🏷️ <b>Vender:</b> Marketing, negociación y respaldo legal<br>
+• 🔑 <b>Arrendar:</b> Administración completa, selección de arrendatarios<br><br>
+Nosotros invertimos en toda la publicidad y marketing para conseguir clientes potenciales.<br><br>
+👉 <a href="publicar-propiedad.html" style="color:#d4af37;font-weight:600;">Ir al formulario de publicación</a>`
   };
 
   // Opciones rápidas iniciales
@@ -84,6 +146,13 @@
     { text: 'Quiero comprar', action: 'comprar' },
     { text: 'Busco arriendo', action: 'arrendar' },
     { text: 'Alojamiento por días', action: 'alojamiento' },
+    { text: 'Soy propietario', action: 'propietario' }
+  ];
+
+  // Opciones para propietarios
+  const PROPIETARIO_OPTIONS = [
+    { text: 'Quiero vender mi propiedad', action: 'propietario_venta' },
+    { text: 'Quiero arrendar mi propiedad', action: 'propietario_arriendos' },
     { text: 'Contactar asesor', action: 'whatsapp' }
   ];
 
@@ -319,6 +388,21 @@
           </a>
         `);
         break;
+
+      case 'propietario':
+        addMessage('Soy propietario', false);
+        botReply(RESPONSES.propietarioGeneral, PROPIETARIO_OPTIONS);
+        break;
+
+      case 'propietario_venta':
+        addMessage('Quiero vender mi propiedad', false);
+        botReply(RESPONSES.propietarioVenta);
+        break;
+
+      case 'propietario_arriendos':
+        addMessage('Quiero arrendar mi propiedad', false);
+        botReply(RESPONSES.propietarioArriendos);
+        break;
     }
   }
 
@@ -367,7 +451,19 @@
       },
       publicar: {
         score: 0,
-        keywords: ['publicar', 'vender mi', 'arrendar mi', 'consignar', 'poner en venta', 'tengo una propiedad', 'tengo un apartamento', 'tengo una casa', 'mi propiedad', 'mi inmueble']
+        keywords: ['publicar', 'consignar', 'registrar inmueble', 'inscribir propiedad']
+      },
+      propietario: {
+        score: 0,
+        keywords: ['soy propietario', 'tengo una propiedad', 'tengo un apartamento', 'tengo una casa', 'mi propiedad', 'mi inmueble', 'mi apartamento', 'mi casa', 'dueño de', 'propietario de']
+      },
+      propietarioArriendos: {
+        score: 0,
+        keywords: ['arrendar mi', 'administrar mi', 'poner en arriendo', 'quiero arrendar mi propiedad', 'arriendo mi', 'administren mi', 'que arrienden mi', 'busco arrendar mi', 'necesito arrendar mi']
+      },
+      propietarioVenta: {
+        score: 0,
+        keywords: ['vender mi', 'poner en venta', 'quiero vender mi', 'vendo mi', 'quiero vender mi propiedad', 'necesito vender mi', 'busco vender mi']
       },
       comparar: {
         score: 0,
@@ -609,6 +705,15 @@
           return;
         case 'publicar':
           botReply(RESPONSES.publicar);
+          return;
+        case 'propietario':
+          handleOption('propietario');
+          return;
+        case 'propietarioArriendos':
+          handleOption('propietario_arriendos');
+          return;
+        case 'propietarioVenta':
+          handleOption('propietario_venta');
           return;
         case 'comparar':
           botReply(RESPONSES.comparar);
