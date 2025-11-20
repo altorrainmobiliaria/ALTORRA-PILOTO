@@ -8,269 +8,284 @@
   'use strict';
 
   // ===== CONFIGURACIÓN EMAILJS =====
-  const EMAILJS_CONFIG = {
-    publicKey: 'EiJacymAjNl-Q8X1j',     // ✅ Public Key configurado
-    serviceId: 'service_tddohxc',        // ✅ Service ID configurado
-    templates: {
-      contacto: 'template_442jrws',      // Template ID del formulario de contacto ✅
-      publicar: 'altorra_publicar',      // Template para publicar propiedad
-      detalle: 'altorra_detalle',        // Template para consultas desde detalle
-      autorespuesta: 'altorra_confirmacion'  // Template de confirmación al usuario
-    }
-  };
+  const PUBLIC_KEY  = "EiJacymAjNl-Q8X1j";       // Public Key de EmailJS
+  const SERVICE_ID  = "service_tddohxc";         // Service ID configurado
+  const TEMPLATE_CONTACTO = "template_442jrws";  // Template: altorra_contacto
+  const TEMPLATE_PUBLICAR = "altorra_publicar";  // Template: publicar propiedad
+  const TEMPLATE_DETALLE  = "altorra_detalle";   // Template: detalle propiedad
 
   // ===== GENERADOR DE RADICADOS =====
-  // Formato: ALT + 7 caracteres alfanuméricos = 10 caracteres totales
+  // Formato: ALT-timestamp (ej: ALT-1732143856789)
   function generateRadicado() {
-    const now = new Date();
-
-    // Convertir timestamp a base36 para comprimir
-    const timestamp = now.getTime();
-    const base36 = timestamp.toString(36).toUpperCase();
-
-    // Tomar los últimos 7 caracteres del timestamp en base36
-    // Esto da un código único y corto
-    const code = base36.slice(-7);
-
-    // Formato: ALT + 7 caracteres = 10 caracteres totales
-    // Ejemplo: ALTM8K5X2P
-    return `ALT${code}`;
+    return "ALT-" + Date.now();
   }
 
   // ===== FORMATEAR FECHA =====
   function formatDate(date) {
-    const options = {
+    return date.toLocaleString("es-CO", {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
       hour12: true
-    };
-    return new Intl.DateTimeFormat('es-CO', options).format(date);
-  }
-
-  // ===== PREPARAR DATOS DEL FORMULARIO =====
-  function prepareFormData(form, formType) {
-    const formData = new FormData(form);
-    const data = {};
-
-    // Convertir FormData a objeto
-    for (let [key, value] of formData.entries()) {
-      // Ignorar campos internos y honeypots
-      if (key.startsWith('_') || key === 'website_url') continue;
-      data[key] = value;
-    }
-
-    // Agregar metadatos
-    data.radicado = generateRadicado();
-    data.fecha = formatDate(new Date());
-    data.tipoFormulario = formType;
-
-    return data;
-  }
-
-  // ===== ENVIAR EMAIL CON EMAILJS =====
-  async function sendEmail(templateId, params) {
-    // Verificar que EmailJS esté cargado
-    if (typeof emailjs === 'undefined') {
-      throw new Error('EmailJS no está cargado. Verifica que el script esté incluido en la página.');
-    }
-
-    // 🐛 DEBUG: Mostrar configuración antes de enviar
-    console.log('🔧 Config EmailJS:', {
-      serviceId: EMAILJS_CONFIG.serviceId,
-      templateId: templateId,
-      publicKey: EMAILJS_CONFIG.publicKey.substring(0, 10) + '...'
     });
-    console.log('📤 Enviando email con params:', params);
+  }
 
-    try {
-      const response = await emailjs.send(
-        EMAILJS_CONFIG.serviceId,
-        templateId,
-        params,
-        EMAILJS_CONFIG.publicKey
-      );
-
-      console.log('✅ Email enviado exitosamente:', response);
-
-      return {
-        success: true,
-        response: response,
-        messageId: response.text
-      };
-    } catch (error) {
-      console.error('❌ Error sending email:', error);
-      console.error('❌ Error details:', {
-        message: error.text || error.message,
-        status: error.status,
-        full: error
-      });
-      return {
-        success: false,
-        error: error.text || error.message || 'Error desconocido',
-        errorObject: error
-      };
+  // ===== FUNCIÓN PARA MOSTRAR ESTADO =====
+  function setStatus(message, type) {
+    const statusEl = document.getElementById("formStatus");
+    if (statusEl) {
+      statusEl.textContent = message;
+      statusEl.dataset.type = type || "";
     }
+  }
+
+  // ===== INICIALIZAR EMAILJS =====
+  function initEmailJS() {
+    if (typeof emailjs === 'undefined') {
+      console.error('❌ EmailJS no está cargado');
+      return false;
+    }
+    emailjs.init(PUBLIC_KEY);
+    console.log('✅ EmailJS inicializado correctamente');
+    return true;
   }
 
   // ===== PROCESAR FORMULARIO DE CONTACTO =====
-  async function processContactForm(form) {
-    const data = prepareFormData(form, 'contacto');
+  function processContactForm() {
+    const form = document.getElementById("contactForm");
+    if (!form) return;
 
-    // 🐛 DEBUG: Verificar datos extraídos del formulario
-    console.log('📋 Datos del formulario:', data);
+    const submitBtn = form.querySelector('button[type="submit"]');
 
-    // Preparar parámetros para EmailJS
-    const emailParams = {
-      radicado: data.radicado,
-      nombre: data.Nombre || data.nombre || '',
-      email: data.Email || data.email || '',
-      telefono: data.Telefono || data.telefono || data.Teléfono || '',
-      motivo: data.Motivo || data.motivo || 'No especificado',
-      mensaje: data.Mensaje || data.mensaje || '',
-      fecha: data.fecha
-    };
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
 
-    // 🐛 DEBUG: Verificar parámetros que se envían a EmailJS
-    console.log('📧 Parámetros para EmailJS:', emailParams);
+      // Validación básica
+      const nombre   = document.getElementById("contactNombre").value.trim();
+      const email    = document.getElementById("contactEmail").value.trim();
+      const telefono = document.getElementById("contactTelefono").value.trim();
+      const motivo   = document.getElementById("contactMotivo").value;
+      const mensaje  = document.getElementById("contactMensaje").value.trim();
 
-    // Enviar email a ALTORRA
-    const result = await sendEmail(EMAILJS_CONFIG.templates.contacto, emailParams);
+      if (!nombre || !email || !telefono || !motivo || !mensaje) {
+        setStatus("Por favor completa todos los campos obligatorios.", "error");
+        return;
+      }
 
-    // 🐛 DEBUG: Verificar resultado del envío
-    console.log('📊 Resultado de sendEmail:', result);
+      // Generar radicado y fecha
+      const radicado = generateRadicado();
+      const fecha    = formatDate(new Date());
 
-    // ⏸️ AUTORESPUESTA DESACTIVADA TEMPORALMENTE
-    // (Activar cuando se cree el template altorra_confirmacion en EmailJS)
-    /*
-    if (result.success) {
-      await sendEmail(EMAILJS_CONFIG.templates.autorespuesta, {
-        radicado: data.radicado,
-        nombre: data.Nombre || data.nombre || '',
-        to_email: data.Email || data.email || ''
-      });
-    }
-    */
+      // Preparar parámetros para EmailJS (nombres en minúscula)
+      const templateParams = {
+        nombre:   nombre,
+        email:    email,
+        telefono: telefono,
+        motivo:   motivo,
+        mensaje:  mensaje,
+        fecha:    fecha,
+        radicado: radicado
+      };
 
-    const finalResult = {
-      success: result.success,
-      radicado: data.radicado,
-      error: result.error
-    };
+      // Debug
+      console.log('📤 Enviando formulario de contacto:', templateParams);
 
-    // 🐛 DEBUG: Verificar qué se retorna
-    console.log('🎯 Retornando:', finalResult);
+      // Deshabilitar botón
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Enviando...";
+      }
+      setStatus("Enviando tu mensaje…", "info");
 
-    return finalResult;
+      // Enviar con EmailJS
+      emailjs.send(SERVICE_ID, TEMPLATE_CONTACTO, templateParams)
+        .then(function (response) {
+          console.log('✅ Email enviado exitosamente:', response);
+          setStatus("Mensaje enviado correctamente.", "success");
+
+          // Redirigir a página de gracias
+          setTimeout(function() {
+            window.location.href = "gracias.html";
+          }, 1000);
+        })
+        .catch(function (error) {
+          console.error("❌ Error al enviar email:", error);
+          setStatus("No fue posible enviar el mensaje. Intenta de nuevo en unos minutos.", "error");
+
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Enviar mensaje";
+          }
+        });
+    });
   }
 
   // ===== PROCESAR FORMULARIO DE PUBLICAR PROPIEDAD =====
-  async function processPublishForm(form) {
-    const data = prepareFormData(form, 'publicar');
+  function processPublishForm() {
+    const form = document.getElementById("publishForm");
+    if (!form) return;
 
-    // Enviar email a ALTORRA
-    const result = await sendEmail(EMAILJS_CONFIG.templates.publicar, {
-      radicado: data.radicado,
-      // Datos del propietario
-      nombre: data.Nombre || data.nombre || '',
-      email: data.Email || data.email || '',
-      telefono: data.Telefono || data.telefono || data.Teléfono || '',
-      // Datos de la propiedad
-      operacion: data.Operacion || data.operacion || '',
-      tipo: data['Tipo de propiedad'] || data.tipo || '',
-      precio: data['Precio estimado (COP)'] || data.precio || '',
-      descripcion: data['Descripción de la propiedad'] || data.descripcion || '',
-      fecha: data.fecha
+    const submitBtn = form.querySelector('button[type="submit"]');
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      // Obtener valores con los IDs correctos del formulario
+      const nombre      = document.getElementById("publishNombre")?.value.trim() || "";
+      const email       = document.getElementById("publishEmail")?.value.trim() || "";
+      const telefono    = document.getElementById("publishTelefono")?.value.trim() || "";
+      const operacion   = document.getElementById("publishOperacion")?.value || "";
+      const tipo        = document.getElementById("publishTipo")?.value || "";
+      const precio      = document.getElementById("publishPrecio")?.value.trim() || "";
+      const descripcion = document.getElementById("publishDescripcion")?.value.trim() || "";
+
+      if (!nombre || !email || !telefono || !operacion || !tipo) {
+        setStatus("Por favor completa todos los campos obligatorios.", "error");
+        return;
+      }
+
+      const radicado = generateRadicado();
+      const fecha    = formatDate(new Date());
+
+      const templateParams = {
+        radicado:     radicado,
+        nombre:       nombre,
+        email:        email,
+        telefono:     telefono,
+        operacion:    operacion,
+        tipo:         tipo,
+        precio:       precio,
+        descripcion:  descripcion,
+        fecha:        fecha
+      };
+
+      console.log('📤 Enviando formulario de publicar:', templateParams);
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Enviando...";
+      }
+      setStatus("Enviando tu solicitud…", "info");
+
+      emailjs.send(SERVICE_ID, TEMPLATE_PUBLICAR, templateParams)
+        .then(function (response) {
+          console.log('✅ Email enviado exitosamente:', response);
+          setStatus("Solicitud enviada correctamente.", "success");
+
+          setTimeout(function() {
+            window.location.href = "gracias.html";
+          }, 1000);
+        })
+        .catch(function (error) {
+          console.error("❌ Error al enviar email:", error);
+          setStatus("No fue posible enviar la solicitud. Intenta de nuevo.", "error");
+
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Publicar propiedad";
+          }
+        });
     });
-
-    // ⏸️ AUTORESPUESTA DESACTIVADA TEMPORALMENTE
-    // (Activar cuando se cree el template altorra_confirmacion en EmailJS)
-    /*
-    if (result.success) {
-      await sendEmail(EMAILJS_CONFIG.templates.autorespuesta, {
-        radicado: data.radicado,
-        nombre: data.Nombre || data.nombre || '',
-        to_email: data.Email || data.email || ''
-      });
-    }
-    */
-
-    return {
-      success: result.success,
-      radicado: data.radicado,
-      error: result.error
-    };
   }
 
   // ===== PROCESAR FORMULARIO DE DETALLE =====
-  async function processDetailForm(form) {
-    const data = prepareFormData(form, 'detalle');
+  function processDetailForm() {
+    const form = document.getElementById("detailContactForm");
+    if (!form) return;
 
-    // Enviar email a ALTORRA
-    const result = await sendEmail(EMAILJS_CONFIG.templates.detalle, {
-      radicado: data.radicado,
-      nombre: data.nombre || '',
-      email: data.email || '',
-      telefono: data.telefono || '',
-      mensaje: data.mensaje || '',
-      propiedadId: data.propertyId || '',
-      propiedadTitulo: data.propertyTitle || '',
-      fecha: data.fecha
+    const submitBtn = form.querySelector('button[type="submit"]');
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const nombre          = document.getElementById("detailNombre")?.value.trim() || "";
+      const email           = document.getElementById("detailEmail")?.value.trim() || "";
+      const telefono        = document.getElementById("detailTelefono")?.value.trim() || "";
+      const mensaje         = document.getElementById("detailMensaje")?.value.trim() || "";
+      const propiedadId     = document.getElementById("detailPropertyId")?.value || "";
+      const propiedadTitulo = document.getElementById("detailPropertyTitle")?.value || "";
+
+      if (!nombre || !email || !telefono || !mensaje) {
+        setStatus("Por favor completa todos los campos obligatorios.", "error");
+        return;
+      }
+
+      const radicado = generateRadicado();
+      const fecha    = formatDate(new Date());
+
+      const templateParams = {
+        radicado:         radicado,
+        nombre:           nombre,
+        email:            email,
+        telefono:         telefono,
+        mensaje:          mensaje,
+        propiedadId:      propiedadId,
+        propiedadTitulo:  propiedadTitulo,
+        fecha:            fecha
+      };
+
+      console.log('📤 Enviando formulario de detalle:', templateParams);
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Enviando...";
+      }
+      setStatus("Enviando tu consulta…", "info");
+
+      emailjs.send(SERVICE_ID, TEMPLATE_DETALLE, templateParams)
+        .then(function (response) {
+          console.log('✅ Email enviado exitosamente:', response);
+          setStatus("Consulta enviada correctamente.", "success");
+
+          setTimeout(function() {
+            window.location.href = "gracias.html";
+          }, 1000);
+        })
+        .catch(function (error) {
+          console.error("❌ Error al enviar email:", error);
+          setStatus("No fue posible enviar la consulta. Intenta de nuevo.", "error");
+
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Enviar consulta";
+          }
+        });
     });
-
-    // ⏸️ AUTORESPUESTA DESACTIVADA TEMPORALMENTE
-    // (Activar cuando se cree el template altorra_confirmacion en EmailJS)
-    /*
-    if (result.success) {
-      await sendEmail(EMAILJS_CONFIG.templates.autorespuesta, {
-        radicado: data.radicado,
-        nombre: data.nombre || '',
-        to_email: data.email || ''
-      });
-    }
-    */
-
-    return {
-      success: result.success,
-      radicado: data.radicado,
-      error: result.error
-    };
   }
 
-  // ===== API PÚBLICA =====
+  // ===== INICIALIZACIÓN =====
+  document.addEventListener("DOMContentLoaded", function () {
+    if (!initEmailJS()) {
+      console.error('❌ No se pudo inicializar EmailJS');
+      return;
+    }
+
+    // Inicializar el formulario correspondiente según la página
+    processContactForm();
+    processPublishForm();
+    processDetailForm();
+  });
+
+  // ===== API PÚBLICA (para debugging) =====
   window.AltorraEmailService = {
-    // Procesar formularios
-    processContactForm,
-    processPublishForm,
-    processDetailForm,
-
-    // Utilidades
-    generateRadicado,
-
-    // Configuración (para debugging)
-    getConfig() {
+    generateRadicado: generateRadicado,
+    getConfig: function() {
       return {
-        publicKey: EMAILJS_CONFIG.publicKey,
-        serviceId: EMAILJS_CONFIG.serviceId,
-        templates: EMAILJS_CONFIG.templates
+        publicKey: PUBLIC_KEY,
+        serviceId: SERVICE_ID,
+        templates: {
+          contacto: TEMPLATE_CONTACTO,
+          publicar: TEMPLATE_PUBLICAR,
+          detalle: TEMPLATE_DETALLE
+        }
       };
     },
-
-    // Verificar si está configurado
-    isConfigured() {
-      return EMAILJS_CONFIG.publicKey !== 'YOUR_PUBLIC_KEY_HERE' &&
-             EMAILJS_CONFIG.serviceId !== 'YOUR_SERVICE_ID_HERE';
+    isConfigured: function() {
+      return PUBLIC_KEY !== 'YOUR_PUBLIC_KEY_HERE' &&
+             SERVICE_ID !== 'YOUR_SERVICE_ID_HERE';
     }
   };
-
-  // Inicializar EmailJS cuando esté disponible
-  if (typeof emailjs !== 'undefined') {
-    emailjs.init(EMAILJS_CONFIG.publicKey);
-    console.log('✅ EmailJS inicializado correctamente');
-  } else {
-    console.warn('⚠️ EmailJS no está cargado todavía. Asegúrate de incluir el script de EmailJS en tu HTML.');
-  }
 
 })();

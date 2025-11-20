@@ -346,15 +346,8 @@
   <!-- Contenido principal con el formulario -->
   <main class="publish-container" id="mainContent">
     <p class="lead">Completa el siguiente formulario y un asesor de Altorra se pondrá en contacto contigo para ayudarte a publicar tu inmueble.</p>
-    <form class="publish-form" id="publishForm" action="https://formsubmit.co/altorrainmobiliaria@gmail.com" method="POST" accept-charset="UTF-8" aria-label="Formulario para publicar propiedad" novalidate>
-      <!-- Configuración para FormSubmit -->
-      <input type="hidden" name="_subject" value="Solicitud para publicar propiedad - Altorra Inmobiliaria"/>
-      <input type="hidden" name="_next" value="https://altorrainmobiliaria.github.io/gracias.html"/>
-      <input type="hidden" name="_captcha" value="false"/>
-      <input type="hidden" name="_template" value="box"/>
-      <input type="hidden" name="_autoresponse" value="Gracias por contactar a Altorra Inmobiliaria para publicar tu propiedad. Hemos recibido tu solicitud y un asesor se comunicará contigo pronto." />
-
-      <!-- Honeypot mejorado (anti-spam) - Nombre compatible con FormSubmit -->
+    <form class="publish-form" id="publishForm" aria-label="Formulario para publicar propiedad" novalidate>
+      <!-- Honeypot para anti-spam -->
       <input type="text" name="_gotcha" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" tabindex="-1" autocomplete="off" aria-hidden="true" />
 
       <!-- Timestamp para validación -->

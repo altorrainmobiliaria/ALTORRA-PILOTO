@@ -610,17 +610,21 @@ async function init(){
     form.innerHTML=`
       <h3>Solicitar información</h3>
       <!-- Datos de contexto de la propiedad -->
-      <input type="hidden" name="property_id" value="${prop.id}" />
-      <input type="hidden" name="property_title" value="${escapeHtml(prop.title)}" />
+      <input type="hidden" id="detailPropertyId" name="property_id" value="${prop.id}" />
+      <input type="hidden" id="detailPropertyTitle" name="property_title" value="${escapeHtml(prop.title)}" />
 
       <!-- Honeypot anti-spam -->
       <input type="text" name="_gotcha" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+      <!-- Live region para anuncios de accesibilidad -->
+      <div role="status" aria-live="polite" aria-atomic="true" class="sr-only" id="formStatus"></div>
+
       <div class="row-3">
-        <input type="text" name="name" placeholder="Nombre completo" required />
-        <input type="email" name="email" placeholder="Correo electrónico" required />
-        <input type="tel" name="phone" placeholder="Número de teléfono" required />
+        <input type="text" id="detailNombre" name="name" placeholder="Nombre completo" required />
+        <input type="email" id="detailEmail" name="email" placeholder="Correo electrónico" required />
+        <input type="tel" id="detailTelefono" name="phone" placeholder="Número de teléfono" required />
       </div>
-      <textarea name="message" placeholder="Mensaje" rows="4" required>${msgDefault}</textarea>
+      <textarea id="detailMensaje" name="message" placeholder="Mensaje" rows="4" required>${msgDefault}</textarea>
       <div class="form-actions">
         <button type="submit" class="btn btn-primary">${isAvailable ? 'Enviar mensaje' : 'Avisarme'}</button>
         <a class="btn btn-wa wa-in-form" href="${waInFormHref}" target="_blank" rel="noopener">
