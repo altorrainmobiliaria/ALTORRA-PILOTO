@@ -693,6 +693,121 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     saveContext();
   }
 
+  // Función de "slot filling" - usa la última pregunta del bot para interpretar respuestas
+  function applyAnswerToLastQuestion(msg, criteria) {
+    const last = conversationContext.lastQuestion;
+    if (!last) return;
+
+    const text = msg.toLowerCase();
+
+    // Presupuesto
+    if (last === 'budget' && !conversationContext.budget) {
+      const parsed = parseBudget(msg);
+      if (parsed) {
+        conversationContext.budget = parsed;
+        saveContext();
+      }
+    }
+
+    // Habitaciones
+    if (last === 'beds' && !conversationContext.beds) {
+      if (criteria.beds) {
+        conversationContext.beds = criteria.beds;
+      } else {
+        const numMatch = text.match(/^(\d+)$/);
+        if (numMatch) conversationContext.beds = parseInt(numMatch[1]);
+      }
+      saveContext();
+    }
+
+    // Propósito
+    if (last === 'purpose' && !conversationContext.purpose) {
+      if (/invertir|inversión|inversion|negocio|rentar|airbnb/i.test(text)) {
+        conversationContext.purpose = 'inversion';
+      } else if (/vivir|vivienda|familia|mud(a|o)|hogar/i.test(text)) {
+        conversationContext.purpose = 'vivienda';
+      } else if (/trabajo|oficina|empresa/i.test(text)) {
+        conversationContext.purpose = 'trabajo';
+      }
+      saveContext();
+    }
+
+    // Tipo de propiedad
+    if (last === 'propertyType' && !conversationContext.propertyType) {
+      if (/apartamento|apto|aparta/i.test(text)) conversationContext.propertyType = 'apartamento';
+      else if (/\bcasa\b/i.test(text)) conversationContext.propertyType = 'casa';
+      else if (/lote|terreno/i.test(text)) conversationContext.propertyType = 'lote';
+      else if (/oficina/i.test(text)) conversationContext.propertyType = 'oficina';
+      saveContext();
+    }
+
+    // Zona
+    if (last === 'zone' && !conversationContext.zone) {
+      const z = detectZone(text);
+      if (z) { conversationContext.zone = z; saveContext(); }
+    }
+
+    // Personas
+    if (last === 'guests' && !conversationContext.guests) {
+      if (criteria.guests) conversationContext.guests = criteria.guests;
+      else {
+        const numMatch = text.match(/^(\d+)$/);
+        if (numMatch) conversationContext.guests = parseInt(numMatch[1]);
+      }
+      saveContext();
+    }
+  }
+
+  // Motor de conocimiento inmobiliario - responde FAQs
+  function answerFromKnowledge(msg) {
+    const text = msg.toLowerCase();
+
+    // PROPIETARIOS
+    if (/soy propietario|tengo una propiedad|tengo un inmueble|mi inmueble|mi apartamento|mi casa/.test(text)) {
+      if (/vender mi|poner en venta|quiero vender/.test(text)) return RESPONSES.propietarioVenta;
+      if (/arrendar mi|administrar mi|poner en arriendo/.test(text)) return RESPONSES.propietarioArriendos;
+      return RESPONSES.propietarioGeneral;
+    }
+
+    // PROCESOS
+    if (/proceso.*compra|pasos.*comprar|c[oó]mo comprar|documentos.*comprar|requisitos.*compra/.test(text)) return RESPONSES.procesoCompra;
+    if (/proceso.*arriendo|requisitos.*arriendo|c[oó]mo arrendar|fiador|codeudor/.test(text)) return RESPONSES.procesoArriendo;
+
+    // INVERSIÓN Y FINANCIACIÓN
+    if (/invertir en|inversi[oó]n inmobiliaria|rentabilidad|valorizaci[oó]n/.test(text)) return RESPONSES.inversion;
+    if (/financiar|financiaci[oó]n|cr[eé]dito|hipoteca|cuota inicial/.test(text)) return RESPONSES.financiacion;
+    if (/negociar|c[oó]mo negociar|mejor precio/.test(text)) return RESPONSES.negociacion;
+
+    // EMPRESA
+    if (/qu[ié][eé]nes son|sobre ustedes|sobre altorra|la inmobiliaria/.test(text)) return RESPONSES.nosotros;
+    if (/horario|a qu[eé] hora|cu[aá]ndo atienden/.test(text)) return RESPONSES.horario;
+
+    return null;
+  }
+
+  // Detectar acciones en la página
+  function matchPageByTopic(msg) {
+    const text = msg.toLowerCase();
+
+    if (/publicar mi|consignar mi|registrar mi|quiero publicar/.test(text)) {
+      return { url: SITE_KNOWLEDGE.pages.publicar.url, desc: 'Publicar tu propiedad' };
+    }
+    if (/comparar propiedades|usar.*comparador|cu[aá]l es mejor/.test(text)) {
+      return { url: SITE_KNOWLEDGE.pages.comparar.url, desc: 'Comparador de propiedades' };
+    }
+    if (/p[aá]gina de contacto|formulario de contacto|quiero dejar mis datos/.test(text)) {
+      return { url: SITE_KNOWLEDGE.pages.contacto.url, desc: 'Página de contacto' };
+    }
+    if (/ver todas.*venta|todas las.*venta/.test(text)) {
+      return { url: SITE_KNOWLEDGE.pages.comprar.url, desc: 'Propiedades en venta' };
+    }
+    if (/ver todas.*arriendo|todos los arriendos/.test(text)) {
+      return { url: SITE_KNOWLEDGE.pages.arrendar.url, desc: 'Propiedades en arriendo' };
+    }
+
+    return null;
+  }
+
   // Opciones rápidas iniciales
   const QUICK_OPTIONS = [
     { text: 'Quiero comprar', action: 'comprar' },
@@ -1085,6 +1200,14 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
         score: 0,
         keywords: ['hola', 'buenos', 'buenas', 'hey', 'hi', 'saludos', 'que tal', 'qué tal', 'hello', 'ey', 'buenas tardes', 'buenas noches', 'buenos días', 'buenos dias']
       },
+      estado: {
+        score: 0,
+        keywords: ['como estas', 'cómo estás', 'como vas', 'cómo vas', 'como va todo', 'que tal estas', 'qué tal estás', 'todo bien', 'como te va']
+      },
+      despedida: {
+        score: 0,
+        keywords: ['adios', 'adiós', 'chao', 'hasta luego', 'nos vemos', 'bye', 'me voy', 'gracias por todo']
+      },
       comprar: {
         score: 0,
         keywords: ['comprar', 'compra', 'venta', 'adquirir', 'busco para comprar', 'quiero comprar', 'necesito comprar', 'me interesa comprar', 'propiedad en venta', 'inmueble en venta', 'para compra', 'quisiera comprar', 'estoy buscando para comprar', 'deseo comprar', 'interesado en comprar', 'busco casa', 'busco apartamento', 'necesito propiedad']
@@ -1445,6 +1568,24 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     // Actualizar contexto de la conversación
     updateContext(msg, criteria);
 
+    // Aplicar slot filling - usar la última pregunta del bot para interpretar respuestas
+    applyAnswerToLastQuestion(msg, criteria);
+
+    // Intentar responder con conocimiento inmobiliario si no es claramente una búsqueda
+    const knowledgeAnswer = answerFromKnowledge(msg);
+    if (knowledgeAnswer && !criteria.operation && !criteria.type && !criteria.zone) {
+      botReply(knowledgeAnswer);
+      return;
+    }
+
+    // Detectar si el usuario quiere realizar una acción en la página
+    const matchedPage = matchPageByTopic(msg);
+    if (matchedPage && !criteria.operation && !criteria.type) {
+      const html = `Puedo ayudarte con eso.<br><br>👉 <a href="${matchedPage.url}" style="color:#d4af37;font-weight:600;">Ir a ${matchedPage.desc}</a><br><br>¿Hay algo más en lo que pueda asistirte?`;
+      botReply(html);
+      return;
+    }
+
     // Si hay criterios de búsqueda específicos, buscar propiedades
     const hasCriteria = criteria.operation || criteria.type || criteria.zone || criteria.beds || criteria.maxPrice || criteria.guests;
 
@@ -1569,6 +1710,12 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
       switch (intent) {
         case 'saludo':
           botReply(RESPONSES.greeting[Math.floor(Math.random() * RESPONSES.greeting.length)], QUICK_OPTIONS);
+          return;
+        case 'estado':
+          botReply('¡Muy bien, gracias por preguntar! 😊<br><br>Estoy aquí para ayudarte con tu búsqueda inmobiliaria en Cartagena. ¿Qué necesitas hoy?', QUICK_OPTIONS);
+          return;
+        case 'despedida':
+          botReply('¡Hasta pronto! 👋<br><br>Fue un gusto ayudarte. Recuerda que puedes volver cuando quieras.<br><br>Si necesitas atención inmediata, contáctanos por WhatsApp: <b>+57 300 243 9810</b>');
           return;
         case 'gracias':
           botReply(RESPONSES.gracias);
