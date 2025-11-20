@@ -509,20 +509,28 @@
       // Agregar opción de contacto con contexto completo
       intro += '<br><br>¿Te gustaría agendar una visita?';
 
-      // Crear mensaje de WhatsApp con las propiedades específicas
-      let waText = `Hola Altorra, me interesan estas propiedades:\n\n`;
+      // Crear mensaje de WhatsApp de forma inteligente según cantidad de resultados
+      let waText = '';
+      const MAX_PROPERTIES_IN_MESSAGE = 3;
 
-      // Agregar las propiedades recomendadas
-      results.forEach((p, i) => {
-        const priceStr = p.price ? `$${(p.price/1000000).toFixed(0)}M` : '';
-        waText += `${i + 1}. ${p.title}\n`;
-        waText += `   ${priceStr} • ${p.beds || 0}H • ${p.baths || 0}B • ${p.sqm || 0}m²\n`;
-        if (p.neighborhood) waText += `   Zona: ${p.neighborhood}\n`;
-        waText += `\n`;
-      });
+      if (results.length <= MAX_PROPERTIES_IN_MESSAGE) {
+        // Pocas propiedades: incluir detalles específicos
+        waText = `Hola Altorra, me interesan estas propiedades:\n\n`;
 
-      // Agregar contexto de búsqueda resumido
-      waText += `Mi perfil:\n`;
+        results.forEach((p, i) => {
+          const priceStr = p.price ? `$${(p.price/1000000).toFixed(0)}M` : '';
+          waText += `${i + 1}. ${p.title}\n`;
+          waText += `   ${priceStr} • ${p.beds || 0}H • ${p.baths || 0}B • ${p.sqm || 0}m²\n`;
+          if (p.neighborhood) waText += `   Zona: ${p.neighborhood}\n`;
+          waText += `\n`;
+        });
+      } else {
+        // Muchas propiedades: solo enviar perfil y cantidad
+        waText = `Hola Altorra, estoy buscando propiedades y encontré ${results.length} opciones que me interesan.\n\n`;
+      }
+
+      // Agregar contexto de búsqueda resumido (siempre)
+      waText += `Mi perfil de búsqueda:\n`;
       const opName = ctx.interest === 'comprar' ? 'Comprar' :
                      ctx.interest === 'arrendar' ? 'Arrendar' : 'Alojamiento';
       waText += `• ${opName} ${ctx.propertyType || 'propiedad'}`;
@@ -535,6 +543,10 @@
       }
       if (ctx.budget) waText += `• Presupuesto: ${formatPrice(ctx.budget)}\n`;
       if (ctx.beds) waText += `• ${ctx.beds}+ habitaciones\n`;
+
+      if (results.length > MAX_PROPERTIES_IN_MESSAGE) {
+        waText += `\nMe gustaría agendar una visita y conocer más detalles de las opciones disponibles.`;
+      }
 
       const waSummary = encodeURIComponent(waText);
 
