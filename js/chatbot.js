@@ -838,6 +838,16 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
       return true;
     }
 
+    // Solicitudes de contacto con asesor (debe interrumpir el flujo)
+    if (/hablar con.*asesor|contactar.*asesor|asesor|whatsapp|llamar|contacto/i.test(text)) {
+      return true;
+    }
+
+    // Opciones de ajuste de búsqueda que el usuario puede escribir
+    if (/ampliar.*presupuesto|explorar otras zonas|ajustar.*criterios|ver todas/i.test(text)) {
+      return true;
+    }
+
     // Cambios explícitos de operación/modo
     const operationChangePatterns = [
       /quiero (comprar|arrendar|alquilar|alojamiento|hospedaje)/i,
@@ -1574,9 +1584,21 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     switch (action) {
       case 'comprar':
         addMessage('Quiero comprar una propiedad', false);
+        // Resetear contexto de búsqueda para empezar limpio
         conversationContext.interest = 'comprar';
         conversationContext.consultationPhase = 'discovery';
         conversationContext.role = 'comprador';
+        conversationContext.purpose = null;
+        conversationContext.propertyType = null;
+        conversationContext.zone = null;
+        conversationContext.budget = null;
+        conversationContext.beds = null;
+        conversationContext.baths = null;
+        conversationContext.guests = null;
+        conversationContext.stayDates = null;
+        conversationContext.lastQuestion = null;
+        conversationContext.questionsAsked = [];
+        conversationContext.dataPoints = 0;
 
         // Iniciar consultoría en lugar de mostrar propiedades al azar
         let comprarResponse = `🏡 <b>¡Excelente decisión!</b> Comprar un inmueble en Cartagena es una gran inversión.<br><br>`;
@@ -1600,9 +1622,21 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
 
       case 'arrendar':
         addMessage('Busco arriendo', false);
+        // Resetear contexto de búsqueda para empezar limpio
         conversationContext.interest = 'arrendar';
         conversationContext.consultationPhase = 'discovery';
         conversationContext.role = 'arrendatario';
+        conversationContext.purpose = null;
+        conversationContext.propertyType = null;
+        conversationContext.zone = null;
+        conversationContext.budget = null;
+        conversationContext.beds = null;
+        conversationContext.baths = null;
+        conversationContext.guests = null;
+        conversationContext.stayDates = null;
+        conversationContext.lastQuestion = null;
+        conversationContext.questionsAsked = [];
+        conversationContext.dataPoints = 0;
 
         let arrendarResponse = `🔑 <b>¡Perfecto!</b> Tenemos opciones de arriendo para todos los presupuestos.<br><br>`;
         arrendarResponse += `Para recomendarte las mejores opciones, cuéntame un poco más:<br><br>`;
@@ -1624,8 +1658,20 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
 
       case 'alojamiento':
         addMessage('Alojamiento por días', false);
+        // Resetear contexto de búsqueda para empezar limpio
         conversationContext.interest = 'dias';
         conversationContext.role = 'turista';
+        conversationContext.purpose = null;
+        conversationContext.propertyType = null;
+        conversationContext.zone = null;
+        conversationContext.budget = null;
+        conversationContext.beds = null;
+        conversationContext.baths = null;
+        conversationContext.guests = null;
+        conversationContext.stayDates = null;
+        conversationContext.lastQuestion = null;
+        conversationContext.questionsAsked = [];
+        conversationContext.dataPoints = 0;
 
         let alojamientoResponse = `🌴 <b>¡Cartagena te espera!</b><br><br>`;
         alojamientoResponse += `Para encontrar el alojamiento ideal, necesito saber:<br><br>`;
@@ -1842,7 +1888,7 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
       },
       contacto: {
         score: 0,
-        keywords: ['contacto', 'teléfono', 'telefono', 'email', 'correo', 'llamar', 'número', 'numero', 'dirección', 'direccion', 'whatsapp', 'comunicar', 'hablar']
+        keywords: ['contacto', 'teléfono', 'telefono', 'email', 'correo', 'llamar', 'número', 'numero', 'dirección', 'direccion', 'whatsapp', 'comunicar', 'hablar', 'hablar con un asesor', 'hablar con asesor', 'contactar asesor', 'necesito asesor', 'quiero asesor']
       },
       servicios: {
         score: 0,
@@ -2600,7 +2646,35 @@ Soy tu asistente virtual y puedo ayudarte con:<br><br>
           botReply(RESPONSES.precio);
           return;
         case 'contacto':
-          botReply(RESPONSES.contacto);
+          // Generar link de WhatsApp con contexto de la conversación
+          const ctxContact = conversationContext;
+          let waMessage = 'Hola Altorra, necesito hablar con un asesor';
+
+          // Agregar contexto si existe
+          if (ctxContact.interest || ctxContact.propertyType || ctxContact.zone) {
+            waMessage += '.\n\nMi búsqueda:\n';
+            if (ctxContact.interest) {
+              const opName = ctxContact.interest === 'comprar' ? 'Comprar' :
+                             ctxContact.interest === 'arrendar' ? 'Arrendar' : 'Alojamiento';
+              waMessage += `• Operación: ${opName}\n`;
+            }
+            if (ctxContact.propertyType) waMessage += `• Tipo: ${ctxContact.propertyType}\n`;
+            if (ctxContact.zone) waMessage += `• Zona: ${ctxContact.zone}\n`;
+            if (ctxContact.budget) waMessage += `• Presupuesto: $${(ctxContact.budget/1000000).toFixed(0)} millones\n`;
+            if (ctxContact.beds) waMessage += `• Habitaciones: ${ctxContact.beds}+\n`;
+          }
+
+          const waLinkContact = `https://wa.me/${CONFIG.whatsappNumber}?text=${encodeURIComponent(waMessage)}`;
+
+          let contactResponse = `📞 <b>¡Te conecto con un asesor!</b><br><br>`;
+          contactResponse += `Nuestro equipo está listo para ayudarte de forma personalizada.<br><br>`;
+          contactResponse += `<a href="${waLinkContact}" target="_blank" rel="noopener" class="chat-whatsapp-link">`;
+          contactResponse += `<svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.789l4.94-1.293A11.96 11.96 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>`;
+          contactResponse += `Hablar por WhatsApp</a><br><br>`;
+          contactResponse += `<b>Horario:</b> Lun-Vie 8am-6pm, Sáb 9am-1pm<br>`;
+          contactResponse += `Por WhatsApp respondemos más rápido.`;
+
+          botReply(contactResponse);
           return;
         case 'servicios':
           botReply(RESPONSES.servicios);
