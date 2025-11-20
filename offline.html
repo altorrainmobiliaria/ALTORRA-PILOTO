@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sin conexión | Altorra Inmobiliaria</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      color: #fff;
+    }
+
+    .container {
+      max-width: 500px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 48px 32px;
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      color: #111827;
+    }
+
+    .icon {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 24px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .icon svg {
+      width: 60px;
+      height: 60px;
+      fill: #fff;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.05);
+      }
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 16px;
+      color: #111827;
+    }
+
+    p {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      color: #6b7280;
+      margin-bottom: 32px;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 14px 32px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 1rem;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(102, 126, 234, 0.5);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .info {
+      margin-top: 32px;
+      padding-top: 32px;
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .info p {
+      font-size: 0.9rem;
+      color: #9ca3af;
+      margin-bottom: 8px;
+    }
+
+    .saved-pages {
+      margin-top: 16px;
+    }
+
+    .saved-pages a {
+      display: inline-block;
+      margin: 4px 8px;
+      padding: 8px 16px;
+      background: #f3f4f6;
+      color: #111827;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: background 0.2s ease;
+    }
+
+    .saved-pages a:hover {
+      background: #e5e7eb;
+    }
+
+    @media (max-width: 560px) {
+      .container {
+        padding: 32px 24px;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      p {
+        font-size: 1rem;
+      }
+
+      .icon {
+        width: 100px;
+        height: 100px;
+      }
+
+      .icon svg {
+        width: 50px;
+        height: 50px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/>
+      </svg>
+    </div>
+
+    <h1>Sin conexión a Internet</h1>
+
+    <p>
+      Parece que no tienes conexión en este momento.
+      Verifica tu red e intenta nuevamente.
+    </p>
+
+    <a href="javascript:location.reload()" class="btn">
+      Reintentar
+    </a>
+
+    <div class="info">
+      <p><strong>Páginas guardadas que puedes visitar:</strong></p>
+      <div class="saved-pages">
+        <a href="/">Inicio</a>
+        <a href="/propiedades-comprar.html">Comprar</a>
+        <a href="/propiedades-arrendar.html">Arrendar</a>
+        <a href="/favoritos.html">Favoritos</a>
+      </div>
+
+      <p style="margin-top: 24px; font-size: 0.85rem;">
+        Algunas funciones están disponibles sin conexión gracias a nuestra tecnología PWA.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // Check connection status
+    function checkOnline() {
+      if (navigator.onLine) {
+        location.reload();
+      }
+    }
+
+    // Listen for connection restored
+    window.addEventListener('online', checkOnline);
+
+    // Auto-retry every 5 seconds
+    setInterval(checkOnline, 5000);
+  </script>
+</body>
+</html>
