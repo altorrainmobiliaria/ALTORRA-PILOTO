@@ -255,6 +255,41 @@
     @media (max-width:700px){
       .grid.two{grid-template-columns:1fr;}
     }
+
+    /* Checkbox de consentimiento */
+    .consent-fieldset {
+      margin-top: 8px;
+    }
+    .consent-wrapper {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .consent-wrapper input[type="checkbox"] {
+      margin-top: 4px;
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .consent-wrapper label {
+      cursor: pointer;
+      font-weight: 400;
+      line-height: 1.5;
+      font-size: 0.95rem;
+    }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border-width: 0;
+    }
+
     /* Botón de envío */
     .publish-form button{
       align-self:flex-start;
@@ -465,6 +500,27 @@
           ></textarea>
           <span id="publishDescripcionHelp" class="field-help">Describe las características principales. Máximo 1500 caracteres</span>
         </label>
+      </fieldset>
+
+      <fieldset class="consent-fieldset">
+        <legend class="sr-only">Consentimiento de datos</legend>
+        <div class="consent-wrapper">
+          <input
+            type="checkbox"
+            id="publishConsent"
+            name="Consentimiento"
+            value="Acepto"
+            required
+            aria-required="true"
+            aria-describedby="publishConsentHelp"
+          />
+          <label for="publishConsent">
+            Autorizo el tratamiento de mis datos personales para gestionar mi solicitud y recibir información relacionada con los servicios de Altorra Inmobiliaria.
+          </label>
+        </div>
+        <span id="publishConsentHelp" class="field-help">
+          Requerido para procesar tu solicitud. Lee nuestra <a href="privacidad.html" style="color: var(--gold-light, #d4af37); text-decoration: underline;">política de privacidad</a>.
+        </span>
       </fieldset>
 
       <button type="submit" aria-label="Enviar solicitud de publicación">
