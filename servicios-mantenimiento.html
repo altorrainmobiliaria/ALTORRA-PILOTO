@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8"/>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-EHE7316MST"></script>
   <script>
@@ -16,209 +16,319 @@
       'cookie_flags': 'SameSite=None;Secure'
     });
   </script>
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Servicio próximamente | Altorra Inmobiliaria</title>
-  <meta name="description" content="Este servicio aún no está disponible. Muy pronto estará disponible con Altorra Inmobiliaria." />
-  <meta name="theme-color" content="#ffffff" />
-  <meta name="robots" content="noindex, nofollow" />
-  <meta property="og:title" content="Muy pronto con Altorra Inmobiliaria" />
-  <meta property="og:description" content="Estamos preparando este servicio para ti." />
-  <meta property="og:image" content="https://i.postimg.cc/SsPmBFXt/Chat-GPT-Image-9-ago-2025-10-31-20.png" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600;800&display=swap" rel="stylesheet" />
-  <link rel="prefetch" href="index.html" as="document" />
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Mantenimiento y Reparaciones | Altorra</title>
+  <meta name="description" content="Servicio profesional de mantenimiento y reparaciones para propiedades en Cartagena. Mantenimiento preventivo, correctivo y de emergencia. Altorra Inmobiliaria."/>
+  <meta name="theme-color" content="#d4af37"/>
+  <link rel="manifest" href="manifest.json"/>
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Mantenimiento y Reparaciones | Altorra"/>
+  <meta property="og:description" content="Mantenemos tu propiedad en perfecto estado con profesionales confiables y precios transparentes."/>
+  <meta property="og:image" content="https://altorrainmobiliaria.github.io/multimedia/hero-contact.webp"/>
+
+  <!-- Fonts & Styles -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
   <link href="css/breadcrumbs.css" rel="stylesheet"/>
-  <style>
-    :root{
-      --gold:#d4af37;
-      --accent:#ffb400;
-      --bg:#ffffff;            /* ← fondo totalmente blanco */
-      --ink:#111827;           /* texto principal */
-      --muted:#6b7280;         /* texto secundario */
-      --line:#e5e7eb;          /* bordes sutiles */
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      background:var(--bg);    /* ← blanco puro */
-      color:var(--ink);
-      font-family:"Poppins",system-ui,-apple-system,"Segoe UI",Roboto,Arial;
-      display:grid; place-items:center;
-      padding:clamp(16px,3vw,36px);
-    }
-    main.wrap{width:min(960px,100%); display:grid; gap:18px; text-align:center}
-    .card{
-      background:#fff;
-      border:1px solid var(--line);
-      border-radius:24px;
-      padding:clamp(20px,4vw,36px);
-      box-shadow:0 10px 30px rgba(17,24,39,.06);
-    }
 
-    .logo{
-      width:68px;height:68px;border-radius:16px;display:grid;place-items:center;
-      background:#fff;border:1px solid var(--line);
-      box-shadow:0 8px 20px rgba(17,24,39,.06), inset 0 1px 0 rgba(255,255,255,.6);
-      margin:0 auto 4px;
-    }
-    .logo img{width:44px;height:44px;object-fit:contain}
-
-    .kicker{
-      display:inline-flex;align-items:center;gap:8px;
-      padding:8px 12px;border-radius:999px;
-      background:#fff;border:1px solid var(--line);
-      font-weight:700;color:var(--ink);
-    }
-    .title{
-      margin:10px 0 6px;
-      font-size:clamp(1.6rem, 1.2rem + 2.2vw, 2.6rem);
-      font-weight:800; line-height:1.07; letter-spacing:-.02em;
-      color:var(--ink);
-      text-wrap:balance;
-    }
-    .lead{
-      margin:0 auto; color:var(--muted); font-weight:600; max-width:62ch; text-wrap:pretty;
-    }
-
-    /* Contador circular */
-    .counter{display:grid; place-items:center; gap:10px; margin:18px 0 6px}
-    .ring{width:126px;height:126px; display:grid; place-items:center; position:relative}
-    .ring svg{transform:rotate(-90deg)}
-    .ring .bg{stroke:var(--line)}
-    .ring .fg{stroke:var(--gold); transition:stroke-dashoffset .4s ease}
-    .ring .glow{stroke:var(--accent); opacity:.8; filter:blur(.6px)}
-    .n{
-      position:absolute; inset:0; display:grid; place-items:center;
-      font-size:clamp(1.6rem, 1.2rem + 2vw, 2.2rem);
-      font-weight:800; color:var(--ink);
-    }
-    .hint{color:var(--muted); font-weight:600}
-
-    .actions{display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin-top:10px}
-    .btn{
-      padding:12px 18px; border-radius:14px; border:1px solid var(--line);
-      background:linear-gradient(90deg,var(--accent),#ffd95e); color:#111; font-weight:800; cursor:pointer;
-      box-shadow:0 10px 22px rgba(255,204,0,.22), inset 0 1px 0 rgba(255,255,255,.65);
-      transition:transform .12s ease;
-    }
-    .btn:hover{transform:translateY(-1px)}
-    .btn:focus-visible{outline:4px solid rgba(212,175,55,.35); outline-offset:2px}
-    .btn.secondary{
-      background:#fff; color:var(--ink); border-color:var(--line); box-shadow:0 8px 20px rgba(17,24,39,.06);
-    }
-
-    .fine{margin-top:6px; color:#94a3b8; font-size:.95rem; text-wrap:pretty}
-
-    @media (prefers-reduced-motion:reduce){
-      .ring .fg{transition:none}
-      .btn{transition:none}
-    }
-  </style>
+  <!-- Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="header-footer.js" defer></script>
 </head>
-<body data-home="index.html">
+<body>
+  <!-- Header -->
+  <div id="header-placeholder"></div>
+
   <!-- Breadcrumbs -->
   <div style="max-width: var(--page-max); margin: 0 auto; padding: 0 16px;">
     <div id="breadcrumb-container"></div>
   </div>
 
-  <main class="wrap" role="main">
-    <section class="card" aria-labelledby="t1">
-      <div class="logo" aria-hidden="true">
-        <img src="https://i.postimg.cc/SsPmBFXt/Chat-GPT-Image-9-ago-2025-10-31-20.png" alt="" width="44" height="44">
+  <!-- Skip link -->
+  <a class="skip-link" href="#main-content">Saltar al contenido</a>
+
+  <main id="main-content">
+    <!-- Hero Section -->
+    <section class="hero" style="min-height:50vh" aria-label="Hero">
+      <img class="bg"
+           src="https://i.postimg.cc/zvpqNGVG/pexels-pixabay-209251.jpg"
+           alt="Mantenimiento profesional de propiedades"
+           loading="eager"
+           width="1600"
+           height="900"/>
+      <div class="overlay" aria-hidden="true"></div>
+      <div class="inner" style="max-width:900px">
+        <h1 style="font-size:clamp(2rem,5vw,3rem);margin-bottom:12px">Mantenimiento y Reparaciones</h1>
+        <p style="font-size:1.1rem;opacity:0.95">Mantén tu propiedad en perfecto estado con nuestro servicio profesional</p>
       </div>
+    </section>
 
-      <span class="kicker">Servicio no disponible en este momento</span>
-      <h1 id="t1" class="title">Muy pronto estará disponible con Altorra Inmobiliaria</h1>
-      <p class="lead">Estamos afinando los últimos detalles para ofrecerte una experiencia de primer nivel. En breve podrás acceder a este servicio con la seguridad, legalidad y confianza de Altorra.</p>
-
-      <div class="counter" aria-live="polite" aria-atomic="true">
-        <div class="ring" aria-hidden="true">
-          <svg width="126" height="126" viewBox="0 0 126 126" fill="none">
-            <defs>
-              <linearGradient id="g1" x1="0" y1="0" x2="126" y2="126" gradientUnits="userSpaceOnUse">
-                <stop stop-color="#ffb400"/><stop offset="1" stop-color="#ffd95e"/>
-              </linearGradient>
-            </defs>
-            <circle class="bg" cx="63" cy="63" r="54" stroke-width="10" />
-            <circle class="glow" cx="63" cy="63" r="54" stroke="url(#g1)" stroke-width="10" stroke-linecap="round" stroke-dasharray="339.292" stroke-dashoffset="0" />
-            <circle class="fg" cx="63" cy="63" r="54" stroke="url(#g1)" stroke-width="10" stroke-linecap="round" stroke-dasharray="339.292" stroke-dashoffset="0" />
-          </svg>
-          <div class="n" id="count">10</div>
+    <!-- Benefits Section -->
+    <section class="section" style="background:#fff;padding:48px 16px">
+      <div style="max-width:var(--page-max);margin:0 auto">
+        <div style="text-align:center;margin-bottom:36px">
+          <h2 style="color:var(--gold);font-size:2rem;margin-bottom:12px">¿Por qué elegir nuestro servicio de mantenimiento?</h2>
+          <p style="color:var(--muted);font-weight:600;max-width:680px;margin:0 auto">
+            Profesionales certificados, respuesta rápida y garantía en todos nuestros trabajos
+          </p>
         </div>
-        <div class="hint">Te redirigimos al inicio en <strong><span id="countText">10</span>s</strong>.</div>
-      </div>
 
-      <div class="actions">
-        <button class="btn" id="goHome" type="button" aria-label="Volver al inicio ahora">Volver al inicio ahora</button>
-        <button class="btn secondary" id="pause" type="button" aria-pressed="false" aria-label="Pausar o reanudar contador">Pausar contador</button>
-      </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-top:32px">
+          <!-- Card 1 -->
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:24px">
+            <div style="width:48px;height:48px;background:linear-gradient(135deg,#d4af37,#ffb400);border-radius:12px;display:grid;place-items:center;margin-bottom:16px">
+              <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+              </svg>
+            </div>
+            <h3 style="font-weight:700;margin-bottom:8px">Mantenimiento Preventivo</h3>
+            <p style="color:var(--muted);margin:0">Inspecciones regulares y mantenimiento programado para evitar problemas costosos.</p>
+          </div>
 
-      <p class="fine">Si prefieres, guarda esta página y vuelve más tarde. Estamos trabajando para ti.</p>
+          <!-- Card 2 -->
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:24px">
+            <div style="width:48px;height:48px;background:linear-gradient(135deg,#d4af37,#ffb400);border-radius:12px;display:grid;place-items:center;margin-bottom:16px">
+              <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </div>
+            <h3 style="font-weight:700;margin-bottom:8px">Reparaciones Garantizadas</h3>
+            <p style="color:var(--muted);margin:0">Todos nuestros trabajos incluyen garantía de satisfacción y calidad.</p>
+          </div>
+
+          <!-- Card 3 -->
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:24px">
+            <div style="width:48px;height:48px;background:linear-gradient(135deg,#d4af37,#ffb400);border-radius:12px;display:grid;place-items:center;margin-bottom:16px">
+              <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <h3 style="font-weight:700;margin-bottom:8px">Respuesta Rápida</h3>
+            <p style="color:var(--muted);margin:0">Atención de emergencias 24/7 y programación flexible según tu disponibilidad.</p>
+          </div>
+
+          <!-- Card 4 -->
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:24px">
+            <div style="width:48px;height:48px;background:linear-gradient(135deg,#d4af37,#ffb400);border-radius:12px;display:grid;place-items:center;margin-bottom:16px">
+              <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <h3 style="font-weight:700;margin-bottom:8px">Profesionales Certificados</h3>
+            <p style="color:var(--muted);margin:0">Personal calificado con años de experiencia en mantenimiento residencial y comercial.</p>
+          </div>
+
+          <!-- Card 5 -->
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:24px">
+            <div style="width:48px;height:48px;background:linear-gradient(135deg,#d4af37,#ffb400);border-radius:12px;display:grid;place-items:center;margin-bottom:16px">
+              <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="7.5 4.21 12 6.81 16.5 4.21"/><polyline points="7.5 19.79 7.5 14.6 3 12"/><polyline points="21 12 16.5 14.6 16.5 19.79"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+              </svg>
+            </div>
+            <h3 style="font-weight:700;margin-bottom:8px">Materiales de Calidad</h3>
+            <p style="color:var(--muted);margin:0">Usamos solo materiales y repuestos de primera calidad con garantía del fabricante.</p>
+          </div>
+
+          <!-- Card 6 -->
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:24px">
+            <div style="width:48px;height:48px;background:linear-gradient(135deg,#d4af37,#ffb400);border-radius:12px;display:grid;place-items:center;margin-bottom:16px">
+              <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+              </svg>
+            </div>
+            <h3 style="font-weight:700;margin-bottom:8px">Presupuestos Transparentes</h3>
+            <p style="color:var(--muted);margin:0">Cotizaciones detalladas sin costos ocultos. Sabrás exactamente qué pagas.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="section" style="background:#f9fafb;padding:48px 16px">
+      <div style="max-width:var(--page-max);margin:0 auto">
+        <h2 style="text-align:center;color:var(--gold);font-size:2rem;margin-bottom:36px">Servicios que Ofrecemos</h2>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px">
+          <!-- Plomería -->
+          <div style="background:#fff;border-radius:12px;padding:20px;border:1px solid #e5e7eb">
+            <h3 style="font-weight:700;margin-bottom:12px;color:var(--gold)">🚰 Plomería</h3>
+            <ul style="list-style:none;padding:0;margin:0;color:var(--muted)">
+              <li style="padding:6px 0">✓ Reparación de fugas</li>
+              <li style="padding:6px 0">✓ Destapado de tuberías</li>
+              <li style="padding:6px 0">✓ Instalación de grifos y sanitarios</li>
+              <li style="padding:6px 0">✓ Calentadores de agua</li>
+            </ul>
+          </div>
+
+          <!-- Electricidad -->
+          <div style="background:#fff;border-radius:12px;padding:20px;border:1px solid #e5e7eb">
+            <h3 style="font-weight:700;margin-bottom:12px;color:var(--gold)">⚡ Electricidad</h3>
+            <ul style="list-style:none;padding:0;margin:0;color:var(--muted)">
+              <li style="padding:6px 0">✓ Instalaciones eléctricas</li>
+              <li style="padding:6px 0">✓ Reparación de cortocircuitos</li>
+              <li style="padding:6px 0">✓ Iluminación LED</li>
+              <li style="padding:6px 0">✓ Tableros y breakers</li>
+            </ul>
+          </div>
+
+          <!-- Pintura -->
+          <div style="background:#fff;border-radius:12px;padding:20px;border:1px solid #e5e7eb">
+            <h3 style="font-weight:700;margin-bottom:12px;color:var(--gold)">🎨 Pintura</h3>
+            <ul style="list-style:none;padding:0;margin:0;color:var(--muted)">
+              <li style="padding:6px 0">✓ Pintura interior y exterior</li>
+              <li style="padding:6px 0">✓ Reparación de grietas</li>
+              <li style="padding:6px 0">✓ Estuco y acabados</li>
+              <li style="padding:6px 0">✓ Impermeabilización</li>
+            </ul>
+          </div>
+
+          <!-- Carpintería -->
+          <div style="background:#fff;border-radius:12px;padding:20px;border:1px solid #e5e7eb">
+            <h3 style="font-weight:700;margin-bottom:12px;color:var(--gold)">🪵 Carpintería</h3>
+            <ul style="list-style:none;padding:0;margin:0;color:var(--muted)">
+              <li style="padding:6px 0">✓ Reparación de puertas y ventanas</li>
+              <li style="padding:6px 0">✓ Instalación de closets</li>
+              <li style="padding:6px 0">✓ Muebles a medida</li>
+              <li style="padding:6px 0">✓ Pisos de madera</li>
+            </ul>
+          </div>
+
+          <!-- Aire Acondicionado -->
+          <div style="background:#fff;border-radius:12px;padding:20px;border:1px solid #e5e7eb">
+            <h3 style="font-weight:700;margin-bottom:12px;color:var(--gold)">❄️ Aire Acondicionado</h3>
+            <ul style="list-style:none;padding:0;margin:0;color:var(--muted)">
+              <li style="padding:6px 0">✓ Mantenimiento preventivo</li>
+              <li style="padding:6px 0">✓ Reparaciones</li>
+              <li style="padding:6px 0">✓ Instalación de equipos</li>
+              <li style="padding:6px 0">✓ Recarga de gas</li>
+            </ul>
+          </div>
+
+          <!-- Limpieza -->
+          <div style="background:#fff;border-radius:12px;padding:20px;border:1px solid #e5e7eb">
+            <h3 style="font-weight:700;margin-bottom:12px;color:var(--gold)">🧹 Limpieza</h3>
+            <ul style="list-style:none;padding:0;margin:0;color:var(--muted)">
+              <li style="padding:6px 0">✓ Limpieza profunda</li>
+              <li style="padding:6px 0">✓ Lavado de fachadas</li>
+              <li style="padding:6px 0">✓ Limpieza de tanques de agua</li>
+              <li style="padding:6px 0">✓ Fumigación y desinfección</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="section" style="padding:48px 16px">
+      <div style="max-width:780px;margin:0 auto;text-align:center">
+        <h2 style="color:var(--gold);font-size:2rem;margin-bottom:16px">Tarifas Competitivas</h2>
+
+        <div style="background:#fff;border:2px solid var(--gold);border-radius:20px;padding:32px;margin:24px 0">
+          <div style="font-size:2.5rem;font-weight:800;color:var(--gold);margin-bottom:8px">Cotización Gratuita</div>
+          <div style="font-weight:700;font-size:1.2rem;margin-bottom:16px">Evaluamos tu caso sin compromiso</div>
+          <p style="color:var(--muted);margin:0">
+            Precios justos según el trabajo requerido. Sin tarifas mínimas abusivas.
+          </p>
+        </div>
+
+        <div style="background:#f9fafb;border-radius:16px;padding:24px;margin-top:24px;text-align:left">
+          <h3 style="font-weight:700;margin-bottom:12px">✅ Nuestro servicio incluye:</h3>
+          <ul style="list-style:none;padding:0;margin:0">
+            <li style="padding:8px 0;border-bottom:1px solid #e5e7eb">✓ Visita de inspección sin costo</li>
+            <li style="padding:8px 0;border-bottom:1px solid #e5e7eb">✓ Presupuesto detallado y transparente</li>
+            <li style="padding:8px 0;border-bottom:1px solid #e5e7eb">✓ Materiales de primera calidad incluidos</li>
+            <li style="padding:8px 0;border-bottom:1px solid #e5e7eb">✓ Limpieza del área de trabajo</li>
+            <li style="padding:8px 0;border-bottom:1px solid #e5e7eb">✓ Garantía por escrito en todos los trabajos</li>
+            <li style="padding:8px 0">✓ Servicio de urgencias disponible</li>
+          </ul>
+        </div>
+
+        <div style="margin-top:32px">
+          <a href="contacto.html" style="display:inline-block;background:linear-gradient(135deg,var(--gold),#ffb400);color:#fff;padding:14px 32px;border-radius:12px;font-weight:700;text-decoration:none;box-shadow:0 4px 12px rgba(212,175,55,0.3)">
+            Solicitar cotización gratuita
+          </a>
+          <div style="margin-top:12px">
+            <a href="https://wa.me/573002439810?text=Hola%2C%20necesito%20servicio%20de%20mantenimiento" style="color:var(--gold);font-weight:600">¿Urgencia? Escríbenos por WhatsApp →</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Process Section -->
+    <section class="section" style="background:#f9fafb;padding:48px 16px">
+      <div style="max-width:var(--page-max);margin:0 auto">
+        <h2 style="text-align:center;color:var(--gold);font-size:2rem;margin-bottom:36px">¿Cómo funciona?</h2>
+
+        <div style="max-width:680px;margin:0 auto">
+          <div style="display:flex;gap:16px;margin-bottom:24px">
+            <div style="flex-shrink:0;width:40px;height:40px;background:var(--gold);border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800">1</div>
+            <div>
+              <h3 style="font-weight:700;margin-bottom:4px">Contacto Inicial</h3>
+              <p style="color:var(--muted);margin:0">Llámanos, escríbenos por WhatsApp o llena el formulario. Nos pondremos en contacto contigo de inmediato.</p>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:16px;margin-bottom:24px">
+            <div style="flex-shrink:0;width:40px;height:40px;background:var(--gold);border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800">2</div>
+            <div>
+              <h3 style="font-weight:700;margin-bottom:4px">Inspección y Cotización</h3>
+              <p style="color:var(--muted);margin:0">Visitamos tu propiedad, evaluamos el trabajo necesario y te enviamos una cotización detallada sin compromiso.</p>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:16px;margin-bottom:24px">
+            <div style="flex-shrink:0;width:40px;height:40px;background:var(--gold);border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800">3</div>
+            <div>
+              <h3 style="font-weight:700;margin-bottom:4px">Programación</h3>
+              <p style="color:var(--muted);margin:0">Si apruebas la cotización, agendamos el servicio en la fecha y hora que mejor te convenga.</p>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:16px;margin-bottom:24px">
+            <div style="flex-shrink:0;width:40px;height:40px;background:var(--gold);border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800">4</div>
+            <div>
+              <h3 style="font-weight:700;margin-bottom:4px">Ejecución del Trabajo</h3>
+              <p style="color:var(--muted);margin:0">Nuestro equipo llega puntual, ejecuta el trabajo con profesionalismo y deja todo limpio y en orden.</p>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:16px">
+            <div style="flex-shrink:0;width:40px;height:40px;background:var(--gold);border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800">5</div>
+            <div>
+              <h3 style="font-weight:700;margin-bottom:4px">Garantía y Seguimiento</h3>
+              <p style="color:var(--muted);margin:0">Entregamos garantía por escrito y hacemos seguimiento para asegurarnos de tu completa satisfacción.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="section" style="background:#fff;padding:48px 16px">
+      <div style="max-width:680px;margin:0 auto;text-align:center">
+        <h2 style="color:var(--gold);font-size:2rem;margin-bottom:16px">¿Listo para mantener tu propiedad en perfecto estado?</h2>
+        <p style="color:var(--muted);font-weight:600;margin-bottom:32px">
+          Solicita tu cotización gratuita hoy mismo y descubre por qué somos la opción preferida en Cartagena
+        </p>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+          <a href="contacto.html" style="display:inline-block;background:linear-gradient(135deg,var(--gold),#ffb400);color:#fff;padding:14px 28px;border-radius:12px;font-weight:700;text-decoration:none;box-shadow:0 4px 12px rgba(212,175,55,0.3)">
+            Solicitar cotización
+          </a>
+          <a href="https://wa.me/573002439810?text=Hola%2C%20necesito%20servicio%20de%20mantenimiento" style="display:inline-block;background:#25d366;color:#fff;padding:14px 28px;border-radius:12px;font-weight:700;text-decoration:none;box-shadow:0 4px 12px rgba(37,211,102,0.3)">
+            WhatsApp
+          </a>
+        </div>
+      </div>
     </section>
   </main>
 
-  <!-- Fallback sin JavaScript: redirección en 10s -->
-  <noscript>
-    <meta http-equiv="refresh" content="10; url=index.html">
-  </noscript>
+  <!-- Footer -->
+  <div id="footer-placeholder"></div>
 
+  <!-- Scripts -->
   <script defer src="js/breadcrumbs.js"></script>
-  <script>
-    (function(){
-      const home = document.body.dataset.home || 'index.html';
-      const countEl = document.getElementById('count');
-      const countTextEl = document.getElementById('countText');
-      const fg = document.querySelector('.ring .fg');
-      const glow = document.querySelector('.ring .glow');
-      const goBtn = document.getElementById('goHome');
-      const pauseBtn = document.getElementById('pause');
-
-      const TOTAL = 10;                // segundos
-      const CIRC = 2 * Math.PI * 54;   // 339.292...
-      let t = TOTAL;
-      let paused = false;
-      let timer = null;
-
-      function setDash(sec){
-        const progress = (TOTAL - sec) / TOTAL; // 0..1
-        const offset = CIRC * progress;
-        fg.style.strokeDasharray = CIRC.toFixed(3);
-        fg.style.strokeDashoffset = offset.toFixed(3);
-        glow.style.strokeDasharray = CIRC.toFixed(3);
-        glow.style.strokeDashoffset = offset.toFixed(3);
-      }
-      function render(){
-        countEl.textContent = String(t);
-        countTextEl.textContent = String(t);
-        setDash(t);
-      }
-      function tick(){
-        if(paused) return;
-        t = Math.max(0, t - 1);
-        render();
-        if(t === 0){
-          clearInterval(timer);
-          safeGo(home);
-        }
-      }
-      function start(){ render(); timer = setInterval(tick, 1000); }
-      function safeGo(url){ try{ window.location.assign(url); } catch(e){ window.location.href = url; } }
-
-      goBtn.addEventListener('click', ()=> safeGo(home));
-      pauseBtn.addEventListener('click', ()=>{
-        paused = !paused;
-        pauseBtn.setAttribute('aria-pressed', String(paused));
-        pauseBtn.textContent = paused ? 'Reanudar contador' : 'Pausar contador';
-      });
-      document.addEventListener('visibilitychange', ()=>{
-        if(document.hidden){ paused = true; pauseBtn.setAttribute('aria-pressed','true'); pauseBtn.textContent = 'Reanudar contador'; }
-      });
-      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){
-        fg.style.transition = 'none'; glow.style.transition = 'none';
-      }
-      start();
-    })();
-  </script>
+  <script defer src="js/analytics.js"></script>
 </body>
 </html>
