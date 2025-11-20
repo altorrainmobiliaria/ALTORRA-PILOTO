@@ -262,10 +262,9 @@
         'Carta laboral o certificación de ingresos',
         'Referencias personales y comerciales',
         'Codeudor o fiador (en algunos casos)',
-        'Depósito de garantía (1-2 meses)'
+        'Depósito de seguridad'
       ],
-      incluido: ['Administración', 'Mantenimiento de zonas comunes'],
-      noIncluido: ['Servicios públicos', 'Internet', 'Gas']
+      nota: 'Las condiciones específicas varían según cada propiedad'
     },
     inversion: {
       factores: ['Ubicación y valorización', 'Potencial de arriendo', 'Estado del inmueble', 'Amenidades del sector'],
@@ -342,9 +341,9 @@
       '¡Hola! 👋 Soy <b>Altorra IA</b>, tu asistente inmobiliario virtual.<br><br>Puedo ayudarte a:<br>• 🏠 Encontrar propiedades<br>• 📍 Conocer zonas de Cartagena<br>• 📋 Resolver dudas sobre servicios<br>• 💬 Conectarte con un asesor<br><br>¿Qué necesitas hoy?',
       '¡Bienvenido a <b>Altorra Inmobiliaria</b>! 🏠<br><br>Soy tu asistente IA. Cuéntame:<br>• ¿Buscas <b>comprar</b>, <b>arrendar</b> o <b>alojamiento por días</b>?<br>• ¿Tienes alguna zona preferida?<br>• ¿Cuál es tu presupuesto?'
     ],
-    comprar: '🏡 <b>Propiedades en Venta</b><br><br>Tenemos apartamentos, casas, lotes y oficinas en las mejores zonas de Cartagena.<br><br><b>Ventajas de comprar:</b><br>• Inversión con valorización<br>• Patrimonio propio<br>• Sin pago mensual de arriendo<br><br>👉 <a href="propiedades-comprar.html" style="color:#d4af37;font-weight:600;">Ver todas las propiedades en venta</a><br><br>¿Qué tipo de propiedad buscas?',
-    arrendar: '🔑 <b>Arriendos en Cartagena</b><br><br>Opciones para todos los presupuestos con contrato y respaldo legal.<br><br><b>Ventajas del arriendo:</b><br>• Flexibilidad<br>• Sin inversión inicial grande<br>• Mantenimiento incluido<br><br>👉 <a href="propiedades-arrendar.html" style="color:#d4af37;font-weight:600;">Ver propiedades en arriendo</a><br><br>¿Prefieres apartamento o casa?',
-    alojamiento: '🌴 <b>Alojamientos por Días</b><br><br>Perfectos para vacaciones, amoblados y con todos los servicios.<br><br><b>Incluyen:</b><br>• WiFi y servicios<br>• Ubicaciones turísticas<br>• Atención personalizada<br><br>👉 <a href="propiedades-alojamiento.html" style="color:#d4af37;font-weight:600;">Ver alojamientos disponibles</a><br><br>¿Cuántas personas serán y qué fechas?',
+    comprar: '🏡 <b>Propiedades en Venta</b><br><br>Contamos con apartamentos, casas, lotes y oficinas en las mejores zonas de Cartagena.<br><br>Te acompañamos en todo el proceso de compra con respaldo jurídico y notarial.<br><br>👉 <a href="propiedades-comprar.html" style="color:#d4af37;font-weight:600;">Ver propiedades en venta</a><br><br>¿Qué tipo de propiedad buscas y cuál es tu presupuesto?',
+    arrendar: '🔑 <b>Arriendos en Cartagena</b><br><br>Contamos con propiedades en arriendo en las mejores zonas de la ciudad, con contratos respaldados legalmente.<br><br>👉 <a href="propiedades-arrendar.html" style="color:#d4af37;font-weight:600;">Ver propiedades en arriendo</a><br><br>¿Qué tipo de propiedad buscas y en qué zona?',
+    alojamiento: '🌴 <b>Alojamientos por Días</b><br><br>Contamos con propiedades amobladas en las mejores zonas turísticas de Cartagena para estadías cortas.<br><br>Cada propiedad tiene diferentes características y amenidades. Un asesor te brindará información detallada según tus necesidades.<br><br>👉 <a href="propiedades-alojamiento.html" style="color:#d4af37;font-weight:600;">Ver alojamientos disponibles</a><br><br>¿Cuántas personas serán y qué fechas tienes en mente?',
     precio: '💰 <b>Rangos de Precio</b><br><br>Dime tu presupuesto y te muestro las mejores opciones:<br><br>• <b>Compra:</b> Desde $150 millones<br>• <b>Arriendo:</b> Desde $1.5 millones/mes<br>• <b>Por días:</b> Desde $200.000/noche<br><br>Ejemplo: "apartamento hasta 300 millones" o "arriendo hasta 2 millones"',
     ubicacion: '📍 <b>Zonas de Cartagena</b><br><br>• <b>Bocagrande</b> - Playa, restaurantes, vida nocturna. Ideal inversión turística.<br>• <b>Manga</b> - Tradicional, central, familiar. Buenos precios.<br>• <b>Centro Histórico</b> - Encanto colonial. Ideal Airbnb.<br>• <b>Castillogrande</b> - Exclusiva, familiar, cerca a playa.<br>• <b>Crespo</b> - Cerca al aeropuerto, tranquila.<br>• <b>Laguito</b> - Frente al mar, turística.<br><br>¿Cuál zona te interesa explorar?',
     contacto: '📞 <b>Contacto Directo</b><br><br>• <b>WhatsApp:</b> +57 300 243 9810<br>• <b>Email:</b> altorrainmobiliaria@gmail.com<br>• <b>Ciudad:</b> Cartagena de Indias<br><br>👉 <a href="contacto.html" style="color:#d4af37;font-weight:600;">Ir a página de contacto</a><br><br>¿Prefieres que te contactemos nosotros?',
@@ -416,13 +415,8 @@ Nosotros invertimos en toda la publicidad y marketing para conseguir clientes po
 • Carta laboral o certificación de ingresos<br>
 • Referencias personales y comerciales<br>
 • Codeudor o fiador (según el caso)<br>
-• Depósito de seguridad (1-2 meses)<br><br>
-<b>Generalmente incluye:</b><br>
-✅ Administración<br>
-✅ Mantenimiento de zonas comunes<br><br>
-<b>No incluye:</b><br>
-❌ Servicios públicos<br>
-❌ Internet/Gas<br><br>
+• Depósito de seguridad<br><br>
+Las condiciones específicas del arriendo (canon, administración, servicios incluidos) varían según cada propiedad.<br><br>
 El contrato es típicamente a 12 meses con posibilidad de renovación.<br><br>
 ¿Qué tipo de propiedad estás buscando para arrendar?`,
     inversion: `💹 <b>Inversión Inmobiliaria en Cartagena</b><br><br>
