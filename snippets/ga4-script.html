@@ -1,0 +1,54 @@
+<!-- ========================================
+     GOOGLE ANALYTICS 4 (GA4) - SNIPPET
+     ======================================== -->
+
+<!-- ⚠️ INSTRUCCIONES:
+     1. Reemplazar 'G-XXXXXXXXXX' con el Measurement ID real de GA4
+     2. Agregar este snippet en el <head> de TODAS las páginas HTML
+     3. Colocar ANTES de cualquier otro script
+     4. También actualizar el ID en js/analytics.js línea 18
+-->
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  // Configuración básica con GDPR compliance
+  gtag('config', 'G-XXXXXXXXXX', {
+    'anonymize_ip': true,
+    'allow_google_signals': false,
+    'allow_ad_personalization_signals': false,
+    'cookie_flags': 'SameSite=None;Secure'
+  });
+</script>
+
+<!-- ========================================
+     EVENTOS PERSONALIZADOS DISPONIBLES
+     ========================================
+
+     Los eventos se envían automáticamente desde js/analytics.js:
+
+     1. page_view - Vista de página (automático)
+     2. property_view - Vista de propiedad específica
+     3. external_click - Click en enlace externo
+     4. whatsapp_click - Click en botón de WhatsApp
+     5. time_on_page - Tiempo en página (al salir)
+     6. search - Búsqueda realizada
+     7. favorite_added - Propiedad agregada a favoritos
+     8. favorite_removed - Propiedad removida de favoritos
+     9. property_compare_add - Propiedad agregada al comparador
+     10. form_submit - Envío de formulario
+     11. calculator_use - Uso de calculadora hipotecaria
+     12. chatbot_message - Mensaje enviado al chatbot
+     13. breadcrumb_click - Click en breadcrumb
+
+     Uso manual:
+     AltorraAnalytics.track('evento_personalizado', {
+       propiedad1: 'valor1',
+       propiedad2: 'valor2'
+     });
+
+     ======================================== -->

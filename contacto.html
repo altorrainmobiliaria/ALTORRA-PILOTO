@@ -2,6 +2,20 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-XXXXXXXXXX', {
+      'anonymize_ip': true,
+      'allow_google_signals': false,
+      'allow_ad_personalization_signals': false,
+      'cookie_flags': 'SameSite=None;Secure'
+    });
+  </script>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Contacto | Altorra Inmobiliaria</title>
   <meta name="description" content="Ponte en contacto con Altorra Inmobiliaria: Administración y arriendo de inmuebles, ventas, avalúos y servicios legales inmobiliarios en Cartagena." />
@@ -26,6 +40,7 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <link href="css/breadcrumbs.css" rel="stylesheet"/>
   <script src="header-footer.js" defer></script>
 
   <!-- Estilos SOLO para esta página -->
@@ -139,6 +154,11 @@
 <body class="page-contact">
   <!-- Header externo -->
   <div id="header-placeholder"></div>
+
+  <!-- Breadcrumbs -->
+  <div style="max-width: var(--page-max); margin: 0 auto; padding: 0 16px;">
+    <div id="breadcrumb-container"></div>
+  </div>
 
   <!-- HERO -->
   <section class="hero-contact" aria-label="Hero de Contacto">
@@ -343,5 +363,6 @@
   </a>
   <script defer src="js/form-validation.js"></script>
   <script defer src="js/favoritos.js"></script>
+  <script defer src="js/breadcrumbs.js"></script>
 </body>
 </html>

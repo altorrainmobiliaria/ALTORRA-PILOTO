@@ -2,6 +2,20 @@
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-XXXXXXXXXX', {
+    'anonymize_ip': true,
+    'allow_google_signals': false,
+    'allow_ad_personalization_signals': false,
+    'cookie_flags': 'SameSite=None;Secure'
+  });
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <meta name="format-detection" content="telephone=no"/>
 <title>Detalle de propiedad | Altorra</title>
@@ -24,6 +38,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="style.css"/>
 <link rel="stylesheet" href="css/comparador.css"/>
+<link rel="stylesheet" href="css/breadcrumbs.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700;800&display=swap" rel="stylesheet"/>
 
 <!-- Cargar comparador antes para que esté disponible -->
@@ -214,6 +229,11 @@ footer{background:#0b0b0b;color:#fff;padding:36px 16px}
 <body>
   <a href="#propertyDetail" class="skip-link">Saltar al contenido principal</a>
   <div id="header-placeholder"></div>
+
+  <!-- Breadcrumbs -->
+  <div style="max-width: var(--page-max); margin: 0 auto; padding: 0 16px;">
+    <div id="breadcrumb-container"></div>
+  </div>
 
   <script>
     if("serviceWorker" in navigator){
@@ -735,6 +755,7 @@ document.addEventListener('DOMContentLoaded', init);
     });
   }
 </script>
+  <script defer src="js/breadcrumbs.js"></script>
 </body>
 <script>
 (function(){

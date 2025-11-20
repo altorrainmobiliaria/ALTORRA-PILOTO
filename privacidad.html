@@ -2,6 +2,20 @@
 <html lang="es" itemscope itemtype="https://schema.org/PrivacyPolicy">
 <head>
   <meta charset="utf-8" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-XXXXXXXXXX', {
+      'anonymize_ip': true,
+      'allow_google_signals': false,
+      'allow_ad_personalization_signals': false,
+      'cookie_flags': 'SameSite=None;Secure'
+    });
+  </script>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Política de Privacidad | Altorra Inmobiliaria</title>
   <meta name="description" content="Tratamiento de datos personales conforme a la Ley 1581 de 2012 y Decreto 1377 de 2013 en Colombia." />
