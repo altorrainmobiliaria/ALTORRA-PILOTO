@@ -87,20 +87,50 @@
 
   // Contexto de la conversación - memoria del chatbot
   let conversationContext = {
-    interest: null,        // comprar, arrendar, dias, propietario
-    propertyType: null,    // apartamento, casa, etc.
-    zone: null,            // bocagrande, manga, etc.
-    budget: null,          // presupuesto
-    beds: null,            // habitaciones
-    baths: null,           // baños
-    guests: null,          // número de personas (para alojamientos)
-    purpose: null,         // vivienda, inversión, trabajo
-    timeline: null,        // urgente, flexible
-    family: null,          // solo, pareja, familia
-    lastQuestion: null,    // última pregunta hecha
-    questionsAsked: [],    // preguntas ya respondidas
+    // Rol del usuario (prioridad alta)
+    role: null,              // 'comprador' | 'arrendatario' | 'turista' | 'propietario_venta' | 'propietario_arriendo'
+    hasGreetedUser: false,   // Si ya saludamos al usuario
+
+    // Datos de búsqueda (compradores/arrendatarios/turistas)
+    interest: null,          // comprar, arrendar, dias
+    propertyType: null,      // apartamento, casa, etc.
+    zone: null,              // bocagrande, manga, etc.
+    budget: null,            // presupuesto
+    beds: null,              // habitaciones
+    baths: null,             // baños
+    guests: null,            // número de personas (para alojamientos)
+    purpose: null,           // vivienda, inversión, trabajo
+    timeline: null,          // urgente, flexible
+    family: null,            // solo, pareja, familia
+
+    // Control de flujo
+    lastQuestion: null,      // última pregunta hecha
+    questionsAsked: [],      // preguntas ya respondidas
     consultationPhase: 'discovery', // discovery, recommendation, closing
-    dataPoints: 0          // cantidad de información recopilada
+    dataPoints: 0,           // cantidad de información recopilada
+
+    // Datos del inmueble del propietario (para venta)
+    ownerPropertyForSale: {
+      type: null,            // apartamento, casa, lote, oficina
+      zone: null,            // barrio/zona
+      price: null,           // valor estimado
+      sqm: null,             // área en m²
+      beds: null,            // habitaciones
+      baths: null,           // baños
+      parking: null,         // parqueadero (sí/no)
+      condition: null        // nuevo, usado, remodelado
+    },
+
+    // Datos del inmueble del propietario (para arriendo)
+    ownerPropertyForRent: {
+      type: null,
+      zone: null,
+      canon: null,           // canon mensual deseado
+      furnished: null,       // amoblado (sí/no)
+      pets: null,            // mascotas permitidas
+      beds: null,
+      availableFrom: null    // fecha disponible
+    }
   };
 
   // Sistema de consultoría - preguntas calificadoras
@@ -808,6 +838,291 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     return null;
   }
 
+  // ============================================
+  // DETECCIÓN Y FLUJO DE PROPIETARIOS
+  // ============================================
+
+  // Detectar si el usuario es propietario (ALTA PRIORIDAD)
+  function detectOwnerIntent(msg) {
+    const text = msg.toLowerCase();
+
+    // Patrones de propietario que quiere VENDER
+    const sellPatterns = [
+      /quiero vender mi (propiedad|apartamento|casa|inmueble|lote|oficina)/,
+      /vender mi (propiedad|apartamento|casa|inmueble)/,
+      /poner en venta mi (propiedad|apartamento|casa|inmueble)/,
+      /tengo (una?|un) (propiedad|apartamento|casa|inmueble|lote) para vender/,
+      /tengo (una?|un) (propiedad|apartamento|casa|inmueble) (que|y) quiero vender/,
+      /necesito vender mi (propiedad|apartamento|casa|inmueble)/,
+      /quiero consignar mi (propiedad|apartamento|casa|inmueble) para venta/
+    ];
+
+    // Patrones de propietario que quiere ARRENDAR/ADMINISTRAR
+    const rentPatterns = [
+      /quiero arrendar mi (propiedad|apartamento|casa|inmueble)/,
+      /arrendar mi (propiedad|apartamento|casa|inmueble)/,
+      /poner en arriendo mi (propiedad|apartamento|casa|inmueble)/,
+      /tengo (una?|un) (propiedad|apartamento|casa|inmueble) para arrendar/,
+      /tengo (una?|un) (propiedad|apartamento|casa|inmueble) para arriendo/,
+      /quiero que administren mi (propiedad|apartamento|casa|inmueble)/,
+      /necesito administrar mi (propiedad|apartamento|casa|inmueble)/,
+      /busco administraci[oó]n para mi (propiedad|apartamento|casa|inmueble)/
+    ];
+
+    // Patrones generales de propietario (sin especificar venta/arriendo)
+    const generalOwnerPatterns = [
+      /soy propietario/,
+      /tengo (una?|un) (propiedad|apartamento|casa|inmueble|lote)/,
+      /mi (propiedad|apartamento|casa|inmueble)/
+    ];
+
+    // Verificar patrones de venta (más específicos primero)
+    for (const pattern of sellPatterns) {
+      if (pattern.test(text)) {
+        return 'propietario_venta';
+      }
+    }
+
+    // Verificar patrones de arriendo
+    for (const pattern of rentPatterns) {
+      if (pattern.test(text)) {
+        return 'propietario_arriendo';
+      }
+    }
+
+    // Verificar patrones generales + contexto
+    for (const pattern of generalOwnerPatterns) {
+      if (pattern.test(text)) {
+        // Si menciona "vender" o "venta" en el mismo mensaje
+        if (/vender|venta/.test(text)) {
+          return 'propietario_venta';
+        }
+        // Si menciona "arrendar", "arriendo" o "administrar"
+        if (/arrendar|arriendo|administrar|administraci[oó]n/.test(text)) {
+          return 'propietario_arriendo';
+        }
+        // Propietario sin especificar
+        return 'propietario_general';
+      }
+    }
+
+    return null;
+  }
+
+  // Preguntas para propietario que quiere VENDER
+  const OWNER_SALE_QUESTIONS = [
+    { field: 'type', question: '¿Qué tipo de inmueble deseas vender?', options: ['Apartamento', 'Casa', 'Lote', 'Oficina', 'Local', 'Otro'] },
+    { field: 'zone', question: '¿En qué zona o barrio está ubicado?' },
+    { field: 'price', question: '¿Cuál es el valor aproximado de venta?' },
+    { field: 'sqm', question: '¿Cuál es el área en metros cuadrados (m²)?' },
+    { field: 'beds', question: '¿Cuántas habitaciones tiene?' },
+    { field: 'baths', question: '¿Cuántos baños tiene?' },
+    { field: 'parking', question: '¿Tiene parqueadero?', options: ['Sí', 'No'] },
+    { field: 'condition', question: '¿En qué estado se encuentra?', options: ['Nuevo', 'Usado buen estado', 'Para remodelar'] }
+  ];
+
+  // Preguntas para propietario que quiere ARRENDAR
+  const OWNER_RENT_QUESTIONS = [
+    { field: 'type', question: '¿Qué tipo de inmueble deseas arrendar?', options: ['Apartamento', 'Casa', 'Oficina', 'Local', 'Otro'] },
+    { field: 'zone', question: '¿En qué zona o barrio está ubicado?' },
+    { field: 'canon', question: '¿Cuál es el canon mensual deseado? (incluye administración)' },
+    { field: 'beds', question: '¿Cuántas habitaciones tiene?' },
+    { field: 'furnished', question: '¿Está amoblado?', options: ['Sí', 'No', 'Parcialmente'] },
+    { field: 'pets', question: '¿Se permiten mascotas?', options: ['Sí', 'No'] },
+    { field: 'availableFrom', question: '¿Desde cuándo estaría disponible?' }
+  ];
+
+  // Obtener siguiente pregunta para propietario
+  function getNextOwnerQuestion(role) {
+    const questions = role === 'propietario_venta' ? OWNER_SALE_QUESTIONS : OWNER_RENT_QUESTIONS;
+    const data = role === 'propietario_venta' ? conversationContext.ownerPropertyForSale : conversationContext.ownerPropertyForRent;
+
+    for (const q of questions) {
+      if (!data[q.field]) {
+        return q;
+      }
+    }
+    return null; // Todas las preguntas respondidas
+  }
+
+  // Generar resumen del inmueble para WhatsApp
+  function generateOwnerSummary(role) {
+    if (role === 'propietario_venta') {
+      const d = conversationContext.ownerPropertyForSale;
+      return `Hola Altorra, soy propietario y quiero VENDER mi inmueble:\n` +
+        `• Tipo: ${d.type || 'No especificado'}\n` +
+        `• Zona: ${d.zone || 'No especificada'}\n` +
+        `• Valor: ${d.price ? formatPrice(d.price) : 'No especificado'}\n` +
+        `• Área: ${d.sqm ? d.sqm + ' m²' : 'No especificada'}\n` +
+        `• Habitaciones: ${d.beds || 'No especificado'}\n` +
+        `• Baños: ${d.baths || 'No especificado'}\n` +
+        `• Parqueadero: ${d.parking || 'No especificado'}\n` +
+        `• Estado: ${d.condition || 'No especificado'}`;
+    } else {
+      const d = conversationContext.ownerPropertyForRent;
+      return `Hola Altorra, soy propietario y quiero ARRENDAR mi inmueble:\n` +
+        `• Tipo: ${d.type || 'No especificado'}\n` +
+        `• Zona: ${d.zone || 'No especificada'}\n` +
+        `• Canon deseado: ${d.canon ? formatPrice(d.canon) : 'No especificado'}\n` +
+        `• Habitaciones: ${d.beds || 'No especificado'}\n` +
+        `• Amoblado: ${d.furnished || 'No especificado'}\n` +
+        `• Mascotas: ${d.pets || 'No especificado'}\n` +
+        `• Disponible desde: ${d.availableFrom || 'No especificado'}`;
+    }
+  }
+
+  // Manejar flujo de propietario
+  function handleOwnerFlow(role, isFirstInteraction = false) {
+    let response = '';
+
+    // Saludo inicial si es la primera interacción
+    if (!conversationContext.hasGreetedUser) {
+      response += '¡Hola! Soy <b>Altorra IA</b>, tu asistente virtual. 👋<br><br>';
+      conversationContext.hasGreetedUser = true;
+    }
+
+    // Explicación del servicio según el tipo
+    if (isFirstInteraction) {
+      if (role === 'propietario_venta') {
+        response += `🏡 <b>Servicio de Venta de Inmuebles</b><br><br>`;
+        response += `Excelente decisión. En ALTORRA te ayudamos a vender tu propiedad de forma rápida y segura.<br><br>`;
+        response += `<b>Te ofrecemos:</b><br>`;
+        response += `✅ Marketing digital en portales, redes y Google Ads<br>`;
+        response += `✅ Gestión de visitas y negociación<br>`;
+        response += `✅ Respaldo jurídico y notarial completo<br><br>`;
+        response += `<b>Honorarios:</b> 3% sobre valor de venta (urbano) / 10% (rural)<br><br>`;
+        response += `Para darte una mejor asesoría, necesito algunos datos de tu inmueble.<br><br>`;
+      } else if (role === 'propietario_arriendo') {
+        response += `🔑 <b>Servicio de Administración y Arriendo</b><br><br>`;
+        response += `Perfecto. En ALTORRA administramos tu propiedad de forma profesional y sin complicaciones.<br><br>`;
+        response += `<b>Te ofrecemos:</b><br>`;
+        response += `✅ Publicidad profesional en portales y redes<br>`;
+        response += `✅ Selección rigurosa de arrendatarios<br>`;
+        response += `✅ Contratos con respaldo legal<br>`;
+        response += `✅ Administración de pagos y cobros<br>`;
+        response += `✅ Inspecciones periódicas<br>`;
+        response += `🔐 Opción de póliza de arrendamiento<br><br>`;
+        response += `<b>Honorarios:</b> 10% + IVA sobre el canon integral<br><br>`;
+        response += `Para darte una mejor asesoría, necesito algunos datos de tu inmueble.<br><br>`;
+      }
+    }
+
+    // Obtener siguiente pregunta
+    const nextQ = getNextOwnerQuestion(role);
+
+    if (nextQ) {
+      response += `<b>${nextQ.question}</b>`;
+      conversationContext.lastQuestion = nextQ.field;
+
+      // Si tiene opciones, mostrarlas como botones
+      if (nextQ.options) {
+        const options = nextQ.options.map(opt => ({
+          text: opt,
+          action: `owner_set_${nextQ.field}_${opt.toLowerCase().replace(/\s+/g, '_')}`
+        }));
+        botReply(response, options);
+      } else {
+        botReply(response);
+      }
+    } else {
+      // Todas las preguntas respondidas - generar resumen
+      const summary = generateOwnerSummary(role);
+      const waLink = `https://wa.me/${CONFIG.whatsappNumber}?text=${encodeURIComponent(summary)}`;
+
+      response += `✅ <b>¡Perfecto!</b> Ya tengo toda la información de tu inmueble.<br><br>`;
+      response += `<b>Resumen:</b><br>`;
+
+      if (role === 'propietario_venta') {
+        const d = conversationContext.ownerPropertyForSale;
+        response += `• ${d.type} en ${d.zone}<br>`;
+        response += `• ${d.beds} hab, ${d.baths} baños, ${d.sqm} m²<br>`;
+        response += `• Valor: ${formatPrice(d.price)}<br>`;
+        response += `• ${d.parking === 'sí' ? 'Con' : 'Sin'} parqueadero, ${d.condition}<br><br>`;
+      } else {
+        const d = conversationContext.ownerPropertyForRent;
+        response += `• ${d.type} en ${d.zone}<br>`;
+        response += `• ${d.beds} hab, Canon: ${formatPrice(d.canon)}<br>`;
+        response += `• ${d.furnished === 'sí' ? 'Amoblado' : 'Sin amoblar'}, Mascotas: ${d.pets}<br><br>`;
+      }
+
+      response += `Un asesor te contactará pronto. También puedes escribirnos directamente:<br><br>`;
+      response += `<a href="${waLink}" target="_blank" rel="noopener" class="chat-whatsapp-link">`;
+      response += `<svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.789l4.94-1.293A11.96 11.96 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>`;
+      response += `Contactar asesor con mi información</a>`;
+
+      botReply(response);
+      conversationContext.consultationPhase = 'closing';
+    }
+
+    saveContext();
+  }
+
+  // Aplicar respuesta del propietario a la última pregunta
+  function applyOwnerAnswer(msg) {
+    const role = conversationContext.role;
+    if (!role || !role.startsWith('propietario_')) return false;
+
+    const last = conversationContext.lastQuestion;
+    if (!last) return false;
+
+    const data = role === 'propietario_venta' ? conversationContext.ownerPropertyForSale : conversationContext.ownerPropertyForRent;
+    const text = msg.toLowerCase().trim();
+
+    // Intentar parsear la respuesta según el campo
+    switch (last) {
+      case 'type':
+        if (/apartamento|apto/.test(text)) data.type = 'Apartamento';
+        else if (/casa/.test(text)) data.type = 'Casa';
+        else if (/lote|terreno/.test(text)) data.type = 'Lote';
+        else if (/oficina/.test(text)) data.type = 'Oficina';
+        else if (/local/.test(text)) data.type = 'Local';
+        else data.type = msg;
+        break;
+      case 'zone':
+        data.zone = msg;
+        break;
+      case 'price':
+      case 'canon':
+        const parsed = parseBudget(msg);
+        if (parsed) data[last] = parsed;
+        else data[last] = msg;
+        break;
+      case 'sqm':
+        const sqmMatch = msg.match(/(\d+)/);
+        data.sqm = sqmMatch ? parseInt(sqmMatch[1]) : msg;
+        break;
+      case 'beds':
+      case 'baths':
+        const numMatch = msg.match(/(\d+)/);
+        if (numMatch) data[last] = parseInt(numMatch[1]);
+        else if (WORD_NUMBERS[text]) data[last] = WORD_NUMBERS[text];
+        else data[last] = msg;
+        break;
+      case 'parking':
+      case 'furnished':
+      case 'pets':
+        if (/s[ií]|si|tiene|con/.test(text)) data[last] = 'Sí';
+        else if (/no|sin/.test(text)) data[last] = 'No';
+        else data[last] = msg;
+        break;
+      case 'condition':
+        if (/nuevo/.test(text)) data.condition = 'Nuevo';
+        else if (/usado|buen/.test(text)) data.condition = 'Usado buen estado';
+        else if (/remodelar|arreglar/.test(text)) data.condition = 'Para remodelar';
+        else data.condition = msg;
+        break;
+      case 'availableFrom':
+        data.availableFrom = msg;
+        break;
+      default:
+        return false;
+    }
+
+    conversationContext.lastQuestion = null;
+    saveContext();
+    return true;
+  }
+
   // Opciones rápidas iniciales
   const QUICK_OPTIONS = [
     { text: 'Quiero comprar', action: 'comprar' },
@@ -1103,6 +1418,19 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
         botReply(RESPONSES.propietarioArriendos);
         break;
 
+      // Nuevos handlers para flujo de consultoría de propietarios
+      case 'owner_set_venta':
+        addMessage('Quiero vender mi propiedad', false);
+        conversationContext.role = 'propietario_venta';
+        handleOwnerFlow('propietario_venta', true);
+        break;
+
+      case 'owner_set_arriendo':
+        addMessage('Quiero arrendar mi propiedad', false);
+        conversationContext.role = 'propietario_arriendo';
+        handleOwnerFlow('propietario_arriendo', true);
+        break;
+
       case 'ver_ambas':
         // Mostrar propiedades tanto en venta como arriendo según el contexto
         addMessage('Ver ambas opciones', false);
@@ -1320,6 +1648,31 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
       }
     }
 
+    // Aplicar multiplicadores de prioridad para intenciones críticas
+    // Las intenciones de propietario deben tener ALTA prioridad sobre búsquedas
+    if (intents.propietarioVenta.score > 0) {
+      intents.propietarioVenta.score *= 2.5; // Alta prioridad
+    }
+    if (intents.propietarioArriendos.score > 0) {
+      intents.propietarioArriendos.score *= 2.5; // Alta prioridad
+    }
+    if (intents.propietario.score > 0) {
+      intents.propietario.score *= 2.0; // Prioridad media-alta
+    }
+
+    // Las intenciones de alojamiento deben tener prioridad sobre arriendo genérico
+    if (intents.alojamiento.score > 0 && intents.arrendar.score > 0) {
+      // Si hay indicios de alojamiento por días, priorizar sobre arriendo
+      if (msg.match(/días|dias|vacaciones|hospedaje|temporal|por.*noche/i)) {
+        intents.alojamiento.score *= 1.8;
+      }
+    }
+
+    // Penalizar 'comprar' si hay patrones de propietario
+    if ((intents.propietarioVenta.score > 0 || intents.propietarioArriendos.score > 0) && intents.comprar.score > 0) {
+      intents.comprar.score *= 0.3; // Reducir significativamente
+    }
+
     // Obtener la intención con mayor puntuación
     let bestIntent = null;
     let bestScore = 0;
@@ -1366,13 +1719,20 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     };
 
     // Detectar operación - mejorado con más patrones
-    if (msg.match(/comprar|compra|venta|vender|inversión|inversion|adquirir|busco.*para.*comprar|quiero.*comprar|necesito.*comprar/i)) {
-      criteria.operation = 'comprar';
-    } else if (msg.match(/arrendar|arriendo|alquiler|alquilar|rentar|renta|busco.*arriendo|necesito.*arrendar|mensual/i)) {
-      criteria.operation = 'arrendar';
-    } else if (msg.match(/días|dias|alojamiento|hospedaje|vacaciones|temporal|por.*noche|semana.*santa|fin.*semana/i)) {
-      criteria.operation = 'dias';
+    // IMPORTANTE: No detectar "vender/venta" como compra cuando el usuario es propietario
+    const isOwnerPattern = /quiero (vender|arrendar) mi|vender mi (propiedad|casa|apartamento|inmueble)|arrendar mi (propiedad|casa|apartamento|inmueble)|poner en (venta|arriendo) mi|busco quien (compre|arriende) mi/i;
+
+    if (!msg.match(isOwnerPattern)) {
+      // Solo si NO es un propietario, entonces buscar operación de compra/arriendo
+      if (msg.match(/comprar|compra|en venta|busco.*venta|inversión|inversion|adquirir|busco.*para.*comprar|quiero.*comprar|necesito.*comprar/i)) {
+        criteria.operation = 'comprar';
+      } else if (msg.match(/arrendar|arriendo|alquiler|alquilar|rentar|renta|busco.*arriendo|necesito.*arrendar|mensual|busco.*para.*arrendar/i)) {
+        criteria.operation = 'arrendar';
+      } else if (msg.match(/días|dias|alojamiento|hospedaje|vacaciones|temporal|por.*noche|semana.*santa|fin.*semana/i)) {
+        criteria.operation = 'dias';
+      }
     }
+    // Si es patrón de propietario, NO establecer operación (se manejará en processMessage)
 
     // Inferir operación por contexto de precio si no se detectó
     if (!criteria.operation) {
@@ -1565,6 +1925,45 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     const { intent, score } = analyzeIntent(msg);
     const criteria = extractSearchCriteria(msg);
 
+    // ========== PRIORIDAD ALTA: DETECCIÓN DE PROPIETARIOS ==========
+    // Evaluar PRIMERO si el usuario es un propietario que quiere vender/arrendar
+    const ownerIntent = detectOwnerIntent(msg);
+    if (ownerIntent) {
+      // Si ya tiene rol de propietario, continuar el flujo
+      if (conversationContext.role && conversationContext.role.startsWith('propietario_')) {
+        handleOwnerFlow(conversationContext.role, false);
+        return;
+      }
+      // Nueva detección de propietario
+      if (ownerIntent === 'propietario_venta') {
+        conversationContext.role = 'propietario_venta';
+        handleOwnerFlow('propietario_venta', true);
+        return;
+      } else if (ownerIntent === 'propietario_arriendo') {
+        conversationContext.role = 'propietario_arriendo';
+        handleOwnerFlow('propietario_arriendo', true);
+        return;
+      } else if (ownerIntent === 'propietario_general') {
+        // Preguntar qué servicio necesita
+        const html = `¡Excelente! Nos especializamos en ayudar a propietarios.<br><br>¿Qué servicio te interesa?`;
+        botReply(html, [
+          { text: 'Quiero vender mi propiedad', action: 'owner_set_venta' },
+          { text: 'Quiero arrendar mi propiedad', action: 'owner_set_arriendo' }
+        ]);
+        return;
+      }
+    }
+
+    // Si ya es propietario y responde algo, procesar como continuación del flujo
+    if (conversationContext.role && conversationContext.role.startsWith('propietario_')) {
+      // Aplicar la respuesta a la pregunta pendiente
+      applyOwnerAnswer(msg);
+      handleOwnerFlow(conversationContext.role, false);
+      return;
+    }
+
+    // ========== FIN DETECCIÓN DE PROPIETARIOS ==========
+
     // Actualizar contexto de la conversación
     updateContext(msg, criteria);
 
@@ -1709,7 +2108,21 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     if (score > 0) {
       switch (intent) {
         case 'saludo':
-          botReply(RESPONSES.greeting[Math.floor(Math.random() * RESPONSES.greeting.length)], QUICK_OPTIONS);
+          if (!conversationContext.hasGreetedUser) {
+            // Primera interacción - saludo más completo y guía
+            conversationContext.hasGreetedUser = true;
+            const welcomeHtml = `¡Bienvenido a <b>Altorra Inmobiliaria</b>! 🏠<br><br>
+Soy tu asistente virtual y puedo ayudarte con:<br><br>
+• <b>Comprar</b> - Encuentra tu inmueble ideal<br>
+• <b>Arrendar</b> - Opciones de arriendo a largo plazo<br>
+• <b>Alojamientos</b> - Estadías por días en Cartagena<br>
+• <b>Vender o Arrendar tu propiedad</b> - Servicios para propietarios<br><br>
+¿Qué te gustaría hacer hoy?`;
+            botReply(welcomeHtml, QUICK_OPTIONS);
+          } else {
+            // Ya saludó antes - saludo más corto
+            botReply(RESPONSES.greeting[Math.floor(Math.random() * RESPONSES.greeting.length)], QUICK_OPTIONS);
+          }
           return;
         case 'estado':
           botReply('¡Muy bien, gracias por preguntar! 😊<br><br>Estoy aquí para ayudarte con tu búsqueda inmobiliaria en Cartagena. ¿Qué necesitas hoy?', QUICK_OPTIONS);
@@ -1718,6 +2131,48 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
           botReply('¡Hasta pronto! 👋<br><br>Fue un gusto ayudarte. Recuerda que puedes volver cuando quieras.<br><br>Si necesitas atención inmediata, contáctanos por WhatsApp: <b>+57 300 243 9810</b>');
           return;
         case 'gracias':
+          // Detectar si es confirmación en flujo activo vs agradecimiento real
+          const isActiveFlow = conversationContext.lastQuestion ||
+            conversationContext.dataPoints > 0 ||
+            conversationContext.consultationPhase === 'discovery' ||
+            conversationContext.interest;
+
+          // Palabras que son claramente agradecimiento
+          const isClearThanks = msg.match(/gracias|muchas gracias|agradezco|te agradezco|muy amable/i);
+
+          // Palabras de confirmación que podrían ser continuación
+          const isConfirmation = msg.match(/^(ok|bien|bueno|listo|vale|perfecto|claro|entendido|de acuerdo|sí|si)$/i);
+
+          if (isActiveFlow && isConfirmation && !isClearThanks) {
+            // Es una confirmación en flujo activo - pedir siguiente información
+            let followUpResponse = '¡Perfecto! ';
+
+            if (conversationContext.lastQuestion) {
+              // Continuar la consultoría
+              const nextQuestion = getNextConsultationQuestion();
+              if (nextQuestion) {
+                followUpResponse += `<b>${nextQuestion.question}</b>`;
+                conversationContext.lastQuestion = nextQuestion.field;
+                const options = nextQuestion.options ? nextQuestion.options.map(opt => ({
+                  text: opt.text,
+                  action: `set_${nextQuestion.field}_${opt.value}`
+                })) : null;
+                botReply(followUpResponse, options);
+              } else {
+                // Ya terminó la consultoría - mostrar recomendaciones
+                const results = getSmartRecommendations();
+                const recommendation = generatePersonalizedRecommendation(results);
+                botReply(recommendation);
+              }
+            } else {
+              // No hay pregunta pendiente, ofrecer opciones
+              followUpResponse += '¿En qué más puedo ayudarte?';
+              botReply(followUpResponse, QUICK_OPTIONS);
+            }
+            return;
+          }
+
+          // Es un agradecimiento real
           botReply(RESPONSES.gracias);
           return;
         case 'ayuda':
