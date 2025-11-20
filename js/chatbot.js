@@ -99,6 +99,7 @@
     beds: null,              // habitaciones
     baths: null,             // baños
     guests: null,            // número de personas (para alojamientos)
+    stayDates: null,         // texto de las fechas para alojamientos (ej: "del 5 al 10 de enero")
     purpose: null,           // vivienda, inversión, trabajo
     timeline: null,          // urgente, flexible
     family: null,            // solo, pareja, familia
@@ -365,12 +366,24 @@
       // Crear mensaje de WhatsApp con todo el contexto
       const waSummary = encodeURIComponent(
         `Hola Altorra, estoy interesado en una propiedad:\n` +
-        `• Operación: ${ctx.interest === 'comprar' ? 'Compra' : ctx.interest === 'arrendar' ? 'Arriendo' : ctx.interest || 'No definido'}\n` +
+        `• Operación: ${ctx.interest === 'comprar'
+          ? 'Compra'
+          : ctx.interest === 'arrendar'
+          ? 'Arriendo'
+          : ctx.interest === 'dias'
+          ? 'Alojamiento por días'
+          : ctx.interest || 'No definido'}\n` +
         `• Tipo: ${ctx.propertyType || 'No definido'}\n` +
         `• Zona: ${ctx.zone ? ctx.zone.charAt(0).toUpperCase() + ctx.zone.slice(1) : 'No definida'}\n` +
         `• Presupuesto: ${ctx.budget ? formatPrice(ctx.budget) : 'No definido'}\n` +
         `• Habitaciones: ${ctx.beds || 'No definido'}\n` +
-        `• Propósito: ${ctx.purpose === 'vivienda' ? 'Para vivir' : ctx.purpose === 'inversion' ? 'Inversión' : ctx.purpose || 'No definido'}`
+        `• Personas: ${ctx.guests || 'No definido'}\n` +
+        `• Fechas: ${ctx.stayDates || 'No definidas'}\n` +
+        `• Propósito: ${ctx.purpose === 'vivienda'
+          ? 'Para vivir'
+          : ctx.purpose === 'inversion'
+          ? 'Inversión'
+          : ctx.purpose || 'No definido'}`
       );
 
       intro += `
@@ -693,6 +706,9 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     if (criteria.guests) {
       conversationContext.guests = criteria.guests;
     }
+    if (criteria.stayDates) {
+      conversationContext.stayDates = criteria.stayDates;
+    }
 
     // Detectar propósito
     if (msg.match(/invertir|inversión|inversion|negocio|rentar|airbnb/i)) {
@@ -792,11 +808,41 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
   function answerFromKnowledge(msg) {
     const text = msg.toLowerCase();
 
-    // PROPIETARIOS
+    // PROPIETARIOS - PREGUNTAS GENERALES
     if (/soy propietario|tengo una propiedad|tengo un inmueble|mi inmueble|mi apartamento|mi casa/.test(text)) {
-      if (/vender mi|poner en venta|quiero vender/.test(text)) return RESPONSES.propietarioVenta;
-      if (/arrendar mi|administrar mi|poner en arriendo/.test(text)) return RESPONSES.propietarioArriendos;
+      if (/vender mi|poner en venta|quiero vender|venta de mi/.test(text)) return RESPONSES.propietarioVenta;
+      if (/arrendar mi|administrar mi|poner en arriendo|arriendo de mi/.test(text)) return RESPONSES.propietarioArriendos;
       return RESPONSES.propietarioGeneral;
+    }
+
+    // HONORARIOS ADMINISTRACIÓN ARRIENDOS
+    if (/administraci[oó]n.*(arriendo|inmueble|apartamento|casa)|cu[aá]nto cobran.*administrar|porcentaje.*administraci[oó]n|honorarios.*administraci[oó]n/.test(text)) {
+      const adm = SITE_KNOWLEDGE.servicioAdministracion;
+      let html = `🔑 <b>Servicio de Administración de Arriendos</b><br><br>`;
+      html += `<b>Honorarios:</b> ${adm.honorarios}<br><br>`;
+      html += `<b>Incluye:</b><br>`;
+      adm.beneficios.forEach(b => {
+        html += `• ${b}<br>`;
+      });
+      html += `<br>Si deseas, puedo tomar unos datos básicos de tu inmueble o te conecto directo con un asesor.`;
+      return html;
+    }
+
+    // HONORARIOS VENTA
+    if (/honorarios.*venta|porcentaje.*venta|cu[aá]nto cobran.*vender|cobran.*comisi[oó]n.*venta/.test(text)) {
+      const venta = SITE_KNOWLEDGE.servicioVenta;
+      let html = `🏡 <b>Servicio de Venta de Inmuebles</b><br><br>`;
+      html += `<b>Honorarios:</b> ${venta.honorarios}<br><br>`;
+      html += `<b>Te ofrecemos:</b><br>`;
+      venta.beneficios.forEach(b => {
+        html += `• ${b}<br>`;
+      });
+      html += `<br><b>Información que solemos solicitar:</b><br>`;
+      venta.infoRequerida.forEach(i => {
+        html += `• ${i}<br>`;
+      });
+      html += `<br>¿Te gustaría que te asesoremos en la venta de tu inmueble?`;
+      return html;
     }
 
     // PROCESOS
@@ -854,7 +900,12 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
       /tengo (una?|un) (propiedad|apartamento|casa|inmueble|lote) para vender/,
       /tengo (una?|un) (propiedad|apartamento|casa|inmueble) (que|y) quiero vender/,
       /necesito vender mi (propiedad|apartamento|casa|inmueble)/,
-      /quiero consignar mi (propiedad|apartamento|casa|inmueble) para venta/
+      /quiero consignar mi (propiedad|apartamento|casa|inmueble) para venta/,
+      // Frases cortas tipo "quiero vender"
+      /^quiero vender$/,
+      /quiero vender\b/,
+      /vender una (propiedad|casa|apartamento|oficina|lote)/,
+      /vender un (inmueble|apartamento|lote|local)/
     ];
 
     // Patrones de propietario que quiere ARRENDAR/ADMINISTRAR
@@ -1292,16 +1343,37 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
       results = results.filter(p => p.type === 'oficina');
     }
 
-    // Filtrar por zona/barrio
-    const zones = ['bocagrande', 'manga', 'centro', 'crespo', 'castillogrande'];
-    zones.forEach(zone => {
-      if (q.includes(zone)) {
-        results = results.filter(p =>
-          (p.neighborhood && p.neighborhood.toLowerCase().includes(zone)) ||
-          (p.city && p.city.toLowerCase().includes(zone))
-        );
+    // Filtrar por zona/barrio usando todas las zonas conocidas
+    const allZones = Object.keys(SITE_KNOWLEDGE.zones);
+    const aliases = SITE_KNOWLEDGE.zoneAliases || {};
+
+    // Primero revisar aliases (frases como "pie de la popa")
+    let detectedZone = null;
+    for (const [alias, zoneKey] of Object.entries(aliases)) {
+      if (q.includes(alias)) {
+        detectedZone = zoneKey;
+        break;
       }
-    });
+    }
+
+    // Si no se detectó por alias, revisar zonas directas
+    if (!detectedZone) {
+      for (const zone of allZones) {
+        if (q.includes(zone)) {
+          detectedZone = zone;
+          break;
+        }
+      }
+    }
+
+    if (detectedZone) {
+      const z = detectedZone.toLowerCase();
+      results = results.filter(p =>
+        (p.neighborhood && p.neighborhood.toLowerCase().includes(z)) ||
+        (p.city && p.city.toLowerCase().includes(z)) ||
+        (p.address && p.address.toLowerCase().includes(z))
+      );
+    }
 
     // Filtrar por habitaciones
     const bedsMatch = q.match(/(\d+)\s*(habitacion|cuarto|alcoba|hab)/i);
@@ -1327,6 +1399,7 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
         addMessage('Quiero comprar una propiedad', false);
         conversationContext.interest = 'comprar';
         conversationContext.consultationPhase = 'discovery';
+        conversationContext.role = 'comprador';
 
         // Iniciar consultoría en lugar de mostrar propiedades al azar
         let comprarResponse = `🏡 <b>¡Excelente decisión!</b> Comprar un inmueble en Cartagena es una gran inversión.<br><br>`;
@@ -1352,6 +1425,7 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
         addMessage('Busco arriendo', false);
         conversationContext.interest = 'arrendar';
         conversationContext.consultationPhase = 'discovery';
+        conversationContext.role = 'arrendatario';
 
         let arrendarResponse = `🔑 <b>¡Perfecto!</b> Tenemos opciones de arriendo para todos los presupuestos.<br><br>`;
         arrendarResponse += `Para recomendarte las mejores opciones, cuéntame un poco más:<br><br>`;
@@ -1374,6 +1448,7 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
       case 'alojamiento':
         addMessage('Alojamiento por días', false);
         conversationContext.interest = 'dias';
+        conversationContext.role = 'turista';
 
         let alojamientoResponse = `🌴 <b>¡Cartagena te espera!</b><br><br>`;
         alojamientoResponse += `Para encontrar el alojamiento ideal, necesito saber:<br><br>`;
@@ -1606,7 +1681,7 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
       },
       propietarioVenta: {
         score: 0,
-        keywords: ['vender mi', 'poner en venta', 'quiero vender mi', 'vendo mi', 'quiero vender mi propiedad', 'necesito vender mi', 'busco vender mi']
+        keywords: ['vender mi', 'poner en venta', 'quiero vender mi', 'vendo mi', 'quiero vender mi propiedad', 'necesito vender mi', 'busco vender mi', 'quiero vender', 'vender propiedad', 'vender apartamento', 'vender casa']
       },
       comparar: {
         score: 0,
@@ -1715,7 +1790,8 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
       baths: null,
       guests: null,
       maxPrice: null,
-      minPrice: null
+      minPrice: null,
+      stayDates: null
     };
 
     // Detectar operación - mejorado con más patrones
@@ -1833,6 +1909,17 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
       if (somosMatch) {
         criteria.guests = parseInt(somosMatch[1]);
       }
+    }
+
+    // Detectar rango de fechas (para alojamientos) en formato sencillo
+    // Ej: "del 5 al 10 de enero" o "5/01 al 10/01"
+    const dateRange1 = msg.match(/del\s+([^,]+?)\s+(?:al|hasta)\s+([^,\.]+)/i);
+    const dateRange2 = msg.match(/(\d{1,2}\/\d{1,2}(?:\/\d{2,4})?)\s*(?:al|-|a)\s*(\d{1,2}\/\d{1,2}(?:\/\d{2,4})?)/i);
+
+    if (dateRange1) {
+      criteria.stayDates = `del ${dateRange1[1].trim()} al ${dateRange1[2].trim()}`;
+    } else if (dateRange2) {
+      criteria.stayDates = `${dateRange2[1]} al ${dateRange2[2]}`;
     }
 
     return criteria;
@@ -2267,6 +2354,23 @@ Soy tu asistente virtual y puedo ayudarte con:<br><br>
           botReply(RESPONSES.ubicacion);
           return;
       }
+    }
+
+    // Evitar mostrar propiedades al azar cuando el mensaje parece de propietario
+    if (/vender\b|arrendar\b|administrar\b/.test(msg) &&
+        !criteria.operation && !criteria.type && !criteria.zone) {
+
+      botReply(
+        'Entiendo que quieres gestionar un inmueble (vender, arrendar o administrar), ' +
+        'pero no logré identificar todos los datos.<br><br>' +
+        '¿Eres propietario del inmueble o estás buscando uno para comprar/arrendar?',
+        [
+          { text: 'Soy propietario', action: 'propietario' },
+          { text: 'Busco comprar', action: 'comprar' },
+          { text: 'Busco arrendar', action: 'arrendar' }
+        ]
+      );
+      return;
     }
 
     // Buscar propiedades con el texto completo como último recurso
