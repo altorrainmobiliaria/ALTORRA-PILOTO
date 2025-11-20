@@ -1415,10 +1415,11 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     // Intentar parsear la respuesta según el campo
     switch (last) {
       case 'type':
-        if (/apartamento|apto/.test(text)) data.type = 'Apartamento';
-        else if (/casa/.test(text)) data.type = 'Casa';
-        else if (/lote|terreno/.test(text)) data.type = 'Lote';
-        else if (/oficina/.test(text)) data.type = 'Oficina';
+        // Usar diccionario de sinónimos para detectar tipo de propiedad
+        if (matchesSynonym(text, 'apartment')) data.type = 'Apartamento';
+        else if (matchesSynonym(text, 'house')) data.type = 'Casa';
+        else if (matchesSynonym(text, 'lot')) data.type = 'Lote';
+        else if (matchesSynonym(text, 'office')) data.type = 'Oficina';
         else if (/local/.test(text)) data.type = 'Local';
         else data.type = msg;
         break;
@@ -1445,8 +1446,9 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
       case 'parking':
       case 'furnished':
       case 'pets':
-        if (/s[ií]|si|tiene|con/.test(text)) data[last] = 'Sí';
-        else if (/no|sin/.test(text)) data[last] = 'No';
+        // Usar diccionario de sinónimos para yes/no
+        if (matchesSynonym(text, 'yes') || /tiene|con/.test(text)) data[last] = 'Sí';
+        else if (matchesSynonym(text, 'no') || /sin/.test(text)) data[last] = 'No';
         else data[last] = msg;
         break;
       case 'condition':
