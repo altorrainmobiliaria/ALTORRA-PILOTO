@@ -20,7 +20,9 @@
     'tres': 3,
     'cuatro': 4,
     'cinco': 5,
-    'seis': 6
+    'seis': 6,
+    'siete': 7,
+    'ocho': 8
   };
 
   // Función para parsear presupuesto en múltiples formatos
@@ -91,6 +93,7 @@
     budget: null,          // presupuesto
     beds: null,            // habitaciones
     baths: null,           // baños
+    guests: null,          // número de personas (para alojamientos)
     purpose: null,         // vivienda, inversión, trabajo
     timeline: null,        // urgente, flexible
     family: null,          // solo, pareja, familia
@@ -258,15 +261,23 @@
     return score;
   }
 
+  // Función auxiliar para filtrar por operación
+  function filterByOperation(props, operation) {
+    if (!operation) return props;
+    if (operation === 'dias') {
+      // Alojamientos pueden tener operación 'dias' o 'alojar'
+      return props.filter(p => p.operation === 'dias' || p.operation === 'alojar');
+    }
+    return props.filter(p => p.operation === operation);
+  }
+
   // Función para hacer recomendaciones inteligentes basadas en el perfil
   function getSmartRecommendations() {
     const ctx = conversationContext;
     let results = [...properties];
 
-    // Solo filtrar por operación (lo imprescindible)
-    if (ctx.interest) {
-      results = results.filter(p => p.operation === ctx.interest);
-    }
+    // Filtrar por operación (lo imprescindible)
+    results = filterByOperation(results, ctx.interest);
 
     // Calcular puntuación para cada propiedad
     results.forEach(p => {
@@ -280,10 +291,7 @@
 
     // Si no hay resultados con puntuación, mostrar los mejores sin filtro estricto
     if (results.length === 0) {
-      results = [...properties];
-      if (ctx.interest) {
-        results = results.filter(p => p.operation === ctx.interest);
-      }
+      results = filterByOperation([...properties], ctx.interest);
       // Ordenar por presupuesto si existe
       if (ctx.budget) {
         results.sort((a, b) => Math.abs(a.price - ctx.budget) - Math.abs(b.price - ctx.budget));
@@ -651,6 +659,9 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     }
     if (criteria.maxPrice || criteria.minPrice) {
       conversationContext.budget = criteria.maxPrice || criteria.minPrice;
+    }
+    if (criteria.guests) {
+      conversationContext.guests = criteria.guests;
     }
 
     // Detectar propósito
@@ -1226,6 +1237,7 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
       zone: null,
       beds: null,
       baths: null,
+      guests: null,
       maxPrice: null,
       minPrice: null
     };
@@ -1317,6 +1329,29 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
       }
     }
 
+    // Detectar número de personas/huéspedes (para alojamientos)
+    const guestsMatch = msg.match(/(\d+)\s*(persona|personas|huésped|huespedes|huéspedes|adulto|adultos)/i);
+    if (guestsMatch) {
+      criteria.guests = parseInt(guestsMatch[1]);
+    }
+
+    // Detectar número de personas con palabras
+    if (!criteria.guests) {
+      const guestsWordMatch = msg.match(/(somos|para|seremos)\s*(una|un|dos|tres|cuatro|cinco|seis|siete|ocho)/i);
+      if (guestsWordMatch) {
+        const word = guestsWordMatch[2].toLowerCase();
+        criteria.guests = WORD_NUMBERS[word] || null;
+      }
+    }
+
+    // Detectar "somos X" sin la palabra persona
+    if (!criteria.guests) {
+      const somosMatch = msg.match(/somos\s*(\d+)/i);
+      if (somosMatch) {
+        criteria.guests = parseInt(somosMatch[1]);
+      }
+    }
+
     return criteria;
   }
 
@@ -1324,10 +1359,8 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
   function smartSearchProperties(criteria) {
     let results = [...properties];
 
-    // Filtrar por operación
-    if (criteria.operation) {
-      results = results.filter(p => p.operation === criteria.operation);
-    }
+    // Filtrar por operación usando la función auxiliar
+    results = filterByOperation(results, criteria.operation);
 
     // Filtrar por tipo
     if (criteria.type) {
@@ -1413,7 +1446,17 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     updateContext(msg, criteria);
 
     // Si hay criterios de búsqueda específicos, buscar propiedades
-    const hasCriteria = criteria.operation || criteria.type || criteria.zone || criteria.beds || criteria.maxPrice;
+    const hasCriteria = criteria.operation || criteria.type || criteria.zone || criteria.beds || criteria.maxPrice || criteria.guests;
+
+    // Si el usuario ya está en contexto de alojamiento y menciona personas, usar ese contexto
+    if (!criteria.operation && conversationContext.interest === 'dias' && criteria.guests) {
+      criteria.operation = 'dias';
+    }
+
+    // Si el usuario ya está en otro contexto y da información relevante, usar ese contexto
+    if (!criteria.operation && conversationContext.interest && (criteria.type || criteria.zone || criteria.beds || criteria.maxPrice)) {
+      criteria.operation = conversationContext.interest;
+    }
 
     if (hasCriteria) {
       // Si no se especificó operación pero tenemos tipo o zona, preguntar inteligentemente
