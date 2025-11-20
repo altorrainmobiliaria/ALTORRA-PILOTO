@@ -19,6 +19,53 @@
   let hasGreeted = false;
   let welcomeBubbleShown = false;
 
+  // Contexto de la conversación - memoria del chatbot
+  let conversationContext = {
+    interest: null,        // comprar, arrendar, dias, propietario
+    propertyType: null,    // apartamento, casa, etc.
+    zone: null,            // bocagrande, manga, etc.
+    budget: null,          // presupuesto
+    beds: null,            // habitaciones
+    baths: null,           // baños
+    purpose: null,         // vivienda, inversión, trabajo
+    timeline: null,        // urgente, flexible
+    family: null,          // solo, pareja, familia
+    lastQuestion: null,    // última pregunta hecha
+    questionsAsked: []     // preguntas ya respondidas
+  };
+
+  // Conocimiento del proceso inmobiliario
+  const REAL_ESTATE_KNOWLEDGE = {
+    procesoCompra: {
+      pasos: [
+        'Definir presupuesto y pre-aprobación de crédito si aplica',
+        'Búsqueda de propiedades según criterios',
+        'Visitas y evaluación de opciones',
+        'Negociación del precio',
+        'Promesa de compraventa con arras',
+        'Estudio de títulos y libertad del inmueble',
+        'Firma de escritura pública',
+        'Pago y registro de la propiedad'
+      ],
+      documentos: ['Cédula', 'Certificado de ingresos', 'Extractos bancarios', 'Declaración de renta'],
+      tiempoEstimado: '30-60 días desde la promesa'
+    },
+    procesoArriendo: {
+      requisitos: [
+        'Carta laboral o certificación de ingresos',
+        'Referencias personales y comerciales',
+        'Codeudor o fiador (en algunos casos)',
+        'Depósito de garantía (1-2 meses)'
+      ],
+      incluido: ['Administración', 'Mantenimiento de zonas comunes'],
+      noIncluido: ['Servicios públicos', 'Internet', 'Gas']
+    },
+    inversion: {
+      factores: ['Ubicación y valorización', 'Potencial de arriendo', 'Estado del inmueble', 'Amenidades del sector'],
+      rentabilidad: 'En Cartagena, un arriendo puede generar 0.4% a 0.8% mensual del valor del inmueble'
+    }
+  };
+
   // Conocimiento completo del sitio web y negocio
   const SITE_KNOWLEDGE = {
     pages: {
@@ -138,8 +185,145 @@ En ALTORRA te ayudamos a vender o arrendar tu inmueble con respaldo profesional.
 • 🏷️ <b>Vender:</b> Marketing, negociación y respaldo legal<br>
 • 🔑 <b>Arrendar:</b> Administración completa, selección de arrendatarios<br><br>
 Nosotros invertimos en toda la publicidad y marketing para conseguir clientes potenciales.<br><br>
-👉 <a href="publicar-propiedad.html" style="color:#d4af37;font-weight:600;">Ir al formulario de publicación</a>`
+👉 <a href="publicar-propiedad.html" style="color:#d4af37;font-weight:600;">Ir al formulario de publicación</a>`,
+    // Respuestas sobre procesos inmobiliarios
+    procesoCompra: `📋 <b>Proceso de Compra de Inmueble</b><br><br>
+<b>Pasos principales:</b><br>
+1️⃣ Definir presupuesto y pre-aprobación de crédito<br>
+2️⃣ Búsqueda según tus criterios<br>
+3️⃣ Visitas y evaluación<br>
+4️⃣ Negociación del precio<br>
+5️⃣ Promesa de compraventa<br>
+6️⃣ Estudio de títulos<br>
+7️⃣ Escritura pública<br>
+8️⃣ Registro de la propiedad<br><br>
+<b>Documentos necesarios:</b><br>
+• Cédula de ciudadanía<br>
+• Certificación de ingresos<br>
+• Extractos bancarios<br>
+• Declaración de renta (si aplica)<br><br>
+⏱️ <b>Tiempo estimado:</b> 30-60 días<br><br>
+¿Te gustaría que te ayude a encontrar propiedades dentro de tu presupuesto?`,
+    procesoArriendo: `📋 <b>Proceso de Arriendo</b><br><br>
+<b>Requisitos para arrendar:</b><br>
+• Carta laboral o certificación de ingresos<br>
+• Referencias personales y comerciales<br>
+• Codeudor o fiador (según el caso)<br>
+• Depósito de seguridad (1-2 meses)<br><br>
+<b>Generalmente incluye:</b><br>
+✅ Administración<br>
+✅ Mantenimiento de zonas comunes<br><br>
+<b>No incluye:</b><br>
+❌ Servicios públicos<br>
+❌ Internet/Gas<br><br>
+El contrato es típicamente a 12 meses con posibilidad de renovación.<br><br>
+¿Qué tipo de propiedad estás buscando para arrendar?`,
+    inversion: `💹 <b>Inversión Inmobiliaria en Cartagena</b><br><br>
+Cartagena es excelente para invertir por su crecimiento turístico y valorización constante.<br><br>
+<b>Factores a considerar:</b><br>
+• Ubicación estratégica (turismo, servicios)<br>
+• Potencial de arriendo<br>
+• Estado y amenidades<br>
+• Proyección de valorización<br><br>
+<b>Rentabilidad esperada:</b><br>
+Un arriendo puede generar <b>0.4% a 0.8% mensual</b> del valor del inmueble.<br><br>
+<b>Mejores zonas para inversión:</b><br>
+• <b>Bocagrande:</b> Alta demanda turística<br>
+• <b>Centro Histórico:</b> Ideal para Airbnb<br>
+• <b>Manga:</b> Arriendo tradicional, buenos precios<br><br>
+¿Buscas para arriendo tradicional o por días?`,
+    financiacion: `🏦 <b>Financiación de Vivienda</b><br><br>
+La mayoría de bancos en Colombia financian hasta el <b>70% del valor</b> del inmueble.<br><br>
+<b>Requisitos generales:</b><br>
+• Ingresos mínimos según el valor del crédito<br>
+• Historial crediticio favorable<br>
+• Cuota inicial del 30%<br><br>
+<b>Tasas actuales:</b> Aproximadamente 10-13% EA<br><br>
+💡 <b>Tip:</b> Compara opciones entre varios bancos y considera subsidios si aplicas.<br><br>
+Nosotros te asesoramos en todo el proceso. ¿Te gustaría ver opciones dentro de tu presupuesto?`,
+    negociacion: `🤝 <b>Negociación del Precio</b><br><br>
+<b>Consejos para negociar:</b><br>
+• Investiga el precio del m² en la zona<br>
+• Identifica tiempo en el mercado<br>
+• Evalúa el estado del inmueble<br>
+• Considera gastos adicionales (escrituras, impuestos)<br><br>
+En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conocimiento del mercado local.<br><br>
+¿Ya tienes alguna propiedad en mente para negociar?`
   };
+
+  // Funciones de ayuda para respuestas contextuales
+  function getContextualFollowUp() {
+    const ctx = conversationContext;
+
+    // Si sabemos el interés pero no el tipo de propiedad
+    if (ctx.interest && !ctx.propertyType) {
+      return '¿Qué tipo de propiedad prefieres: apartamento, casa u otro?';
+    }
+
+    // Si sabemos tipo pero no zona
+    if (ctx.propertyType && !ctx.zone) {
+      return '¿Tienes alguna zona de preferencia en Cartagena?';
+    }
+
+    // Si sabemos zona pero no presupuesto
+    if (ctx.zone && !ctx.budget) {
+      return '¿Cuál es tu presupuesto aproximado?';
+    }
+
+    // Si sabemos presupuesto pero no habitaciones
+    if (ctx.budget && !ctx.beds) {
+      return '¿Cuántas habitaciones necesitas?';
+    }
+
+    return null;
+  }
+
+  function updateContext(msg, criteria) {
+    // Actualizar contexto con la información extraída
+    if (criteria.operation) {
+      conversationContext.interest = criteria.operation;
+    }
+    if (criteria.type) {
+      conversationContext.propertyType = criteria.type;
+    }
+    if (criteria.zone) {
+      conversationContext.zone = criteria.zone;
+    }
+    if (criteria.beds) {
+      conversationContext.beds = criteria.beds;
+    }
+    if (criteria.baths) {
+      conversationContext.baths = criteria.baths;
+    }
+    if (criteria.maxPrice || criteria.minPrice) {
+      conversationContext.budget = criteria.maxPrice || criteria.minPrice;
+    }
+
+    // Detectar propósito
+    if (msg.match(/invertir|inversión|inversion|negocio|rentar|airbnb/i)) {
+      conversationContext.purpose = 'inversion';
+    } else if (msg.match(/vivir|vivienda|mudar|trasladar|familia/i)) {
+      conversationContext.purpose = 'vivienda';
+    } else if (msg.match(/trabajo|oficina|empresa|negocio/i)) {
+      conversationContext.purpose = 'trabajo';
+    }
+
+    // Detectar urgencia
+    if (msg.match(/urgente|pronto|rápido|rapido|inmediato|ya|hoy/i)) {
+      conversationContext.timeline = 'urgente';
+    } else if (msg.match(/tranquilo|sin afán|cuando sea|flexible/i)) {
+      conversationContext.timeline = 'flexible';
+    }
+
+    // Detectar familia
+    if (msg.match(/solo|soltero|soltera/i)) {
+      conversationContext.family = 'solo';
+    } else if (msg.match(/pareja|esposo|esposa|novio|novia/i)) {
+      conversationContext.family = 'pareja';
+    } else if (msg.match(/familia|hijos|niños|niñas/i)) {
+      conversationContext.family = 'familia';
+    }
+  }
 
   // Opciones rápidas iniciales
   const QUICK_OPTIONS = [
@@ -415,11 +599,31 @@ Nosotros invertimos en toda la publicidad y marketing para conseguir clientes po
       },
       comprar: {
         score: 0,
-        keywords: ['comprar', 'compra', 'venta', 'vender', 'adquirir', 'inversión', 'inversion', 'invertir', 'busco para comprar', 'quiero comprar', 'necesito comprar', 'me interesa comprar', 'propiedad en venta', 'inmueble en venta']
+        keywords: ['comprar', 'compra', 'venta', 'adquirir', 'busco para comprar', 'quiero comprar', 'necesito comprar', 'me interesa comprar', 'propiedad en venta', 'inmueble en venta', 'para compra', 'quisiera comprar', 'estoy buscando para comprar', 'deseo comprar', 'interesado en comprar', 'busco casa', 'busco apartamento', 'necesito propiedad']
       },
       arrendar: {
         score: 0,
-        keywords: ['arrendar', 'arriendo', 'alquiler', 'alquilar', 'rentar', 'renta', 'busco arriendo', 'necesito arrendar', 'quiero arrendar', 'para arrendar', 'en arriendo', 'mensual']
+        keywords: ['arrendar', 'arriendo', 'alquiler', 'alquilar', 'rentar', 'renta', 'busco arriendo', 'necesito arrendar', 'quiero arrendar', 'para arrendar', 'en arriendo', 'mensual', 'arrendamiento', 'quisiera arrendar', 'busco para arrendar', 'necesito alquilar']
+      },
+      inversion: {
+        score: 0,
+        keywords: ['invertir', 'inversión', 'inversion', 'rentabilidad', 'retorno', 'negocio', 'airbnb', 'renta por días', 'generar ingresos', 'capital', 'patrimonio', 'valorización', 'valorizacion']
+      },
+      procesoCompra: {
+        score: 0,
+        keywords: ['cómo comprar', 'como comprar', 'proceso de compra', 'pasos para comprar', 'qué necesito para comprar', 'que necesito para comprar', 'documentos para comprar', 'requisitos compra', 'escritura', 'notaría', 'notaria']
+      },
+      procesoArriendo: {
+        score: 0,
+        keywords: ['cómo arrendar', 'como arrendar', 'requisitos arriendo', 'requisitos para arrendar', 'qué necesito para arrendar', 'que necesito para arrendar', 'fiador', 'codeudor', 'depósito', 'deposito', 'contrato arriendo']
+      },
+      financiacion: {
+        score: 0,
+        keywords: ['financiar', 'financiación', 'financiacion', 'crédito', 'credito', 'hipoteca', 'banco', 'préstamo', 'prestamo', 'cuota inicial', 'tasa de interés', 'leasing']
+      },
+      negociacion: {
+        score: 0,
+        keywords: ['negociar', 'negociación', 'negociacion', 'regatear', 'descuento', 'mejor precio', 'oferta', 'contraoferta']
       },
       alojamiento: {
         score: 0,
@@ -630,6 +834,9 @@ Nosotros invertimos en toda la publicidad y marketing para conseguir clientes po
     const { intent, score } = analyzeIntent(msg);
     const criteria = extractSearchCriteria(msg);
 
+    // Actualizar contexto de la conversación
+    updateContext(msg, criteria);
+
     // Si hay criterios de búsqueda específicos, buscar propiedades
     const hasCriteria = criteria.operation || criteria.type || criteria.zone || criteria.beds || criteria.maxPrice;
 
@@ -648,20 +855,33 @@ Nosotros invertimos en toda la publicidad y marketing para conseguir clientes po
 
         let html = `Encontré <b>${results.length} propiedad${results.length > 1 ? 'es' : ''}</b> ${description}:`;
         results.forEach(p => { html += createPropertyCard(p); });
-        html += '<br>Haz clic en cualquiera para ver detalles. ¿Quieres filtrar más o ver otras opciones?';
+
+        // Agregar seguimiento contextual
+        const followUp = getContextualFollowUp();
+        if (followUp) {
+          html += `<br><br>${followUp}`;
+        } else {
+          html += '<br>Haz clic en cualquiera para ver detalles. ¿Te gustaría agendar una visita o ajustar los criterios?';
+        }
         botReply(html);
         return;
       } else {
-        // No hay resultados pero sí criterios
-        let suggestion = 'No encontré propiedades con esos criterios exactos.<br><br>';
+        // No hay resultados pero sí criterios - dar sugerencias inteligentes
+        let suggestion = 'No encontré propiedades exactas con esos criterios.<br><br>';
+
+        // Sugerir según el contexto
+        if (conversationContext.purpose === 'inversion') {
+          suggestion += 'Para inversión, te recomiendo explorar Bocagrande o Centro Histórico por su alta demanda turística.<br><br>';
+        }
+
         if (criteria.operation === 'comprar') {
           suggestion += '👉 <a href="propiedades-comprar.html" style="color:#d4af37;font-weight:600;">Ver todas las propiedades en venta</a>';
         } else if (criteria.operation === 'arrendar') {
           suggestion += '👉 <a href="propiedades-arrendar.html" style="color:#d4af37;font-weight:600;">Ver todas las propiedades en arriendo</a>';
         } else if (criteria.operation === 'dias') {
-          suggestion += '👉 <a href="propiedades-alojamiento.html" style="color:#d4af37;font-weight:600;">Ver todos los alojamientos</a>';
+          suggestion += '👉 <a href="propiedades-alojamientos.html" style="color:#d4af37;font-weight:600;">Ver todos los alojamientos</a>';
         }
-        suggestion += '<br><br>¿Quieres ajustar tus criterios o hablar con un asesor?';
+        suggestion += '<br><br>¿Te gustaría que ajuste los criterios o prefieres hablar con un asesor?';
         botReply(suggestion);
         return;
       }
@@ -687,6 +907,22 @@ Nosotros invertimos en toda la publicidad y marketing para conseguir clientes po
           return;
         case 'alojamiento':
           handleOption('alojamiento');
+          return;
+        case 'inversion':
+          conversationContext.purpose = 'inversion';
+          botReply(RESPONSES.inversion);
+          return;
+        case 'procesoCompra':
+          botReply(RESPONSES.procesoCompra);
+          return;
+        case 'procesoArriendo':
+          botReply(RESPONSES.procesoArriendo);
+          return;
+        case 'financiacion':
+          botReply(RESPONSES.financiacion);
+          return;
+        case 'negociacion':
+          botReply(RESPONSES.negociacion);
           return;
         case 'precio':
           botReply(RESPONSES.precio);
@@ -751,23 +987,51 @@ Nosotros invertimos en toda la publicidad y marketing para conseguir clientes po
       return;
     }
 
-    // Respuesta inteligente por defecto
-    const suggestions = [];
-    if (msg.length < 10) {
-      suggestions.push('Escribe tu pregunta completa');
-    }
-    suggestions.push('Ejemplo: "apartamento en Bocagrande hasta 300 millones"');
-    suggestions.push('O usa los botones rápidos:');
+    // Respuesta inteligente por defecto basada en contexto
+    let response = '';
+    const ctx = conversationContext;
 
-    botReply(`
-      🤔 No estoy seguro de entender "<b>${message}</b>"<br><br>
-      ${suggestions.join('<br>')}<br><br>
-      También puedes hablar con un asesor:
+    // Si tenemos contexto, dar respuesta personalizada
+    if (ctx.interest || ctx.propertyType || ctx.zone) {
+      response = 'Entiendo que ';
+      if (ctx.interest === 'comprar') response += 'buscas comprar';
+      else if (ctx.interest === 'arrendar') response += 'buscas arrendar';
+      else if (ctx.interest === 'dias') response += 'buscas alojamiento por días';
+
+      if (ctx.propertyType) response += ` un ${ctx.propertyType}`;
+      if (ctx.zone) response += ` en ${ctx.zone.charAt(0).toUpperCase() + ctx.zone.slice(1)}`;
+      response += '.<br><br>';
+
+      // Dar seguimiento específico
+      const followUp = getContextualFollowUp();
+      if (followUp) {
+        response += `Para ayudarte mejor: ${followUp}`;
+      } else {
+        response += '¿Podrías darme más detalles sobre lo que necesitas?';
+      }
+    } else {
+      // Sin contexto - respuesta general pero amigable
+      response = `Disculpa, no logré entender completamente tu mensaje.<br><br>`;
+
+      if (msg.length < 15) {
+        response += 'Intenta ser más específico, por ejemplo:<br>';
+        response += '• "Busco apartamento en Bocagrande para comprar"<br>';
+        response += '• "Necesito casa en arriendo con 3 habitaciones"<br>';
+        response += '• "¿Cómo es el proceso para comprar?"<br><br>';
+      } else {
+        response += '¿Podrías reformular tu pregunta o elegir una opción?<br><br>';
+      }
+    }
+
+    response += `
+      Si prefieres atención personalizada:
       <a href="https://wa.me/${CONFIG.whatsappNumber}?text=${encodeURIComponent('Hola Altorra, ' + message)}" target="_blank" rel="noopener" class="chat-whatsapp-link">
         <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.789l4.94-1.293A11.96 11.96 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>
-        Contactar por WhatsApp
+        Hablar con un asesor
       </a>
-    `, QUICK_OPTIONS);
+    `;
+
+    botReply(response, QUICK_OPTIONS);
   }
 
   // Toggle del chatbot
