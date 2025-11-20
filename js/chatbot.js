@@ -322,163 +322,347 @@
     }
   }
 
+  // Analizar intención del mensaje con puntuación
+  function analyzeIntent(msg) {
+    const intents = {
+      saludo: {
+        score: 0,
+        keywords: ['hola', 'buenos', 'buenas', 'hey', 'hi', 'saludos', 'que tal', 'qué tal', 'hello', 'ey', 'buenas tardes', 'buenas noches', 'buenos días', 'buenos dias']
+      },
+      comprar: {
+        score: 0,
+        keywords: ['comprar', 'compra', 'venta', 'vender', 'adquirir', 'inversión', 'inversion', 'invertir', 'busco para comprar', 'quiero comprar', 'necesito comprar', 'me interesa comprar', 'propiedad en venta', 'inmueble en venta']
+      },
+      arrendar: {
+        score: 0,
+        keywords: ['arrendar', 'arriendo', 'alquiler', 'alquilar', 'rentar', 'renta', 'busco arriendo', 'necesito arrendar', 'quiero arrendar', 'para arrendar', 'en arriendo', 'mensual']
+      },
+      alojamiento: {
+        score: 0,
+        keywords: ['días', 'dias', 'alojamiento', 'hospedaje', 'vacaciones', 'turismo', 'turista', 'hotel', 'airbnb', 'por noche', 'temporal', 'corta estadía', 'fin de semana', 'fines de semana', 'semana santa', 'navidad', 'año nuevo']
+      },
+      precio: {
+        score: 0,
+        keywords: ['precio', 'costo', 'valor', 'cuánto', 'cuanto', 'presupuesto', 'tarifa', 'económico', 'economico', 'barato', 'costoso', 'rango', 'millones', 'pesos']
+      },
+      ubicacion: {
+        score: 0,
+        keywords: ['ubicación', 'ubicacion', 'zona', 'barrio', 'donde', 'dónde', 'sector', 'cerca', 'lejos', 'norte', 'sur', 'playa', 'centro', 'afueras']
+      },
+      contacto: {
+        score: 0,
+        keywords: ['contacto', 'teléfono', 'telefono', 'email', 'correo', 'llamar', 'número', 'numero', 'dirección', 'direccion', 'whatsapp', 'comunicar', 'hablar']
+      },
+      servicios: {
+        score: 0,
+        keywords: ['servicio', 'avalúo', 'avaluo', 'jurídico', 'juridico', 'legal', 'contable', 'administración', 'administracion', 'asesoría', 'asesoria', 'trámite', 'tramite']
+      },
+      ayuda: {
+        score: 0,
+        keywords: ['ayuda', 'help', 'ayudar', 'puedes', 'funciona', 'opciones', 'haces', 'sirves', 'capacidad', 'información', 'informacion', 'info', 'explicar', 'cómo', 'como']
+      },
+      gracias: {
+        score: 0,
+        keywords: ['gracias', 'genial', 'perfecto', 'excelente', 'ok', 'vale', 'bien', 'super', 'listo', 'bueno', 'entendido', 'claro', 'agradezco', 'muchas gracias']
+      },
+      publicar: {
+        score: 0,
+        keywords: ['publicar', 'vender mi', 'arrendar mi', 'consignar', 'poner en venta', 'tengo una propiedad', 'tengo un apartamento', 'tengo una casa', 'mi propiedad', 'mi inmueble']
+      },
+      comparar: {
+        score: 0,
+        keywords: ['comparar', 'comparador', 'comparación', 'comparacion', 'versus', 'diferencia', 'mejor opción', 'cual es mejor', 'cuál es mejor']
+      },
+      nosotros: {
+        score: 0,
+        keywords: ['quiénes son', 'quienes son', 'sobre ustedes', 'sobre altorra', 'la empresa', 'la inmobiliaria', 'quién es', 'quien es', 'historia', 'trayectoria', 'experiencia']
+      },
+      horario: {
+        score: 0,
+        keywords: ['horario', 'hora', 'atienden', 'abierto', 'disponibilidad', 'cuando abren', 'a que hora', 'a qué hora', 'días de atención', 'días de atencion']
+      },
+      habitaciones: {
+        score: 0,
+        keywords: ['habitación', 'habitacion', 'habitaciones', 'cuarto', 'cuartos', 'alcoba', 'alcobas', 'dormitorio', 'dormitorios', 'recámara', 'recamara']
+      },
+      banos: {
+        score: 0,
+        keywords: ['baño', 'bano', 'baños', 'banos', 'sanitario', 'sanitarios']
+      },
+      parqueadero: {
+        score: 0,
+        keywords: ['parqueadero', 'parqueaderos', 'garage', 'garaje', 'estacionamiento', 'parking', 'carro', 'vehículo', 'vehiculo']
+      },
+      tamano: {
+        score: 0,
+        keywords: ['metros', 'm2', 'área', 'area', 'tamaño', 'tamano', 'grande', 'pequeño', 'pequeña', 'espacioso', 'amplio']
+      }
+    };
+
+    // Calcular puntuación para cada intención
+    for (const [intent, data] of Object.entries(intents)) {
+      for (const keyword of data.keywords) {
+        if (msg.includes(keyword)) {
+          // Dar más peso a coincidencias más largas
+          data.score += keyword.length;
+        }
+      }
+    }
+
+    // Obtener la intención con mayor puntuación
+    let bestIntent = null;
+    let bestScore = 0;
+    for (const [intent, data] of Object.entries(intents)) {
+      if (data.score > bestScore) {
+        bestScore = data.score;
+        bestIntent = intent;
+      }
+    }
+
+    return { intent: bestIntent, score: bestScore };
+  }
+
+  // Extraer criterios de búsqueda del mensaje
+  function extractSearchCriteria(msg) {
+    const criteria = {
+      operation: null,
+      type: null,
+      zone: null,
+      beds: null,
+      baths: null,
+      maxPrice: null,
+      minPrice: null
+    };
+
+    // Detectar operación
+    if (msg.match(/comprar|compra|venta|vender|inversión|inversion/i)) {
+      criteria.operation = 'comprar';
+    } else if (msg.match(/arrendar|arriendo|alquiler|rentar|renta/i)) {
+      criteria.operation = 'arrendar';
+    } else if (msg.match(/días|dias|alojamiento|hospedaje|vacaciones|temporal/i)) {
+      criteria.operation = 'dias';
+    }
+
+    // Detectar tipo de propiedad
+    const typePatterns = {
+      'apartamento': /apartamento|apto|aparta/i,
+      'casa': /casa/i,
+      'lote': /lote|terreno/i,
+      'oficina': /oficina/i,
+      'local': /local comercial|local/i,
+      'bodega': /bodega/i,
+      'finca': /finca|parcela/i
+    };
+    for (const [type, pattern] of Object.entries(typePatterns)) {
+      if (msg.match(pattern)) {
+        criteria.type = type;
+        break;
+      }
+    }
+
+    // Detectar zona
+    for (const zone of Object.keys(SITE_KNOWLEDGE.zones)) {
+      if (msg.includes(zone)) {
+        criteria.zone = zone;
+        break;
+      }
+    }
+
+    // Detectar número de habitaciones
+    const bedsMatch = msg.match(/(\d+)\s*(habitacion|cuarto|alcoba|dormitorio|hab)/i);
+    if (bedsMatch) {
+      criteria.beds = parseInt(bedsMatch[1]);
+    }
+
+    // Detectar número de baños
+    const bathsMatch = msg.match(/(\d+)\s*(baño|bano|sanitario)/i);
+    if (bathsMatch) {
+      criteria.baths = parseInt(bathsMatch[1]);
+    }
+
+    // Detectar precio
+    const priceMatch = msg.match(/(\d+)\s*(millon|millón)/i);
+    if (priceMatch) {
+      const price = parseInt(priceMatch[1]) * 1000000;
+      if (msg.match(/hasta|máximo|maximo|menos de|no más de/i)) {
+        criteria.maxPrice = price;
+      } else if (msg.match(/desde|mínimo|minimo|más de|mayor a/i)) {
+        criteria.minPrice = price;
+      } else {
+        criteria.maxPrice = price * 1.2; // 20% de tolerancia
+      }
+    }
+
+    return criteria;
+  }
+
+  // Búsqueda inteligente de propiedades
+  function smartSearchProperties(criteria) {
+    let results = [...properties];
+
+    if (criteria.operation) {
+      results = results.filter(p => p.operation === criteria.operation);
+    }
+    if (criteria.type) {
+      results = results.filter(p => p.type === criteria.type);
+    }
+    if (criteria.zone) {
+      results = results.filter(p =>
+        (p.neighborhood && p.neighborhood.toLowerCase().includes(criteria.zone)) ||
+        (p.city && p.city.toLowerCase().includes(criteria.zone))
+      );
+    }
+    if (criteria.beds) {
+      results = results.filter(p => p.beds >= criteria.beds);
+    }
+    if (criteria.baths) {
+      results = results.filter(p => p.baths >= criteria.baths);
+    }
+    if (criteria.maxPrice) {
+      results = results.filter(p => p.price <= criteria.maxPrice);
+    }
+    if (criteria.minPrice) {
+      results = results.filter(p => p.price >= criteria.minPrice);
+    }
+
+    return results.slice(0, 3);
+  }
+
   // Procesar mensaje del usuario con inteligencia mejorada
   function processMessage(message) {
     const msg = message.toLowerCase().trim();
+    const { intent, score } = analyzeIntent(msg);
+    const criteria = extractSearchCriteria(msg);
 
-    // === SALUDOS ===
-    if (msg.match(/^(hola|buenos|buenas|hey|hi|saludos|qué tal|que tal|ey|hello)$/i) ||
-        msg.match(/^hola.{0,15}$/i) ||
-        msg.match(/^buenas?\s*(tardes?|noches?|días?|dias?)/i)) {
-      botReply(RESPONSES.greeting[Math.floor(Math.random() * RESPONSES.greeting.length)], QUICK_OPTIONS);
-      return;
-    }
+    // Si hay criterios de búsqueda específicos, buscar propiedades
+    const hasCriteria = criteria.operation || criteria.type || criteria.zone || criteria.beds || criteria.maxPrice;
 
-    // === AYUDA Y CAPACIDADES ===
-    if (msg.match(/ayuda|help|qué puedes|que puedes|cómo funciona|como funciona|opciones|qué haces|que haces|para qué sirves|para que sirves/i)) {
-      botReply(RESPONSES.ayuda, QUICK_OPTIONS);
-      return;
-    }
+    if (hasCriteria) {
+      const results = smartSearchProperties(criteria);
 
-    // === AGRADECIMIENTOS ===
-    if (msg.match(/^(gracias|genial|perfecto|excelente|ok|vale|bien|super|listo|bueno|entendido|claro)$/i)) {
-      botReply(RESPONSES.gracias);
-      return;
-    }
+      if (results.length > 0) {
+        let description = '✨ ';
+        if (criteria.type) description += `${criteria.type}s `;
+        if (criteria.operation === 'comprar') description += 'en venta ';
+        if (criteria.operation === 'arrendar') description += 'en arriendo ';
+        if (criteria.operation === 'dias') description += 'por días ';
+        if (criteria.zone) description += `en ${criteria.zone.charAt(0).toUpperCase() + criteria.zone.slice(1)} `;
+        if (criteria.beds) description += `con ${criteria.beds}+ habitaciones `;
+        if (criteria.maxPrice) description += `hasta $${(criteria.maxPrice/1000000).toFixed(0)} millones `;
 
-    // === SOBRE NOSOTROS / QUIÉNES SOMOS ===
-    if (msg.match(/quiénes son|quienes son|sobre ustedes|sobre altorra|la empresa|la inmobiliaria|quién es|quien es/i)) {
-      botReply(RESPONSES.nosotros);
-      return;
-    }
-
-    // === PUBLICAR PROPIEDAD ===
-    if (msg.match(/publicar|vender mi|arrendar mi|consignar|poner en venta|tengo una propiedad|quiero vender|quiero arrendar mi/i)) {
-      botReply(RESPONSES.publicar);
-      return;
-    }
-
-    // === COMPARADOR ===
-    if (msg.match(/comparar|comparador|comparación|comparacion|versus|vs|diferencia entre/i)) {
-      botReply(RESPONSES.comparar);
-      return;
-    }
-
-    // === PRECIOS GENERALES ===
-    if (msg.match(/^(precio|costo|valor|cuánto|cuanto|presupuesto|tarifas?)(\?)?$/i) ||
-        msg.match(/qué precios|que precios|rango de precios|cuánto cuesta|cuanto cuesta|cuánto vale|cuanto vale/i)) {
-      botReply(RESPONSES.precio);
-      return;
-    }
-
-    // === CONTACTO ===
-    if (msg.match(/contacto|teléfono|telefono|email|correo|llamar|número|numero|dirección|direccion|ubicación de la oficina|dónde quedan|donde quedan/i)) {
-      botReply(RESPONSES.contacto);
-      return;
-    }
-
-    // === HORARIO ===
-    if (msg.match(/horario|hora|atienden|abierto|cuándo|cuando abren|disponibilidad|a qué hora|a que hora/i)) {
-      botReply(RESPONSES.horario);
-      return;
-    }
-
-    // === SERVICIOS ===
-    if (msg.match(/servicio|avalúo|avaluo|jurídico|juridico|legal|contable|qué hacen|que hacen|qué ofrecen|que ofrecen|administración|administracion/i)) {
-      botReply(RESPONSES.servicios);
-      return;
-    }
-
-    // === ZONAS ESPECÍFICAS ===
-    for (const [zone, info] of Object.entries(SITE_KNOWLEDGE.zones)) {
-      if (msg.includes(zone)) {
-        const zoneTitle = zone.charAt(0).toUpperCase() + zone.slice(1);
-        let response = `📍 <b>${zoneTitle}</b><br><br>${info}<br><br>`;
-
-        // Buscar propiedades en esa zona
-        const zoneProps = properties.filter(p =>
-          (p.neighborhood && p.neighborhood.toLowerCase().includes(zone)) ||
-          (p.city && p.city.toLowerCase().includes(zone))
-        ).slice(0, 2);
-
-        if (zoneProps.length > 0) {
-          response += `<b>Propiedades disponibles en ${zoneTitle}:</b>`;
-          zoneProps.forEach(p => { response += createPropertyCard(p); });
-        } else {
-          response += `Actualmente no tenemos propiedades publicadas en ${zoneTitle}, pero contáctanos y te ayudamos a buscar.`;
+        let html = `Encontré <b>${results.length} propiedad${results.length > 1 ? 'es' : ''}</b> ${description}:`;
+        results.forEach(p => { html += createPropertyCard(p); });
+        html += '<br>Haz clic en cualquiera para ver detalles. ¿Quieres filtrar más o ver otras opciones?';
+        botReply(html);
+        return;
+      } else {
+        // No hay resultados pero sí criterios
+        let suggestion = 'No encontré propiedades con esos criterios exactos.<br><br>';
+        if (criteria.operation === 'comprar') {
+          suggestion += '👉 <a href="propiedades-comprar.html" style="color:#d4af37;font-weight:600;">Ver todas las propiedades en venta</a>';
+        } else if (criteria.operation === 'arrendar') {
+          suggestion += '👉 <a href="propiedades-arrendar.html" style="color:#d4af37;font-weight:600;">Ver todas las propiedades en arriendo</a>';
+        } else if (criteria.operation === 'dias') {
+          suggestion += '👉 <a href="propiedades-alojamiento.html" style="color:#d4af37;font-weight:600;">Ver todos los alojamientos</a>';
         }
-
-        botReply(response);
+        suggestion += '<br><br>¿Quieres ajustar tus criterios o hablar con un asesor?';
+        botReply(suggestion);
         return;
       }
     }
 
-    // === UBICACIÓN GENERAL ===
-    if (msg.match(/^(ubicación|ubicacion|zona|barrio|donde|dónde|sectores|barrios)(\?)?$/i) ||
-        msg.match(/qué zonas|que zonas|en qué parte|en que parte|mejores zonas|qué barrios|que barrios/i)) {
-      botReply(RESPONSES.ubicacion);
-      return;
-    }
-
-    // === TIPOS DE PROPIEDAD ESPECÍFICOS ===
-    const typeMatch = msg.match(/(apartamento|apto|casa|lote|terreno|oficina|local|bodega|finca)/i);
-    if (typeMatch && !msg.match(/comprar|arrendar|venta|arriendo|alquiler/i)) {
-      const type = typeMatch[1].toLowerCase().replace('apto', 'apartamento').replace('terreno', 'lote');
-      const typeProps = properties.filter(p => p.type === type).slice(0, 3);
-
-      if (typeProps.length > 0) {
-        let html = `🏠 <b>${type.charAt(0).toUpperCase() + type.slice(1)}s disponibles:</b>`;
-        typeProps.forEach(p => { html += createPropertyCard(p); });
-        html += '<br>¿Te interesa alguno en particular? ¿Buscas para comprar o arrendar?';
-        botReply(html);
-      } else {
-        botReply(`Actualmente no tenemos ${type}s publicados, pero contáctanos y te ayudamos a encontrar uno.`);
+    // Procesar según la intención detectada
+    if (score > 0) {
+      switch (intent) {
+        case 'saludo':
+          botReply(RESPONSES.greeting[Math.floor(Math.random() * RESPONSES.greeting.length)], QUICK_OPTIONS);
+          return;
+        case 'gracias':
+          botReply(RESPONSES.gracias);
+          return;
+        case 'ayuda':
+          botReply(RESPONSES.ayuda, QUICK_OPTIONS);
+          return;
+        case 'comprar':
+          handleOption('comprar');
+          return;
+        case 'arrendar':
+          handleOption('arrendar');
+          return;
+        case 'alojamiento':
+          handleOption('alojamiento');
+          return;
+        case 'precio':
+          botReply(RESPONSES.precio);
+          return;
+        case 'contacto':
+          botReply(RESPONSES.contacto);
+          return;
+        case 'servicios':
+          botReply(RESPONSES.servicios);
+          return;
+        case 'nosotros':
+          botReply(RESPONSES.nosotros);
+          return;
+        case 'horario':
+          botReply(RESPONSES.horario);
+          return;
+        case 'publicar':
+          botReply(RESPONSES.publicar);
+          return;
+        case 'comparar':
+          botReply(RESPONSES.comparar);
+          return;
+        case 'ubicacion':
+          // Verificar si menciona una zona específica
+          for (const [zone, info] of Object.entries(SITE_KNOWLEDGE.zones)) {
+            if (msg.includes(zone)) {
+              const zoneTitle = zone.charAt(0).toUpperCase() + zone.slice(1);
+              let response = `📍 <b>${zoneTitle}</b><br><br>${info}<br><br>`;
+              const zoneProps = properties.filter(p =>
+                (p.neighborhood && p.neighborhood.toLowerCase().includes(zone)) ||
+                (p.city && p.city.toLowerCase().includes(zone))
+              ).slice(0, 2);
+              if (zoneProps.length > 0) {
+                response += `<b>Propiedades disponibles:</b>`;
+                zoneProps.forEach(p => { response += createPropertyCard(p); });
+              }
+              botReply(response);
+              return;
+            }
+          }
+          botReply(RESPONSES.ubicacion);
+          return;
       }
-      return;
     }
 
-    // === BÚSQUEDA DE PROPIEDADES ===
+    // Buscar propiedades con el texto completo como último recurso
     const results = searchProperties(msg);
-
     if (results.length > 0) {
-      let html = `✨ Encontré <b>${results.length} propiedad${results.length > 1 ? 'es' : ''}</b> que coinciden:`;
+      let html = `✨ Encontré <b>${results.length} propiedad${results.length > 1 ? 'es' : ''}</b>:`;
       results.forEach(p => { html += createPropertyCard(p); });
-      html += '<br>Haz clic en cualquiera para ver todos los detalles, o dime si quieres filtrar más.';
+      html += '<br>¿Te interesa alguna? Puedo darte más detalles.';
       botReply(html);
       return;
     }
 
-    // === OPERACIONES SIN RESULTADOS ESPECÍFICOS ===
-    if (msg.match(/comprar|compra|venta|vender|inversión|inversion|invertir/i)) {
-      handleOption('comprar');
-      return;
+    // Respuesta inteligente por defecto
+    const suggestions = [];
+    if (msg.length < 10) {
+      suggestions.push('Escribe tu pregunta completa');
     }
+    suggestions.push('Ejemplo: "apartamento en Bocagrande hasta 300 millones"');
+    suggestions.push('O usa los botones rápidos:');
 
-    if (msg.match(/arrendar|arriendo|alquiler|alquilar|rentar|renta/i)) {
-      handleOption('arrendar');
-      return;
-    }
-
-    if (msg.match(/día|dias|días|alojamiento|hospedaje|vacaciones|turismo|turista|hotel|airbnb|por noche/i)) {
-      handleOption('alojamiento');
-      return;
-    }
-
-    // === CONTACTO CON ASESOR ===
-    if (msg.match(/asesor|agente|hablar|whatsapp|persona|humano|llamar/i)) {
-      handleOption('whatsapp');
-      return;
-    }
-
-    // === RESPUESTA POR DEFECTO ===
-    const waLink = `https://wa.me/${CONFIG.whatsappNumber}?text=${encodeURIComponent('Hola Altorra, ' + message)}`;
     botReply(`
-      ${RESPONSES.noEntiendo}
-      <a href="${waLink}" target="_blank" rel="noopener" class="chat-whatsapp-link">
+      🤔 No estoy seguro de entender "<b>${message}</b>"<br><br>
+      ${suggestions.join('<br>')}<br><br>
+      También puedes hablar con un asesor:
+      <a href="https://wa.me/${CONFIG.whatsappNumber}?text=${encodeURIComponent('Hola Altorra, ' + message)}" target="_blank" rel="noopener" class="chat-whatsapp-link">
         <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.789l4.94-1.293A11.96 11.96 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>
         Contactar por WhatsApp
       </a>
-    `);
+    `, QUICK_OPTIONS);
   }
 
   // Toggle del chatbot
