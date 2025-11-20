@@ -777,6 +777,113 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     saveContext();
   }
 
+  // ============================================
+  // DETECCIÓN DE INTENCIÓN NUEVA vs RESPUESTA A SLOT
+  // ============================================
+
+  // Detectar si el mensaje parece una respuesta corta a un slot (dato puntual)
+  function isSlotResponse(msg) {
+    const text = msg.toLowerCase().trim();
+    const len = text.length;
+
+    // Mensajes muy cortos son probablemente respuestas a slots
+    if (len <= 3) return true;
+
+    // Solo números (ej: "3", "200", "1800000")
+    if (/^\d+$/.test(text)) return true;
+
+    // Confirmaciones simples
+    if (/^(s[ií]|no|ok|vale|bien|listo|claro|bueno|perfecto|exacto|correcto)$/i.test(text)) return true;
+
+    // Formato de presupuesto/dinero sin contexto adicional
+    if (/^\$?\s*[\d\.,]+\s*(m|millones?|mil)?$/i.test(text)) return true;
+    if (/^[\d\.,]+\s*(millon|millones|millón)$/i.test(text)) return true;
+
+    // Números con unidades simples (habitaciones, baños, personas, metros)
+    if (/^\d+\s*(habitacion|habitaciones|cuartos?|alcobas?|ba[ñn]os?|personas?|m2|metros?)$/i.test(text)) return true;
+
+    // Respuestas de opciones típicas del flujo
+    if (/^(apartamento|apto|casa|lote|oficina|local)$/i.test(text)) return true;
+    if (/^(vivienda|inversi[oó]n|trabajo|negocio)$/i.test(text)) return true;
+    if (/^(solo|pareja|familia)$/i.test(text)) return true;
+    if (/^(urgente|flexible|sin prisa)$/i.test(text)) return true;
+
+    // Zonas simples sin contexto
+    if (/^(bocagrande|manga|centro|getseman[ií]|crespo|pie de la popa|castillogrande)$/i.test(text)) return true;
+
+    // Fechas simples
+    if (/^(del \d+ al \d+|esta semana|pr[oó]xima semana|\d+ d[ií]as?)$/i.test(text)) return true;
+
+    // Mensajes cortos (< 25 caracteres) sin verbos de intención
+    if (len < 25 && !/quiero|busco|necesito|te dije|me interesa|pregunt|cu[aá]l|c[oó]mo|qu[eé]|horario/i.test(text)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  // Detectar si el mensaje es una nueva intención global que debe interrumpir el flujo actual
+  function isNewGlobalIntent(msg) {
+    const text = msg.toLowerCase().trim();
+
+    // Frases de corrección o insistencia (el usuario quiere cambiar el tema)
+    if (/te dije que|ya te dije|pero quiero|no[,\s]+quiero|en realidad quiero|mejor quiero|prefiero|cambi[eé] de opini[oó]n/i.test(text)) {
+      return true;
+    }
+
+    // Cambios explícitos de operación/modo
+    const operationChangePatterns = [
+      /quiero (comprar|arrendar|alquilar|alojamiento|hospedaje)/i,
+      /busco (para )?(comprar|arrendar|alquilar|alojamiento)/i,
+      /necesito (comprar|arrendar|alquilar|alojamiento)/i,
+      /me interesa (comprar|arrendar|alquilar|alojamiento)/i,
+      /(comprar|arrendar|alquilar|alojamiento|hospedaje) (una?|un) (propiedad|casa|apartamento|inmueble)/i,
+      /^(comprar|arrendar|alojamiento|hospedaje)$/i,
+      /alojamiento por d[ií]as/i,
+      /por d[ií]as/i,
+      /vacaciones/i
+    ];
+
+    for (const pattern of operationChangePatterns) {
+      if (pattern.test(text)) return true;
+    }
+
+    // Intenciones de propietario (siempre son globales)
+    if (/soy propietario|tengo (una?|un) (propiedad|casa|apartamento|inmueble)|quiero (vender|arrendar) mi|vender mi|arrendar mi/i.test(text)) {
+      return true;
+    }
+
+    // Preguntas generales sobre la empresa/servicios
+    if (/\?/.test(text) || /^(cu[aá]l|c[oó]mo|qu[eé]|d[oó]nde|cu[aá]ndo|cu[aá]nto)/i.test(text)) {
+      // Verificar si es pregunta de servicio, no de slot
+      if (/horario|atienden|abierto|proceso|requisito|documento|contacto|tel[eé]fono|whatsapp|direcci[oó]n|servicio|cobran|honorario|comisi[oó]n/i.test(text)) {
+        return true;
+      }
+    }
+
+    // Saludos (reinician contexto implícitamente)
+    if (/^(hola|buenos d[ií]as|buenas tardes|buenas noches|hey|hi)\b/i.test(text)) {
+      return true;
+    }
+
+    // Despedidas
+    if (/^(adi[oó]s|chao|hasta luego|nos vemos|bye|me voy)\b/i.test(text)) {
+      return true;
+    }
+
+    // Peticiones de ayuda general
+    if (/^(ayuda|help|men[uú]|opciones|qu[eé] puedes hacer)\b/i.test(text)) {
+      return true;
+    }
+
+    // Mensajes largos con múltiples criterios (probablemente nueva búsqueda)
+    if (text.length > 50 && /quiero|busco|necesito|me interesa/i.test(text)) {
+      return true;
+    }
+
+    return false;
+  }
+
   // Función de "slot filling" - usa la última pregunta del bot para interpretar respuestas
   function applyAnswerToLastQuestion(msg, criteria) {
     const last = conversationContext.lastQuestion;
@@ -2174,11 +2281,54 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
 
     // ========== FIN DETECCIÓN DE PROPIETARIOS ==========
 
+    // ========== DETECCIÓN INTELIGENTE: NUEVA INTENCIÓN vs RESPUESTA A SLOT ==========
+    // Si hay una pregunta pendiente, determinar si el mensaje es respuesta al slot o nueva intención
+    if (conversationContext.lastQuestion) {
+      const isNewIntent = isNewGlobalIntent(msg);
+      const isSlot = isSlotResponse(msg);
+
+      if (isNewIntent) {
+        // El usuario quiere cambiar de tema - limpiar la pregunta pendiente
+        conversationContext.lastQuestion = null;
+        saveContext();
+        // Continuar procesando como mensaje nuevo (no aplicar slot filling)
+      } else if (isSlot) {
+        // Parece una respuesta al slot - aplicar y continuar flujo
+        updateContext(msg, criteria);
+        applyAnswerToLastQuestion(msg, criteria);
+
+        // Continuar la consultoría con la siguiente pregunta
+        const nextQuestion = getNextConsultationQuestion();
+        if (nextQuestion) {
+          conversationContext.lastQuestion = nextQuestion.field;
+          saveContext();
+          const options = nextQuestion.options ? nextQuestion.options.map(opt => ({
+            text: opt.text,
+            action: `set_${nextQuestion.field}_${opt.value}`
+          })) : null;
+          botReply(`<b>${nextQuestion.question}</b>`, options);
+          return;
+        } else {
+          // Ya no hay más preguntas - mostrar recomendaciones
+          conversationContext.lastQuestion = null;
+          conversationContext.consultationPhase = 'recommendation';
+          saveContext();
+          const results = getSmartRecommendations();
+          if (results.length > 0) {
+            const recommendation = generatePersonalizedRecommendation(results);
+            botReply(recommendation);
+          } else {
+            botReply('Gracias por la información. Lamentablemente no encontré propiedades con esos criterios exactos. ¿Te gustaría ajustar algún parámetro o hablar con un asesor?', QUICK_OPTIONS);
+          }
+          return;
+        }
+      }
+      // Si no es claramente ni nueva intención ni slot response,
+      // continuamos con el procesamiento normal (el mensaje es ambiguo)
+    }
+
     // Actualizar contexto de la conversación
     updateContext(msg, criteria);
-
-    // Aplicar slot filling - usar la última pregunta del bot para interpretar respuestas
-    applyAnswerToLastQuestion(msg, criteria);
 
     // Intentar responder con conocimiento inmobiliario si no es claramente una búsqueda
     const knowledgeAnswer = answerFromKnowledge(msg);
