@@ -17,26 +17,66 @@
   let properties = [];
   let isOpen = false;
   let hasGreeted = false;
+  let welcomeBubbleShown = false;
 
-  // Respuestas predefinidas mejoradas
+  // Conocimiento completo del sitio web
+  const SITE_KNOWLEDGE = {
+    pages: {
+      inicio: { url: 'index.html', desc: 'Página principal con todas las propiedades destacadas' },
+      comprar: { url: 'propiedades-comprar.html', desc: 'Propiedades en venta en Cartagena' },
+      arrendar: { url: 'propiedades-arrendar.html', desc: 'Propiedades en arriendo mensual' },
+      alojamiento: { url: 'propiedades-alojamiento.html', desc: 'Alojamientos por días para vacaciones' },
+      publicar: { url: 'publicar-propiedad.html', desc: 'Formulario para publicar tu propiedad' },
+      contacto: { url: 'contacto.html', desc: 'Información de contacto y formulario' },
+      nosotros: { url: 'quienes-somos.html', desc: 'Información sobre Altorra Inmobiliaria' },
+      comparar: { url: 'comparar.html', desc: 'Comparar propiedades lado a lado' }
+    },
+    company: {
+      name: 'Altorra Inmobiliaria',
+      city: 'Cartagena de Indias',
+      phone: '+57 300 243 9810',
+      email: 'altorrainmobiliaria@gmail.com',
+      services: ['Compra y venta', 'Arriendos', 'Alojamientos por días', 'Avalúos comerciales', 'Asesoría jurídica', 'Administración de propiedades', 'Servicios contables']
+    },
+    zones: {
+      bocagrande: 'Zona exclusiva con playa, restaurantes y vida nocturna. Ideal para inversión turística.',
+      manga: 'Barrio tradicional y central, perfecto para familias. Buenos precios.',
+      centro: 'Centro Histórico con encanto colonial. Ideal para Airbnb y turismo.',
+      crespo: 'Cerca al aeropuerto, zona residencial tranquila.',
+      castillogrande: 'Exclusiva y familiar, cerca a la playa.',
+      cabrero: 'Zona céntrica con buena valorización.',
+      laguito: 'Zona turística con edificios frente al mar.'
+    },
+    propertyTypes: ['apartamento', 'casa', 'lote', 'oficina', 'local', 'bodega', 'finca'],
+    features: {
+      comprar: 'Inversión a largo plazo, valorización, patrimonio propio',
+      arrendar: 'Flexibilidad, sin compromiso de compra, incluye administración',
+      alojamiento: 'Ideal para vacaciones, amoblado, servicios incluidos'
+    }
+  };
+
+  // Respuestas predefinidas mejoradas con enlaces
   const RESPONSES = {
     greeting: [
-      '¡Hola! 👋 Soy el asistente virtual de Altorra Inmobiliaria. Puedo ayudarte a encontrar propiedades, resolver dudas sobre nuestros servicios o conectarte con un asesor. ¿Qué necesitas?',
-      '¡Bienvenido a Altorra! 🏠 Estoy aquí para ayudarte. Puedo mostrarte propiedades en venta, arriendo o alojamientos por días. ¿Qué te interesa?'
+      '¡Hola! 👋 Soy <b>Altorra IA</b>, tu asistente inmobiliario virtual.<br><br>Puedo ayudarte a:<br>• 🏠 Encontrar propiedades<br>• 📍 Conocer zonas de Cartagena<br>• 📋 Resolver dudas sobre servicios<br>• 💬 Conectarte con un asesor<br><br>¿Qué necesitas hoy?',
+      '¡Bienvenido a <b>Altorra Inmobiliaria</b>! 🏠<br><br>Soy tu asistente IA. Cuéntame:<br>• ¿Buscas <b>comprar</b>, <b>arrendar</b> o <b>alojamiento por días</b>?<br>• ¿Tienes alguna zona preferida?<br>• ¿Cuál es tu presupuesto?'
     ],
-    comprar: '🏡 Excelente elección para invertir. Tenemos propiedades en venta en las mejores zonas de Cartagena. ¿Qué tipo buscas: apartamento, casa, lote u oficina?',
-    arrendar: '🔑 Tenemos opciones de arriendo para todos los gustos. ¿Prefieres apartamento o casa? ¿Tienes alguna zona preferida en Cartagena?',
-    alojamiento: '🌴 Nuestros alojamientos por días son perfectos para vacaciones. ¿Cuántas personas serán y en qué fechas planeas tu estadía?',
-    precio: '💰 Entiendo que el presupuesto es importante. Dime tu rango aproximado y te muestro las mejores opciones. Por ejemplo: "hasta 300 millones" o "entre 1 y 2 millones mensuales".',
-    ubicacion: '📍 Cartagena tiene zonas increíbles:<br>• <b>Bocagrande</b> - Playa y exclusividad<br>• <b>Manga</b> - Tradicional y central<br>• <b>Centro Histórico</b> - Encanto colonial<br>• <b>Crespo</b> - Cerca al aeropuerto<br>¿Cuál te interesa?',
-    contacto: '📞 Contáctanos:<br>• <b>WhatsApp:</b> +57 300 243 9810<br>• <b>Email:</b> altorrainmobiliaria@gmail.com<br>• <b>Dirección:</b> Cartagena de Indias<br><br>¿Prefieres que te contactemos nosotros?',
-    servicios: '📋 Nuestros servicios incluyen:<br>• Compra y venta de inmuebles<br>• Arriendos<br>• Avalúos comerciales<br>• Asesoría jurídica<br>• Administración de propiedades<br>• Servicios contables<br><br>¿Te interesa alguno en particular?',
-    horario: '🕐 Horario de atención:<br><b>Lunes a Viernes:</b> 8:00 AM - 6:00 PM<br><b>Sábados:</b> 9:00 AM - 1:00 PM<br><br>Por WhatsApp respondemos más rápido.',
-    gracias: '¡Con mucho gusto! 😊 Recuerda que puedes contactarnos por WhatsApp para una atención más personalizada. ¡Éxitos con tu búsqueda!',
-    noEntiendo: 'Hmm, no estoy seguro de entender completamente tu consulta. 🤔<br><br>Te sugiero:<br>• Ser más específico (ej: "apartamento en Bocagrande")<br>• O mejor aún, habla con un asesor que puede ayudarte mejor:',
-    default: '¿Hay algo más en lo que pueda ayudarte? También puedo conectarte con un asesor por WhatsApp.',
-    sinResultados: 'No encontré propiedades con esos criterios exactos, pero tenemos otras opciones que podrían interesarte. ¿Quieres que te muestre o prefieres hablar con un asesor?',
-    ayuda: '¿Cómo puedo ayudarte?<br><br>Puedo:<br>• Mostrar propiedades en venta, arriendo o por días<br>• Filtrar por zona, precio o características<br>• Conectarte con un asesor<br>• Resolver dudas sobre servicios'
+    comprar: '🏡 <b>Propiedades en Venta</b><br><br>Tenemos apartamentos, casas, lotes y oficinas en las mejores zonas de Cartagena.<br><br><b>Ventajas de comprar:</b><br>• Inversión con valorización<br>• Patrimonio propio<br>• Sin pago mensual de arriendo<br><br>👉 <a href="propiedades-comprar.html" style="color:#d4af37;font-weight:600;">Ver todas las propiedades en venta</a><br><br>¿Qué tipo de propiedad buscas?',
+    arrendar: '🔑 <b>Arriendos en Cartagena</b><br><br>Opciones para todos los presupuestos con contrato y respaldo legal.<br><br><b>Ventajas del arriendo:</b><br>• Flexibilidad<br>• Sin inversión inicial grande<br>• Mantenimiento incluido<br><br>👉 <a href="propiedades-arrendar.html" style="color:#d4af37;font-weight:600;">Ver propiedades en arriendo</a><br><br>¿Prefieres apartamento o casa?',
+    alojamiento: '🌴 <b>Alojamientos por Días</b><br><br>Perfectos para vacaciones, amoblados y con todos los servicios.<br><br><b>Incluyen:</b><br>• WiFi y servicios<br>• Ubicaciones turísticas<br>• Atención personalizada<br><br>👉 <a href="propiedades-alojamiento.html" style="color:#d4af37;font-weight:600;">Ver alojamientos disponibles</a><br><br>¿Cuántas personas serán y qué fechas?',
+    precio: '💰 <b>Rangos de Precio</b><br><br>Dime tu presupuesto y te muestro las mejores opciones:<br><br>• <b>Compra:</b> Desde $150 millones<br>• <b>Arriendo:</b> Desde $1.5 millones/mes<br>• <b>Por días:</b> Desde $200.000/noche<br><br>Ejemplo: "apartamento hasta 300 millones" o "arriendo hasta 2 millones"',
+    ubicacion: '📍 <b>Zonas de Cartagena</b><br><br>• <b>Bocagrande</b> - Playa, restaurantes, vida nocturna. Ideal inversión turística.<br>• <b>Manga</b> - Tradicional, central, familiar. Buenos precios.<br>• <b>Centro Histórico</b> - Encanto colonial. Ideal Airbnb.<br>• <b>Castillogrande</b> - Exclusiva, familiar, cerca a playa.<br>• <b>Crespo</b> - Cerca al aeropuerto, tranquila.<br>• <b>Laguito</b> - Frente al mar, turística.<br><br>¿Cuál zona te interesa explorar?',
+    contacto: '📞 <b>Contacto Directo</b><br><br>• <b>WhatsApp:</b> +57 300 243 9810<br>• <b>Email:</b> altorrainmobiliaria@gmail.com<br>• <b>Ciudad:</b> Cartagena de Indias<br><br>👉 <a href="contacto.html" style="color:#d4af37;font-weight:600;">Ir a página de contacto</a><br><br>¿Prefieres que te contactemos nosotros?',
+    servicios: '📋 <b>Nuestros Servicios</b><br><br>• ✅ Compra y venta de inmuebles<br>• ✅ Arriendos con contrato<br>• ✅ Alojamientos por días<br>• ✅ Avalúos comerciales<br>• ✅ Asesoría jurídica<br>• ✅ Administración de propiedades<br>• ✅ Servicios contables<br><br>👉 <a href="quienes-somos.html" style="color:#d4af37;font-weight:600;">Conocer más sobre nosotros</a>',
+    horario: '🕐 <b>Horario de Atención</b><br><br>• <b>Lunes a Viernes:</b> 8:00 AM - 6:00 PM<br>• <b>Sábados:</b> 9:00 AM - 1:00 PM<br><br>💡 Por WhatsApp respondemos más rápido, incluso fines de semana.',
+    gracias: '¡Con mucho gusto! 😊<br><br>Recuerda que puedes:<br>• 📱 Contactarnos por WhatsApp<br>• 🔄 Comparar propiedades<br>• ❤️ Guardar favoritos<br><br>¡Éxitos con tu búsqueda!',
+    noEntiendo: '🤔 No estoy seguro de entender tu consulta.<br><br><b>Intenta ser más específico:</b><br>• "Apartamento en Bocagrande"<br>• "Casa para arrendar"<br>• "Alojamiento para 4 personas"<br><br>O puedo conectarte con un asesor humano:',
+    default: '¿Hay algo más en lo que pueda ayudarte?<br><br>También puedo:<br>• Mostrarte propiedades específicas<br>• Explicarte sobre zonas<br>• Conectarte con un asesor',
+    sinResultados: 'No encontré propiedades exactas con esos criterios, pero tenemos opciones similares.<br><br>¿Te gustaría:<br>• Ver todas las propiedades disponibles?<br>• Ajustar los criterios de búsqueda?<br>• Hablar con un asesor?',
+    ayuda: '🤖 <b>Soy Altorra IA</b><br><br>Puedo ayudarte con:<br>• 🏠 Buscar propiedades (compra, arriendo, días)<br>• 📍 Información de zonas de Cartagena<br>• 💰 Filtrar por precio<br>• 📋 Explicar servicios<br>• 💬 Conectarte con asesor<br>• 🔄 Usar el comparador<br><br>Solo escribe tu pregunta o usa los botones rápidos.',
+    publicar: '📝 <b>Publica tu Propiedad</b><br><br>¿Tienes una propiedad para vender o arrendar?<br><br>Completa nuestro formulario y un asesor te contactará en menos de 24 horas.<br><br>👉 <a href="publicar-propiedad.html" style="color:#d4af37;font-weight:600;">Ir al formulario de publicación</a>',
+    comparar: '🔄 <b>Comparador de Propiedades</b><br><br>Puedes comparar hasta 3 propiedades lado a lado para ver:<br>• Precios<br>• Características<br>• Ubicación<br>• Amenidades<br><br>Agrega propiedades con el botón "Comparar" en cada tarjeta.<br><br>👉 <a href="comparar.html" style="color:#d4af37;font-weight:600;">Ver comparación actual</a>',
+    nosotros: '🏢 <b>Sobre Altorra Inmobiliaria</b><br><br>Somos una empresa inmobiliaria en Cartagena de Indias con experiencia en:<br>• Compra y venta<br>• Arriendos<br>• Alojamientos turísticos<br>• Asesoría legal y contable<br><br>👉 <a href="quienes-somos.html" style="color:#d4af37;font-weight:600;">Conocer nuestra historia</a>'
   };
 
   // Opciones rápidas iniciales
@@ -282,96 +322,155 @@
     }
   }
 
-  // Procesar mensaje del usuario
+  // Procesar mensaje del usuario con inteligencia mejorada
   function processMessage(message) {
     const msg = message.toLowerCase().trim();
 
-    // Detectar intención con patrones mejorados
-
-    // Saludos
-    if (msg.match(/^(hola|buenos|buenas|hey|hi|saludos|qué tal|que tal|ey)$/i) ||
-        msg.match(/^hola.{0,10}$/i)) {
+    // === SALUDOS ===
+    if (msg.match(/^(hola|buenos|buenas|hey|hi|saludos|qué tal|que tal|ey|hello)$/i) ||
+        msg.match(/^hola.{0,15}$/i) ||
+        msg.match(/^buenas?\s*(tardes?|noches?|días?|dias?)/i)) {
       botReply(RESPONSES.greeting[Math.floor(Math.random() * RESPONSES.greeting.length)], QUICK_OPTIONS);
       return;
     }
 
-    // Ayuda
-    if (msg.match(/ayuda|help|qué puedes|que puedes|cómo funciona|como funciona|opciones/i)) {
+    // === AYUDA Y CAPACIDADES ===
+    if (msg.match(/ayuda|help|qué puedes|que puedes|cómo funciona|como funciona|opciones|qué haces|que haces|para qué sirves|para que sirves/i)) {
       botReply(RESPONSES.ayuda, QUICK_OPTIONS);
       return;
     }
 
-    // Agradecimientos
-    if (msg.match(/gracias|genial|perfecto|excelente|ok|vale|bien|super|listo/i)) {
+    // === AGRADECIMIENTOS ===
+    if (msg.match(/^(gracias|genial|perfecto|excelente|ok|vale|bien|super|listo|bueno|entendido|claro)$/i)) {
       botReply(RESPONSES.gracias);
       return;
     }
 
-    // Preguntas sobre precio (sin buscar propiedades)
-    if (msg.match(/^(precio|costo|valor|cuánto|cuanto|presupuesto)(\?)?$/i) ||
-        msg.match(/qué precios|que precios|rango de precios/i)) {
+    // === SOBRE NOSOTROS / QUIÉNES SOMOS ===
+    if (msg.match(/quiénes son|quienes son|sobre ustedes|sobre altorra|la empresa|la inmobiliaria|quién es|quien es/i)) {
+      botReply(RESPONSES.nosotros);
+      return;
+    }
+
+    // === PUBLICAR PROPIEDAD ===
+    if (msg.match(/publicar|vender mi|arrendar mi|consignar|poner en venta|tengo una propiedad|quiero vender|quiero arrendar mi/i)) {
+      botReply(RESPONSES.publicar);
+      return;
+    }
+
+    // === COMPARADOR ===
+    if (msg.match(/comparar|comparador|comparación|comparacion|versus|vs|diferencia entre/i)) {
+      botReply(RESPONSES.comparar);
+      return;
+    }
+
+    // === PRECIOS GENERALES ===
+    if (msg.match(/^(precio|costo|valor|cuánto|cuanto|presupuesto|tarifas?)(\?)?$/i) ||
+        msg.match(/qué precios|que precios|rango de precios|cuánto cuesta|cuanto cuesta|cuánto vale|cuanto vale/i)) {
       botReply(RESPONSES.precio);
       return;
     }
 
-    // Contacto
-    if (msg.match(/contacto|teléfono|telefono|email|correo|llamar|número|numero|dirección|direccion/i)) {
+    // === CONTACTO ===
+    if (msg.match(/contacto|teléfono|telefono|email|correo|llamar|número|numero|dirección|direccion|ubicación de la oficina|dónde quedan|donde quedan/i)) {
       botReply(RESPONSES.contacto);
       return;
     }
 
-    // Horario
-    if (msg.match(/horario|hora|atienden|abierto|cuándo|cuando abren|disponibilidad/i)) {
+    // === HORARIO ===
+    if (msg.match(/horario|hora|atienden|abierto|cuándo|cuando abren|disponibilidad|a qué hora|a que hora/i)) {
       botReply(RESPONSES.horario);
       return;
     }
 
-    // Servicios
-    if (msg.match(/servicio|avalúo|avaluo|jurídico|juridico|legal|contable|qué hacen|que hacen|qué ofrecen|que ofrecen/i)) {
+    // === SERVICIOS ===
+    if (msg.match(/servicio|avalúo|avaluo|jurídico|juridico|legal|contable|qué hacen|que hacen|qué ofrecen|que ofrecen|administración|administracion/i)) {
       botReply(RESPONSES.servicios);
       return;
     }
 
-    // Ubicación general
-    if (msg.match(/^(ubicación|ubicacion|zona|barrio|donde|dónde|sectores)(\?)?$/i) ||
-        msg.match(/qué zonas|que zonas|en qué parte|en que parte/i)) {
+    // === ZONAS ESPECÍFICAS ===
+    for (const [zone, info] of Object.entries(SITE_KNOWLEDGE.zones)) {
+      if (msg.includes(zone)) {
+        const zoneTitle = zone.charAt(0).toUpperCase() + zone.slice(1);
+        let response = `📍 <b>${zoneTitle}</b><br><br>${info}<br><br>`;
+
+        // Buscar propiedades en esa zona
+        const zoneProps = properties.filter(p =>
+          (p.neighborhood && p.neighborhood.toLowerCase().includes(zone)) ||
+          (p.city && p.city.toLowerCase().includes(zone))
+        ).slice(0, 2);
+
+        if (zoneProps.length > 0) {
+          response += `<b>Propiedades disponibles en ${zoneTitle}:</b>`;
+          zoneProps.forEach(p => { response += createPropertyCard(p); });
+        } else {
+          response += `Actualmente no tenemos propiedades publicadas en ${zoneTitle}, pero contáctanos y te ayudamos a buscar.`;
+        }
+
+        botReply(response);
+        return;
+      }
+    }
+
+    // === UBICACIÓN GENERAL ===
+    if (msg.match(/^(ubicación|ubicacion|zona|barrio|donde|dónde|sectores|barrios)(\?)?$/i) ||
+        msg.match(/qué zonas|que zonas|en qué parte|en que parte|mejores zonas|qué barrios|que barrios/i)) {
       botReply(RESPONSES.ubicacion);
       return;
     }
 
-    // Buscar propiedades basado en la consulta
+    // === TIPOS DE PROPIEDAD ESPECÍFICOS ===
+    const typeMatch = msg.match(/(apartamento|apto|casa|lote|terreno|oficina|local|bodega|finca)/i);
+    if (typeMatch && !msg.match(/comprar|arrendar|venta|arriendo|alquiler/i)) {
+      const type = typeMatch[1].toLowerCase().replace('apto', 'apartamento').replace('terreno', 'lote');
+      const typeProps = properties.filter(p => p.type === type).slice(0, 3);
+
+      if (typeProps.length > 0) {
+        let html = `🏠 <b>${type.charAt(0).toUpperCase() + type.slice(1)}s disponibles:</b>`;
+        typeProps.forEach(p => { html += createPropertyCard(p); });
+        html += '<br>¿Te interesa alguno en particular? ¿Buscas para comprar o arrendar?';
+        botReply(html);
+      } else {
+        botReply(`Actualmente no tenemos ${type}s publicados, pero contáctanos y te ayudamos a encontrar uno.`);
+      }
+      return;
+    }
+
+    // === BÚSQUEDA DE PROPIEDADES ===
     const results = searchProperties(msg);
 
     if (results.length > 0) {
-      let html = `Encontré ${results.length} propiedad${results.length > 1 ? 'es' : ''} que podrían interesarte:`;
+      let html = `✨ Encontré <b>${results.length} propiedad${results.length > 1 ? 'es' : ''}</b> que coinciden:`;
       results.forEach(p => { html += createPropertyCard(p); });
-      html += '<br>¿Te gustaría ver más detalles de alguna?';
+      html += '<br>Haz clic en cualquiera para ver todos los detalles, o dime si quieres filtrar más.';
       botReply(html);
       return;
     }
 
-    // Si menciona comprar/arrendar pero no hay resultados específicos
-    if (msg.match(/comprar|venta|vender/i)) {
+    // === OPERACIONES SIN RESULTADOS ESPECÍFICOS ===
+    if (msg.match(/comprar|compra|venta|vender|inversión|inversion|invertir/i)) {
       handleOption('comprar');
       return;
     }
 
-    if (msg.match(/arrendar|arriendo|alquiler|rentar/i)) {
+    if (msg.match(/arrendar|arriendo|alquiler|alquilar|rentar|renta/i)) {
       handleOption('arrendar');
       return;
     }
 
-    if (msg.match(/día|dias|alojamiento|hospedaje|vacaciones/i)) {
+    if (msg.match(/día|dias|días|alojamiento|hospedaje|vacaciones|turismo|turista|hotel|airbnb|por noche/i)) {
       handleOption('alojamiento');
       return;
     }
 
-    if (msg.match(/asesor|agente|hablar|whatsapp/i)) {
+    // === CONTACTO CON ASESOR ===
+    if (msg.match(/asesor|agente|hablar|whatsapp|persona|humano|llamar/i)) {
       handleOption('whatsapp');
       return;
     }
 
-    // Respuesta por defecto
+    // === RESPUESTA POR DEFECTO ===
     const waLink = `https://wa.me/${CONFIG.whatsappNumber}?text=${encodeURIComponent('Hola Altorra, ' + message)}`;
     botReply(`
       ${RESPONSES.noEntiendo}
@@ -423,6 +522,35 @@
     }, CONFIG.messageDelay);
   }
 
+  // Crear burbuja de bienvenida
+  function createWelcomeBubble() {
+    if (welcomeBubbleShown) return;
+
+    const bubble = document.createElement('div');
+    bubble.className = 'chatbot-welcome-bubble';
+    bubble.id = 'chatbot-welcome-bubble';
+    bubble.innerHTML = `
+      <button class="close-bubble" onclick="event.stopPropagation(); this.parentElement.remove();">×</button>
+      <span class="ia-badge">IA</span>¡Hola! Soy tu asistente virtual. ¿Necesitas ayuda?
+    `;
+
+    bubble.addEventListener('click', () => {
+      bubble.remove();
+      toggleChat();
+    });
+
+    document.body.appendChild(bubble);
+    welcomeBubbleShown = true;
+
+    // Auto-ocultar después de 8 segundos
+    setTimeout(() => {
+      if (bubble.parentElement) {
+        bubble.style.opacity = '0';
+        setTimeout(() => bubble.remove(), 300);
+      }
+    }, 8000);
+  }
+
   // Inicializar chatbot
   function init() {
     createChatbotHTML();
@@ -439,6 +567,14 @@
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && isOpen) toggleChat();
     });
+
+    // Mostrar burbuja de bienvenida después de 3 segundos
+    setTimeout(() => {
+      if (!isOpen && !sessionStorage.getItem('altorra-chatbot-seen')) {
+        createWelcomeBubble();
+        sessionStorage.setItem('altorra-chatbot-seen', 'true');
+      }
+    }, 3000);
   }
 
   // Iniciar cuando el DOM esté listo
