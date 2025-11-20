@@ -79,14 +79,28 @@
     } catch(e) {}
   }
 
+  // Resetear conversación (para "atrás", "reiniciar", cambio de modo, etc.)
+  function resetConversation(options = { full: false }) {
+    const keepGreeting = conversationContext.hasGreetedUser;
+    // Volver al estado base usando deep copy
+    conversationContext = JSON.parse(JSON.stringify(INITIAL_CONTEXT));
+
+    // Si no es reinicio duro, conservamos info de saludo
+    if (!options.full) {
+      conversationContext.hasGreetedUser = keepGreeting;
+    }
+
+    saveContext();
+  }
+
   // Estado del chatbot
   let properties = [];
   let isOpen = false;
   let hasGreeted = false;
   let welcomeBubbleShown = false;
 
-  // Contexto de la conversación - memoria del chatbot
-  let conversationContext = {
+  // Contexto inicial base de la conversación
+  const INITIAL_CONTEXT = {
     // Rol del usuario (prioridad alta)
     role: null,              // 'comprador' | 'arrendatario' | 'turista' | 'propietario_venta' | 'propietario_arriendo'
     hasGreetedUser: false,   // Si ya saludamos al usuario
@@ -133,6 +147,9 @@
       availableFrom: null    // fecha disponible
     }
   };
+
+  // Contexto de la conversación - memoria del chatbot (instancia viva)
+  let conversationContext = JSON.parse(JSON.stringify(INITIAL_CONTEXT));
 
   // Sistema de consultoría - preguntas calificadoras
   const CONSULTATION_QUESTIONS = {
@@ -2009,6 +2026,53 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
   // Procesar mensaje del usuario con inteligencia mejorada
   function processMessage(message) {
     const msg = message.toLowerCase().trim();
+
+    // ===============================
+    // COMANDOS GLOBALES / CAMBIO DE CONTEXTO
+    // ===============================
+
+    // Volver al inicio / menú principal
+    if (/^(atr[aá]s|volver|regresar|quiero regresar|ir al inicio|menu|menú)$/i.test(msg)) {
+      resetConversation(); // limpiamos flujo pero conservamos que ya se saludó
+      botReply('Listo, volvamos al inicio. ¿Qué deseas hacer ahora?', QUICK_OPTIONS);
+      return;
+    }
+
+    // Reiniciar completamente la conversación
+    if (/^(reiniciar chat|reiniciar|empezar de nuevo|nuevo chat|borrar conversaci[oó]n)$/i.test(msg)) {
+      resetConversation({ full: true });
+      botReply('De acuerdo, empezamos desde cero. ¿Qué necesitas hoy?', QUICK_OPTIONS);
+      return;
+    }
+
+    // Cambiar explícitamente de modo principal, aunque esté en medio de otro flujo
+    if (/^quiero arrendar\b|^busco arriendo\b/i.test(msg)) {
+      resetConversation();
+      handleOption('arrendar');
+      return;
+    }
+
+    if (/^quiero comprar\b|^busco comprar\b|^busco.*para comprar\b/i.test(msg)) {
+      resetConversation();
+      handleOption('comprar');
+      return;
+    }
+
+    if (/^alojamiento por d[ií]as\b|^quiero alojamiento\b|^busco alojamiento\b/i.test(msg)) {
+      resetConversation();
+      handleOption('alojamiento');
+      return;
+    }
+
+    if (/^soy propietario\b|^tengo una propiedad\b|^tengo un apartamento\b|^tengo una casa\b/i.test(msg)) {
+      resetConversation();
+      handleOption('propietario');
+      return;
+    }
+
+    // ===============================
+    // FIN COMANDOS GLOBALES
+    // ===============================
 
     // 🔹 ATAJO: si la conversación ya está casi cerrada y el usuario dice "bien",
     // respóndele con el mensaje de cierre corporativo.
