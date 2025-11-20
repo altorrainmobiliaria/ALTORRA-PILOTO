@@ -35,7 +35,7 @@
 }
 
 .altorra-breadcrumb .breadcrumb-item a:hover {
-  color: #d4af37;
+  color: var(--gold-light, #d4af37);
   text-decoration: none;
 }
 
@@ -46,7 +46,7 @@
   left: 0;
   width: 0;
   height: 1px;
-  background: #d4af37;
+  background: var(--gold-light, #d4af37);
   transition: width 0.3s ease;
 }
 

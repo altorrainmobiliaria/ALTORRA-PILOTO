@@ -4,7 +4,6 @@
 
 /* Variables */
 :root {
-  --chat-gold: #d4af37;
   --chat-gold-light: #f5e6b3;
   --chat-bg: #ffffff;
   --chat-text: #111827;
@@ -34,7 +33,7 @@
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--chat-gold), #b8962e);
+  background: linear-gradient(135deg, var(--gold-light), #b8962e);
   border: none;
   cursor: pointer;
   box-shadow: 0 8px 24px rgba(212, 175, 55, 0.4);
@@ -152,7 +151,7 @@
 
 .chatbot-welcome-bubble .ia-badge {
   display: inline-block;
-  background: var(--chat-gold);
+  background: var(--gold-light);
   color: #000;
   font-size: 0.65rem;
   font-weight: 800;
@@ -207,7 +206,7 @@
 
 /* Header del chat */
 .chatbot-header {
-  background: linear-gradient(135deg, var(--chat-gold), #b8962e);
+  background: linear-gradient(135deg, var(--gold-light), #b8962e);
   color: #fff;
   padding: 16px 20px;
   display: flex;
@@ -282,7 +281,7 @@
 }
 
 .chat-message.user {
-  background: var(--chat-gold);
+  background: var(--gold-light);
   color: #fff;
   align-self: flex-end;
   border-bottom-right-radius: 4px;
@@ -309,7 +308,7 @@
 
 .chat-option:hover {
   background: var(--chat-gold-light);
-  border-color: var(--chat-gold);
+  border-color: var(--gold-light);
 }
 
 /* Tarjeta de propiedad en chat */
@@ -408,7 +407,7 @@
 
 .chat-property-card .price {
   font-weight: 800;
-  color: var(--chat-gold);
+  color: var(--gold-light);
   font-size: 0.9rem;
 }
 
@@ -466,7 +465,7 @@
 }
 
 .chatbot-input input:focus {
-  border-color: var(--chat-gold);
+  border-color: var(--gold-light);
 }
 
 .chatbot-input button {
@@ -474,7 +473,7 @@
   height: 40px;
   border-radius: 50%;
   border: none;
-  background: var(--chat-gold);
+  background: var(--gold-light);
   color: #fff;
   cursor: pointer;
   display: flex;
