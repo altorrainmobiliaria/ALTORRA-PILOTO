@@ -31,8 +31,215 @@
     timeline: null,        // urgente, flexible
     family: null,          // solo, pareja, familia
     lastQuestion: null,    // última pregunta hecha
-    questionsAsked: []     // preguntas ya respondidas
+    questionsAsked: [],    // preguntas ya respondidas
+    consultationPhase: 'discovery', // discovery, recommendation, closing
+    dataPoints: 0          // cantidad de información recopilada
   };
+
+  // Sistema de consultoría - preguntas calificadoras
+  const CONSULTATION_QUESTIONS = {
+    comprar: {
+      purpose: {
+        question: '¿Para qué sería esta compra?',
+        options: [
+          { text: 'Para vivir yo/mi familia', value: 'vivienda' },
+          { text: 'Para inversión/renta', value: 'inversion' },
+          { text: 'Para oficina/negocio', value: 'trabajo' }
+        ]
+      },
+      propertyType: {
+        question: '¿Qué tipo de propiedad te interesa?',
+        options: [
+          { text: 'Apartamento', value: 'apartamento' },
+          { text: 'Casa', value: 'casa' },
+          { text: 'Lote/Terreno', value: 'lote' },
+          { text: 'Oficina/Local', value: 'oficina' }
+        ]
+      },
+      zone: {
+        question: '¿Qué zona de Cartagena prefieres?',
+        options: [
+          { text: 'Bocagrande (playa, turístico)', value: 'bocagrande' },
+          { text: 'Manga (tradicional, familiar)', value: 'manga' },
+          { text: 'Centro Histórico', value: 'centro' },
+          { text: 'Otra zona / No estoy seguro', value: 'otra' }
+        ]
+      },
+      budget: {
+        question: '¿Cuál es tu presupuesto aproximado?',
+        options: [
+          { text: 'Hasta $200 millones', value: 200000000 },
+          { text: '$200 - $400 millones', value: 400000000 },
+          { text: '$400 - $700 millones', value: 700000000 },
+          { text: 'Más de $700 millones', value: 1000000000 }
+        ]
+      },
+      beds: {
+        question: '¿Cuántas habitaciones necesitas?',
+        options: [
+          { text: '1-2 habitaciones', value: 2 },
+          { text: '3 habitaciones', value: 3 },
+          { text: '4 o más habitaciones', value: 4 }
+        ]
+      }
+    },
+    arrendar: {
+      purpose: {
+        question: '¿Para qué necesitas el arriendo?',
+        options: [
+          { text: 'Para vivir', value: 'vivienda' },
+          { text: 'Temporal por trabajo', value: 'trabajo' },
+          { text: 'Para estudiantes', value: 'estudio' }
+        ]
+      },
+      propertyType: {
+        question: '¿Qué tipo de propiedad buscas?',
+        options: [
+          { text: 'Apartamento', value: 'apartamento' },
+          { text: 'Casa', value: 'casa' },
+          { text: 'Habitación/Estudio', value: 'estudio' }
+        ]
+      },
+      zone: {
+        question: '¿Qué zona prefieres?',
+        options: [
+          { text: 'Bocagrande', value: 'bocagrande' },
+          { text: 'Manga', value: 'manga' },
+          { text: 'Centro', value: 'centro' },
+          { text: 'Flexible / Cualquier zona', value: 'cualquiera' }
+        ]
+      },
+      budget: {
+        question: '¿Cuál es tu presupuesto mensual?',
+        options: [
+          { text: 'Hasta $1.5 millones', value: 1500000 },
+          { text: '$1.5 - $3 millones', value: 3000000 },
+          { text: '$3 - $5 millones', value: 5000000 },
+          { text: 'Más de $5 millones', value: 10000000 }
+        ]
+      }
+    }
+  };
+
+  // Función para obtener la siguiente pregunta de consultoría
+  function getNextConsultationQuestion() {
+    const ctx = conversationContext;
+    const interest = ctx.interest;
+
+    if (!interest || !CONSULTATION_QUESTIONS[interest]) return null;
+
+    const questions = CONSULTATION_QUESTIONS[interest];
+
+    // Orden de preguntas
+    const questionOrder = ['purpose', 'propertyType', 'zone', 'budget', 'beds'];
+
+    for (const field of questionOrder) {
+      if (questions[field] && !ctx[field]) {
+        return { field, ...questions[field] };
+      }
+    }
+
+    return null; // Ya tenemos toda la información
+  }
+
+  // Función para verificar si tenemos suficiente información para recomendar
+  function hasEnoughInfoToRecommend() {
+    const ctx = conversationContext;
+    let points = 0;
+
+    if (ctx.interest) points++;
+    if (ctx.propertyType) points++;
+    if (ctx.zone) points++;
+    if (ctx.budget) points++;
+    if (ctx.beds) points++;
+    if (ctx.purpose) points++;
+
+    conversationContext.dataPoints = points;
+
+    // Necesitamos al menos 3 puntos de datos para recomendar
+    return points >= 3;
+  }
+
+  // Función para hacer recomendaciones inteligentes basadas en el perfil
+  function getSmartRecommendations() {
+    const ctx = conversationContext;
+    let results = [...properties];
+
+    // Filtrar por operación
+    if (ctx.interest) {
+      results = results.filter(p => p.operation === ctx.interest);
+    }
+
+    // Filtrar por tipo
+    if (ctx.propertyType && ctx.propertyType !== 'otra') {
+      results = results.filter(p => p.type === ctx.propertyType);
+    }
+
+    // Filtrar por zona
+    if (ctx.zone && ctx.zone !== 'otra' && ctx.zone !== 'cualquiera') {
+      results = results.filter(p =>
+        (p.neighborhood && p.neighborhood.toLowerCase().includes(ctx.zone)) ||
+        (p.city && p.city.toLowerCase().includes(ctx.zone))
+      );
+    }
+
+    // Filtrar por presupuesto
+    if (ctx.budget) {
+      results = results.filter(p => p.price <= ctx.budget * 1.15); // 15% tolerancia
+    }
+
+    // Filtrar por habitaciones
+    if (ctx.beds) {
+      results = results.filter(p => p.beds >= ctx.beds - 1); // Flexibilidad de 1
+    }
+
+    // Ordenar por relevancia (más cercano al presupuesto primero)
+    if (ctx.budget) {
+      results.sort((a, b) => Math.abs(a.price - ctx.budget) - Math.abs(b.price - ctx.budget));
+    }
+
+    return results.slice(0, 3);
+  }
+
+  // Generar respuesta de recomendación personalizada
+  function generatePersonalizedRecommendation(results) {
+    const ctx = conversationContext;
+
+    let intro = '✨ <b>Basándome en tu perfil</b>:<br>';
+    if (ctx.purpose === 'inversion') intro += '• Buscas para <b>inversión</b><br>';
+    else if (ctx.purpose === 'vivienda') intro += '• Buscas para <b>vivir</b><br>';
+    if (ctx.propertyType) intro += `• Tipo: <b>${ctx.propertyType}</b><br>`;
+    if (ctx.zone && ctx.zone !== 'otra') intro += `• Zona: <b>${ctx.zone.charAt(0).toUpperCase() + ctx.zone.slice(1)}</b><br>`;
+    if (ctx.budget) intro += `• Presupuesto: hasta <b>$${(ctx.budget/1000000).toFixed(0)} millones</b><br>`;
+    if (ctx.beds) intro += `• Habitaciones: <b>${ctx.beds}+</b><br>`;
+
+    intro += '<br>';
+
+    if (results.length > 0) {
+      intro += `He encontrado <b>${results.length} propiedad${results.length > 1 ? 'es' : ''}</b> que se ajustan a tus necesidades:`;
+
+      results.forEach(p => {
+        intro += createPropertyCard(p);
+      });
+
+      // Agregar valor según propósito
+      if (ctx.purpose === 'inversion') {
+        intro += '<br><br>💡 <b>Tip de inversión:</b> Estas propiedades tienen buen potencial de arriendo en la zona.';
+      } else if (ctx.purpose === 'vivienda' && ctx.family === 'familia') {
+        intro += '<br><br>💡 <b>Tip:</b> Estas propiedades están cerca de colegios y zonas familiares.';
+      }
+
+      intro += '<br><br>¿Te gustaría agendar una visita o necesitas más opciones?';
+    } else {
+      intro += 'No encontré propiedades exactas con estos criterios, pero puedo ajustar la búsqueda.<br><br>';
+      intro += '¿Qué prefieres:<br>';
+      intro += '• Ampliar el presupuesto<br>';
+      intro += '• Explorar otras zonas<br>';
+      intro += '• Hablar con un asesor para opciones personalizadas';
+    }
+
+    return intro;
+  }
 
   // Conocimiento del proceso inmobiliario
   const REAL_ESTATE_KNOWLEDGE = {
@@ -522,43 +729,75 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     return results.slice(0, 3); // Máximo 3 resultados
   }
 
-  // Manejar opciones rápidas
+  // Manejar opciones rápidas con enfoque consultivo
   function handleOption(action) {
     switch (action) {
       case 'comprar':
         addMessage('Quiero comprar una propiedad', false);
-        const buyProps = properties.filter(p => p.operation === 'comprar').slice(0, 2);
-        if (buyProps.length > 0) {
-          let html = RESPONSES.comprar + '<br><br>Aquí te muestro algunas opciones:';
-          buyProps.forEach(p => { html += createPropertyCard(p); });
-          botReply(html);
+        conversationContext.interest = 'comprar';
+        conversationContext.consultationPhase = 'discovery';
+
+        // Iniciar consultoría en lugar de mostrar propiedades al azar
+        let comprarResponse = `🏡 <b>¡Excelente decisión!</b> Comprar un inmueble en Cartagena es una gran inversión.<br><br>`;
+        comprarResponse += `Para encontrar la propiedad <b>perfecta para ti</b>, necesito conocerte mejor.<br><br>`;
+
+        const firstQuestionComprar = getNextConsultationQuestion();
+        if (firstQuestionComprar) {
+          comprarResponse += `<b>${firstQuestionComprar.question}</b>`;
+          conversationContext.lastQuestion = firstQuestionComprar.field;
+
+          // Crear opciones como botones
+          const options = firstQuestionComprar.options.map(opt => ({
+            text: opt.text,
+            action: `set_${firstQuestionComprar.field}_${opt.value}`
+          }));
+          botReply(comprarResponse, options);
         } else {
-          botReply(RESPONSES.comprar);
+          botReply(comprarResponse);
         }
         break;
 
       case 'arrendar':
         addMessage('Busco arriendo', false);
-        const rentProps = properties.filter(p => p.operation === 'arrendar').slice(0, 2);
-        if (rentProps.length > 0) {
-          let html = RESPONSES.arrendar + '<br><br>Te muestro nuestras opciones:';
-          rentProps.forEach(p => { html += createPropertyCard(p); });
-          botReply(html);
+        conversationContext.interest = 'arrendar';
+        conversationContext.consultationPhase = 'discovery';
+
+        let arrendarResponse = `🔑 <b>¡Perfecto!</b> Tenemos opciones de arriendo para todos los presupuestos.<br><br>`;
+        arrendarResponse += `Para recomendarte las mejores opciones, cuéntame un poco más:<br><br>`;
+
+        const firstQuestionArrendar = getNextConsultationQuestion();
+        if (firstQuestionArrendar) {
+          arrendarResponse += `<b>${firstQuestionArrendar.question}</b>`;
+          conversationContext.lastQuestion = firstQuestionArrendar.field;
+
+          const options = firstQuestionArrendar.options.map(opt => ({
+            text: opt.text,
+            action: `set_${firstQuestionArrendar.field}_${opt.value}`
+          }));
+          botReply(arrendarResponse, options);
         } else {
-          botReply(RESPONSES.arrendar + '<br><br>Actualmente no tenemos propiedades en arriendo publicadas, pero contáctanos y te ayudamos a encontrar una.');
+          botReply(arrendarResponse);
         }
         break;
 
       case 'alojamiento':
         addMessage('Alojamiento por días', false);
+        conversationContext.interest = 'dias';
+
+        let alojamientoResponse = `🌴 <b>¡Cartagena te espera!</b><br><br>`;
+        alojamientoResponse += `Para encontrar el alojamiento ideal, necesito saber:<br><br>`;
+        alojamientoResponse += `• ¿Cuántas personas serán?<br>`;
+        alojamientoResponse += `• ¿Qué fechas tienes en mente?<br>`;
+        alojamientoResponse += `• ¿Prefieres cerca a la playa o en el centro histórico?<br><br>`;
+
         const stayProps = properties.filter(p => p.operation === 'dias' || p.operation === 'alojar').slice(0, 2);
         if (stayProps.length > 0) {
-          let html = RESPONSES.alojamiento + '<br><br>Mira estas opciones:';
-          stayProps.forEach(p => { html += createPropertyCard(p); });
-          botReply(html);
-        } else {
-          botReply(RESPONSES.alojamiento + '<br><br>Próximamente tendremos opciones disponibles. Contáctanos para más información.');
+          alojamientoResponse += `Mientras tanto, aquí hay algunas opciones populares:`;
+          stayProps.forEach(p => { alojamientoResponse += createPropertyCard(p); });
         }
+
+        alojamientoResponse += `<br><br>👉 <a href="propiedades-alojamientos.html" style="color:#d4af37;font-weight:600;">Ver todos los alojamientos</a>`;
+        botReply(alojamientoResponse);
         break;
 
       case 'whatsapp':
@@ -586,6 +825,64 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
       case 'propietario_arriendos':
         addMessage('Quiero arrendar mi propiedad', false);
         botReply(RESPONSES.propietarioArriendos);
+        break;
+
+      default:
+        // Manejar respuestas de consultoría (set_field_value)
+        if (action.startsWith('set_')) {
+          const parts = action.split('_');
+          if (parts.length >= 3) {
+            const field = parts[1];
+            const value = parts.slice(2).join('_');
+
+            // Guardar el valor en el contexto
+            if (field === 'purpose') {
+              conversationContext.purpose = value;
+              addMessage(CONSULTATION_QUESTIONS[conversationContext.interest]?.purpose?.options?.find(o => o.value === value)?.text || value, false);
+            } else if (field === 'propertyType') {
+              conversationContext.propertyType = value;
+              addMessage(CONSULTATION_QUESTIONS[conversationContext.interest]?.propertyType?.options?.find(o => o.value === value)?.text || value, false);
+            } else if (field === 'zone') {
+              conversationContext.zone = value;
+              addMessage(CONSULTATION_QUESTIONS[conversationContext.interest]?.zone?.options?.find(o => o.value === value)?.text || value, false);
+            } else if (field === 'budget') {
+              conversationContext.budget = parseInt(value);
+              addMessage(CONSULTATION_QUESTIONS[conversationContext.interest]?.budget?.options?.find(o => o.value === parseInt(value))?.text || value, false);
+            } else if (field === 'beds') {
+              conversationContext.beds = parseInt(value);
+              addMessage(CONSULTATION_QUESTIONS[conversationContext.interest]?.beds?.options?.find(o => o.value === parseInt(value))?.text || value, false);
+            }
+
+            // Verificar si tenemos suficiente información
+            if (hasEnoughInfoToRecommend()) {
+              // Cambiar a fase de recomendación
+              conversationContext.consultationPhase = 'recommendation';
+              const results = getSmartRecommendations();
+              const recommendation = generatePersonalizedRecommendation(results);
+              botReply(recommendation);
+            } else {
+              // Continuar con la siguiente pregunta
+              const nextQuestion = getNextConsultationQuestion();
+              if (nextQuestion) {
+                let response = '✅ ¡Perfecto!<br><br>';
+                response += `<b>${nextQuestion.question}</b>`;
+                conversationContext.lastQuestion = nextQuestion.field;
+
+                const options = nextQuestion.options.map(opt => ({
+                  text: opt.text,
+                  action: `set_${nextQuestion.field}_${opt.value}`
+                }));
+                botReply(response, options);
+              } else {
+                // Ya tenemos toda la información
+                conversationContext.consultationPhase = 'recommendation';
+                const results = getSmartRecommendations();
+                const recommendation = generatePersonalizedRecommendation(results);
+                botReply(recommendation);
+              }
+            }
+          }
+        }
         break;
     }
   }
