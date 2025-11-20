@@ -542,9 +542,10 @@
   <!-- Inyección del header y footer -->
   <script src="header-footer.js" defer></script>
 
-  <!-- EmailJS SDK -->
+  <!-- EmailJS SDK (sin defer para cargar primero) -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  <script defer src="js/email-service.js"></script>
+  <!-- Email Service (sin defer para ejecutar después de EmailJS SDK) -->
+  <script src="js/email-service.js"></script>
 
   <script defer src="js/form-validation.js"></script>
   <script defer src="js/form-autosave.js"></script>
