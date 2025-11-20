@@ -10,7 +10,7 @@
   // ===== CONFIGURACIÓN EMAILJS =====
   const EMAILJS_CONFIG = {
     publicKey: 'EiJacymAjNl-Q8X1j',     // ✅ Public Key configurado
-    serviceId: 'YOUR_SERVICE_ID_HERE',   // ⚠️ FALTA: Service ID
+    serviceId: 'service_tddohxc',        // ✅ Service ID configurado
     templates: {
       contacto: 'template_442jrws',      // Template ID del formulario de contacto ✅
       publicar: 'altorra_publicar',      // Template para publicar propiedad
