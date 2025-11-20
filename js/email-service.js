@@ -1,240 +1,233 @@
 /* ========================================
-   ALTORRA - EMAIL SERVICE (EmailJS)
+   ALTORRA - SERVICIO DE ENVÍO DE EMAILS
    Archivo: js/email-service.js
-   Sistema de envío de emails sin backend
+   Integración con EmailJS
    ======================================== */
 
 (function() {
   'use strict';
 
-  // =============================================
-  // CONFIGURACIÓN DE EmailJS
-  // =============================================
-
-  const EMAIL_CONFIG = {
-    // TODO: Reemplazar con tus credenciales reales de EmailJS
-    // 1. Crear cuenta en https://www.emailjs.com/
-    // 2. Crear servicio de email (Gmail)
-    // 3. Crear templates
-    // 4. Reemplazar estos valores
-
-    publicKey: 'YOUR_PUBLIC_KEY', // Tu Public Key de EmailJS
-    serviceId: 'service_altorra', // ID del servicio
+  // ===== CONFIGURACIÓN EMAILJS =====
+  const EMAILJS_CONFIG = {
+    publicKey: 'EiJacymAjNl-Q8X1j',     // ✅ Public Key configurado
+    serviceId: 'YOUR_SERVICE_ID_HERE',   // ⚠️ FALTA: Service ID
     templates: {
-      contactForm: 'template_contacto',        // Template para contacto.html
-      publishForm: 'template_publicar',        // Template para publicar-propiedad.html
-      detailForm: 'template_detalle',          // Template para detalle-propiedad.html
-      autoResponse: 'template_autorespuesta'   // Template de respuesta automática al usuario
-    },
-    toEmail: 'altorrainmobiliaria@gmail.com'
+      contacto: 'template_442jrws',      // Template ID del formulario de contacto ✅
+      publicar: 'altorra_publicar',      // Template para publicar propiedad
+      detalle: 'altorra_detalle',        // Template para consultas desde detalle
+      autorespuesta: 'altorra_confirmacion'  // Template de confirmación al usuario
+    }
   };
 
-  // =============================================
-  // SISTEMA DE RADICADOS
-  // =============================================
-
-  /**
-   * Genera número de radicado único
-   * Formato: ALTORRA-YYYYMMDD-HHMMSS-RND
-   * Ejemplo: ALTORRA-20251120-143025-A7F3
-   */
+  // ===== GENERADOR DE RADICADOS =====
   function generateRadicado() {
     const now = new Date();
-
-    // Fecha: YYYYMMDD
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
-    const datePart = `${year}${month}${day}`;
-
-    // Hora: HHMMSS
     const hours = String(now.getHours()).padStart(2, '0');
     const minutes = String(now.getMinutes()).padStart(2, '0');
     const seconds = String(now.getSeconds()).padStart(2, '0');
-    const timePart = `${hours}${minutes}${seconds}`;
 
-    // Random: 4 caracteres alfanuméricos
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let randomPart = '';
-    for (let i = 0; i < 4; i++) {
-      randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
+    // Generar código aleatorio de 4 caracteres
+    const randomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
 
-    return `ALTORRA-${datePart}-${timePart}-${randomPart}`;
+    return `ALTORRA-${year}${month}${day}-${hours}${minutes}${seconds}-${randomCode}`;
   }
 
-  // =============================================
-  // INICIALIZACIÓN DE EmailJS
-  // =============================================
-
-  /**
-   * Inicializa EmailJS con la public key
-   */
-  function initEmailJS() {
-    try {
-      if (typeof emailjs === 'undefined') {
-        console.error('❌ EmailJS no está cargado. Verifica el script en el HTML.');
-        return false;
-      }
-
-      emailjs.init(EMAIL_CONFIG.publicKey);
-      console.log('✅ EmailJS inicializado correctamente');
-      return true;
-    } catch (error) {
-      console.error('❌ Error al inicializar EmailJS:', error);
-      return false;
-    }
+  // ===== FORMATEAR FECHA =====
+  function formatDate(date) {
+    const options = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    };
+    return new Intl.DateTimeFormat('es-CO', options).format(date);
   }
 
-  // =============================================
-  // ENVÍO DE EMAILS
-  // =============================================
+  // ===== PREPARAR DATOS DEL FORMULARIO =====
+  function prepareFormData(form, formType) {
+    const formData = new FormData(form);
+    const data = {};
 
-  /**
-   * Envía email usando EmailJS
-   * @param {string} templateId - ID del template
-   * @param {Object} data - Datos del formulario
-   * @returns {Promise}
-   */
-  async function sendEmail(templateId, data) {
+    // Convertir FormData a objeto
+    for (let [key, value] of formData.entries()) {
+      // Ignorar campos internos y honeypots
+      if (key.startsWith('_') || key === 'website_url') continue;
+      data[key] = value;
+    }
+
+    // Agregar metadatos
+    data.radicado = generateRadicado();
+    data.fecha = formatDate(new Date());
+    data.tipoFormulario = formType;
+
+    return data;
+  }
+
+  // ===== ENVIAR EMAIL CON EMAILJS =====
+  async function sendEmail(templateId, params) {
+    // Verificar que EmailJS esté cargado
+    if (typeof emailjs === 'undefined') {
+      throw new Error('EmailJS no está cargado. Verifica que el script esté incluido en la página.');
+    }
+
     try {
       const response = await emailjs.send(
-        EMAIL_CONFIG.serviceId,
+        EMAILJS_CONFIG.serviceId,
         templateId,
-        data
+        params,
+        EMAILJS_CONFIG.publicKey
       );
 
-      console.log('✅ Email enviado:', response);
       return {
         success: true,
-        response: response
+        response: response,
+        messageId: response.text
       };
     } catch (error) {
-      console.error('❌ Error al enviar email:', error);
+      console.error('Error sending email:', error);
       return {
         success: false,
-        error: error
+        error: error,
+        message: error.text || 'Error desconocido'
       };
     }
   }
 
-  /**
-   * Envía email de confirmación al usuario
-   * @param {Object} data - Datos del formulario
-   * @returns {Promise}
-   */
-  async function sendAutoResponse(data) {
-    const autoResponseData = {
-      to_email: data.Email || data.email,
-      to_name: data.Nombre || data.nombre,
+  // ===== PROCESAR FORMULARIO DE CONTACTO =====
+  async function processContactForm(form) {
+    const data = prepareFormData(form, 'contacto');
+
+    // Enviar email a ALTORRA
+    const result = await sendEmail(EMAILJS_CONFIG.templates.contacto, {
       radicado: data.radicado,
-      message: `Hemos recibido tu solicitud con número de radicado: ${data.radicado}. Un asesor de Altorra se pondrá en contacto contigo pronto.`
-    };
+      nombre: data.Nombre || data.nombre || '',
+      email: data.Email || data.email || '',
+      telefono: data.Telefono || data.telefono || data.Teléfono || '',
+      motivo: data.Motivo || data.motivo || 'No especificado',
+      mensaje: data.Mensaje || data.mensaje || '',
+      fecha: data.fecha
+    });
 
-    return await sendEmail(EMAIL_CONFIG.templates.autoResponse, autoResponseData);
-  }
-
-  // =============================================
-  // PROCESAMIENTO DE FORMULARIOS
-  // =============================================
-
-  /**
-   * Procesa y envía formulario de contacto
-   * @param {FormData} formData - Datos del formulario
-   * @param {string} formType - Tipo de formulario (contactForm, publishForm, detailForm)
-   * @returns {Promise}
-   */
-  async function processForm(formData, formType = 'contactForm') {
-    try {
-      // Generar radicado
-      const radicado = generateRadicado();
-
-      // Convertir FormData a objeto
-      const data = {};
-      for (let [key, value] of formData.entries()) {
-        // Ignorar campos ocultos de seguridad
-        if (key.startsWith('_') || key === 'g-recaptcha-response') {
-          continue;
-        }
-        data[key] = value;
-      }
-
-      // Agregar radicado y metadata
-      data.radicado = radicado;
-      data.to_email = EMAIL_CONFIG.toEmail;
-      data.fecha_envio = new Date().toLocaleString('es-CO', {
-        timeZone: 'America/Bogota',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+    // Enviar autorespuesta al usuario
+    if (result.success) {
+      await sendEmail(EMAILJS_CONFIG.templates.autorespuesta, {
+        radicado: data.radicado,
+        nombre: data.Nombre || data.nombre || '',
+        to_email: data.Email || data.email || ''
       });
-
-      // Determinar template según tipo de formulario
-      let templateId;
-      switch (formType) {
-        case 'contactForm':
-          templateId = EMAIL_CONFIG.templates.contactForm;
-          break;
-        case 'publishForm':
-          templateId = EMAIL_CONFIG.templates.publishForm;
-          break;
-        case 'detailForm':
-          templateId = EMAIL_CONFIG.templates.detailForm;
-          break;
-        default:
-          templateId = EMAIL_CONFIG.templates.contactForm;
-      }
-
-      // Enviar email principal a Altorra
-      console.log('📧 Enviando email principal...', data);
-      const mainEmailResult = await sendEmail(templateId, data);
-
-      if (!mainEmailResult.success) {
-        throw new Error('No se pudo enviar el email principal');
-      }
-
-      // Enviar auto-respuesta al usuario
-      console.log('📧 Enviando confirmación al usuario...');
-      const autoResponseResult = await sendAutoResponse(data);
-
-      if (!autoResponseResult.success) {
-        console.warn('⚠️ Email principal enviado pero falló la auto-respuesta');
-      }
-
-      return {
-        success: true,
-        radicado: radicado,
-        data: data
-      };
-
-    } catch (error) {
-      console.error('❌ Error al procesar formulario:', error);
-      return {
-        success: false,
-        error: error.message || 'Error desconocido al enviar el formulario'
-      };
     }
+
+    return {
+      success: result.success,
+      radicado: data.radicado,
+      error: result.error
+    };
   }
 
-  // =============================================
-  // API PÚBLICA
-  // =============================================
+  // ===== PROCESAR FORMULARIO DE PUBLICAR PROPIEDAD =====
+  async function processPublishForm(form) {
+    const data = prepareFormData(form, 'publicar');
 
+    // Enviar email a ALTORRA
+    const result = await sendEmail(EMAILJS_CONFIG.templates.publicar, {
+      radicado: data.radicado,
+      // Datos del propietario
+      nombre: data.Nombre || data.nombre || '',
+      email: data.Email || data.email || '',
+      telefono: data.Telefono || data.telefono || data.Teléfono || '',
+      // Datos de la propiedad
+      operacion: data.Operacion || data.operacion || '',
+      tipo: data['Tipo de propiedad'] || data.tipo || '',
+      precio: data['Precio estimado (COP)'] || data.precio || '',
+      descripcion: data['Descripción de la propiedad'] || data.descripcion || '',
+      fecha: data.fecha
+    });
+
+    // Enviar autorespuesta al usuario
+    if (result.success) {
+      await sendEmail(EMAILJS_CONFIG.templates.autorespuesta, {
+        radicado: data.radicado,
+        nombre: data.Nombre || data.nombre || '',
+        to_email: data.Email || data.email || ''
+      });
+    }
+
+    return {
+      success: result.success,
+      radicado: data.radicado,
+      error: result.error
+    };
+  }
+
+  // ===== PROCESAR FORMULARIO DE DETALLE =====
+  async function processDetailForm(form) {
+    const data = prepareFormData(form, 'detalle');
+
+    // Enviar email a ALTORRA
+    const result = await sendEmail(EMAILJS_CONFIG.templates.detalle, {
+      radicado: data.radicado,
+      nombre: data.nombre || '',
+      email: data.email || '',
+      telefono: data.telefono || '',
+      mensaje: data.mensaje || '',
+      propiedadId: data.propertyId || '',
+      propiedadTitulo: data.propertyTitle || '',
+      fecha: data.fecha
+    });
+
+    // Enviar autorespuesta al usuario
+    if (result.success) {
+      await sendEmail(EMAILJS_CONFIG.templates.autorespuesta, {
+        radicado: data.radicado,
+        nombre: data.nombre || '',
+        to_email: data.email || ''
+      });
+    }
+
+    return {
+      success: result.success,
+      radicado: data.radicado,
+      error: result.error
+    };
+  }
+
+  // ===== API PÚBLICA =====
   window.AltorraEmailService = {
-    init: initEmailJS,
-    generateRadicado: generateRadicado,
-    sendEmail: sendEmail,
-    processForm: processForm,
-    config: EMAIL_CONFIG
+    // Procesar formularios
+    processContactForm,
+    processPublishForm,
+    processDetailForm,
+
+    // Utilidades
+    generateRadicado,
+
+    // Configuración (para debugging)
+    getConfig() {
+      return {
+        publicKey: EMAILJS_CONFIG.publicKey,
+        serviceId: EMAILJS_CONFIG.serviceId,
+        templates: EMAILJS_CONFIG.templates
+      };
+    },
+
+    // Verificar si está configurado
+    isConfigured() {
+      return EMAILJS_CONFIG.publicKey !== 'YOUR_PUBLIC_KEY_HERE' &&
+             EMAILJS_CONFIG.serviceId !== 'YOUR_SERVICE_ID_HERE';
+    }
   };
 
-  // Inicializar cuando el DOM esté listo
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initEmailJS);
+  // Inicializar EmailJS cuando esté disponible
+  if (typeof emailjs !== 'undefined') {
+    emailjs.init(EMAILJS_CONFIG.publicKey);
+    console.log('✅ EmailJS inicializado correctamente');
   } else {
-    initEmailJS();
+    console.warn('⚠️ EmailJS no está cargado todavía. Asegúrate de incluir el script de EmailJS en tu HTML.');
   }
 
 })();
