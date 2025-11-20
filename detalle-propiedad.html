@@ -275,6 +275,79 @@ async function init(){
     window.__PROP_JSON__ = prop;
     if(!prop){container.innerHTML='<p>Propiedad no encontrada.</p>';return;}
 
+    /* ===== SEO dinámico: Actualizar meta tags ===== */
+    (function updateMetaTags(){
+      try{
+        const operationText = prop.operation==='arrendar'?'en Arriendo':(prop.operation==='dias'?'por Días':'en Venta');
+        const priceText = prop.price ? ` - $${formatCOP(prop.price)} COP` : '';
+        const locationText = prop.city ? ` en ${prop.city}` : '';
+        const typeText = prop.type ? ` ${prop.type.charAt(0).toUpperCase()+prop.type.slice(1)}` : '';
+
+        // Título optimizado para SEO
+        const pageTitle = `${prop.title}${operationText}${locationText} | Altorra Inmobiliaria`;
+        document.title = pageTitle;
+
+        // Description optimizada
+        const specs = [
+          prop.beds ? `${prop.beds} hab` : '',
+          prop.baths ? `${prop.baths} baños` : '',
+          prop.sqm ? `${prop.sqm}m²` : ''
+        ].filter(Boolean).join(' · ');
+
+        const shortDesc = prop.description ? prop.description.substring(0, 130).trim() + '...' : '';
+        const metaDesc = `${typeText}${operationText}${locationText}${priceText}. ${specs}. ${shortDesc}`.trim();
+
+        const descTag = document.querySelector('meta[name="description"]');
+        if(descTag) descTag.setAttribute('content', metaDesc);
+
+        // URL canónica con ID de propiedad
+        let canonicalTag = document.querySelector('link[rel="canonical"]');
+        if(canonicalTag){
+          canonicalTag.setAttribute('href', `https://altorrainmobiliaria.github.io/detalle-propiedad.html?id=${encodeURIComponent(id)}`);
+        }
+
+        // Open Graph tags
+        const ogTitle = document.querySelector('meta[property="og:title"]');
+        if(ogTitle) ogTitle.setAttribute('content', pageTitle);
+
+        const ogDesc = document.querySelector('meta[property="og:description"]');
+        if(ogDesc) ogDesc.setAttribute('content', metaDesc);
+
+        const ogUrl = document.querySelector('meta[property="og:url"]');
+        if(ogUrl) ogUrl.setAttribute('content', `https://altorrainmobiliaria.github.io/detalle-propiedad.html?id=${encodeURIComponent(id)}`);
+
+        // Imagen OG desde la galería
+        const ogImage = document.querySelector('meta[property="og:image"]');
+        if(ogImage && prop.images && prop.images.length > 0){
+          let imgSrc = prop.images[0];
+          if(!imgSrc.startsWith('http')){
+            imgSrc = imgSrc.startsWith('/') ? `https://altorrainmobiliaria.github.io${imgSrc}` : `https://altorrainmobiliaria.github.io/${imgSrc}`;
+          }
+          ogImage.setAttribute('content', imgSrc);
+        }
+
+        // Twitter Card tags
+        const twitterTitle = document.querySelector('meta[name="twitter:title"]');
+        if(twitterTitle) twitterTitle.setAttribute('content', pageTitle);
+
+        const twitterDesc = document.querySelector('meta[name="twitter:description"]');
+        if(twitterDesc) twitterDesc.setAttribute('content', metaDesc);
+
+        const twitterImage = document.querySelector('meta[name="twitter:image"]');
+        if(twitterImage && prop.images && prop.images.length > 0){
+          let imgSrc = prop.images[0];
+          if(!imgSrc.startsWith('http')){
+            imgSrc = imgSrc.startsWith('/') ? `https://altorrainmobiliaria.github.io${imgSrc}` : `https://altorrainmobiliaria.github.io/${imgSrc}`;
+          }
+          twitterImage.setAttribute('content', imgSrc);
+        }
+
+        console.log('✅ Meta tags actualizados dinámicamente:', {title: pageTitle, desc: metaDesc});
+      }catch(e){
+        console.warn('Error actualizando meta tags:', e);
+      }
+    })();
+
     const isAvailable = Number(prop.available) === 1;
 
     /* ===== Galería ===== */
@@ -650,6 +723,7 @@ document.addEventListener('DOMContentLoaded', init);
   </script>
   <div style="display:none"><?php /* placeholder for GH Pages */ ?></div>
   <script src="js/utils.js"></script>
+  <script src="js/form-validation.js"></script>
 <script src="js/analytics.js"></script>
 <script>
   const urlParams = new URLSearchParams(window.location.search);

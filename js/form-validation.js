@@ -23,7 +23,7 @@
     }
   };
 
-  // Estilos para mensajes de error
+  // Estilos para mensajes de error Y loading states
   const ERROR_STYLES = `
     .form-error {
       color: #dc2626;
@@ -42,6 +42,84 @@
     .field-success textarea,
     .field-success select {
       border-color: #16a34a !important;
+    }
+
+    /* ===== LOADING STATES ===== */
+    .form-loading {
+      position: relative;
+      pointer-events: none;
+      opacity: 0.7;
+    }
+    .form-loading input,
+    .form-loading textarea,
+    .form-loading select,
+    .form-loading button {
+      cursor: not-allowed !important;
+    }
+    .btn-loading {
+      position: relative;
+      pointer-events: none;
+      opacity: 0.8;
+    }
+    .btn-loading::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      top: 50%;
+      left: 50%;
+      margin-left: -8px;
+      margin-top: -8px;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      border-top-color: transparent;
+      animation: spinner 0.6s linear infinite;
+    }
+    @keyframes spinner {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Toast notifications */
+    .altorra-toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #111;
+      color: #fff;
+      padding: 16px 24px;
+      border-radius: 12px;
+      font-weight: 600;
+      z-index: 9999;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      animation: slideIn 0.3s ease;
+      max-width: 400px;
+    }
+    .altorra-toast.success {
+      background: #16a34a;
+    }
+    .altorra-toast.error {
+      background: #dc2626;
+    }
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    @media (max-width: 640px) {
+      .altorra-toast {
+        bottom: 16px;
+        right: 16px;
+        left: 16px;
+        max-width: none;
+      }
     }
   `;
 
@@ -262,12 +340,103 @@
     });
   });
 
+  // ===== LOADING STATES =====
+
+  // Mostrar estado de carga en formulario
+  function showLoading(form) {
+    form.classList.add('form-loading');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.dataset.originalText = submitBtn.textContent;
+      submitBtn.textContent = 'Enviando...';
+      submitBtn.classList.add('btn-loading');
+      submitBtn.disabled = true;
+    }
+    // Deshabilitar todos los inputs
+    form.querySelectorAll('input, textarea, select, button').forEach(el => {
+      el.disabled = true;
+    });
+  }
+
+  // Ocultar estado de carga
+  function hideLoading(form) {
+    form.classList.remove('form-loading');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      if (submitBtn.dataset.originalText) {
+        submitBtn.textContent = submitBtn.dataset.originalText;
+        delete submitBtn.dataset.originalText;
+      }
+      submitBtn.classList.remove('btn-loading');
+      submitBtn.disabled = false;
+    }
+    // Re-habilitar todos los inputs
+    form.querySelectorAll('input, textarea, select, button').forEach(el => {
+      el.disabled = false;
+    });
+  }
+
+  // Mostrar toast notification
+  function showToast(message, type = 'success') {
+    // Remover toast anterior si existe
+    const existingToast = document.querySelector('.altorra-toast');
+    if (existingToast) existingToast.remove();
+
+    const toast = document.createElement('div');
+    toast.className = `altorra-toast ${type}`;
+
+    const icon = type === 'success' ? '✓' : '✕';
+    toast.innerHTML = `<span style="font-size:1.5rem">${icon}</span><span>${message}</span>`;
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      toast.style.animation = 'slideIn 0.3s ease reverse';
+      setTimeout(() => toast.remove(), 300);
+    }, 4000);
+  }
+
+  // Interceptar envío de formularios para agregar loading states
+  function interceptFormSubmit() {
+    document.addEventListener('submit', (e) => {
+      const form = e.target;
+
+      // Ignorar formularios de búsqueda o que ya tienen handler personalizado
+      if (form.id === 'quickSearch' || form.classList.contains('search-box')) return;
+      if (form.hasAttribute('data-no-intercept')) return;
+
+      // Solo aplicar loading si el formulario es válido
+      if (validateForm(form)) {
+        showLoading(form);
+
+        // Si el form va a formsubmit.co, simular success después de envío
+        if (form.action && form.action.includes('formsubmit.co')) {
+          // FormSubmit.co redirige, así que no podemos detectar success/error
+          // Mostramos loading hasta que la página cambie
+          console.log('📤 Formulario enviándose a FormSubmit.co...');
+        }
+      }
+    });
+  }
+
+  // Inicializar interceptor
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', interceptFormSubmit);
+  } else {
+    interceptFormSubmit();
+  }
+
   // Exponer API global
   window.AltorraFormValidation = {
     validate: validateForm,
     validatePhone,
     validateEmail,
-    validateName
+    validateName,
+    showLoading,
+    hideLoading,
+    showToast
   };
+
+  console.log('✅ Form validation + loading states loaded');
 
 })();
