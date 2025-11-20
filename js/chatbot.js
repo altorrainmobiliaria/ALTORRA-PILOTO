@@ -460,6 +460,43 @@
     return props.filter(p => p.operation === operation);
   }
 
+  // Función auxiliar para obtener recomendaciones SIN filtro de zona (para alternativas)
+  function getSmartRecommendationsWithoutZone(ctx) {
+    let results = [...properties];
+
+    console.log(`🔍 Búsqueda de alternativas (sin zona): ${results.length} propiedades en inventario`);
+
+    // 1. Filtrar por operación
+    results = filterByOperation(results, ctx.interest);
+    console.log(`📊 Después de filtrar por operación (${ctx.interest}): ${results.length} propiedades`);
+
+    // 2. Filtrar por tipo de propiedad
+    if (ctx.propertyType) {
+      const typeFiltered = results.filter(p => p.type === ctx.propertyType);
+      if (typeFiltered.length > 0) {
+        results = typeFiltered;
+      }
+    }
+
+    // 3. Filtrar por presupuesto (con margen del 20%)
+    if (ctx.budget) {
+      const maxBudget = ctx.budget * 1.2;
+      const budgetFiltered = results.filter(p => p.price && p.price <= maxBudget);
+      if (budgetFiltered.length > 0) {
+        results = budgetFiltered;
+      }
+    }
+
+    // 4. Scoring y ordenar
+    results.forEach(p => {
+      p._score = scoreProperty(p, ctx);
+    });
+
+    results.sort((a, b) => b._score - a._score);
+
+    return results.slice(0, 5); // Retornar hasta 5 para mostrar más alternativas
+  }
+
   // Función para hacer recomendaciones inteligentes basadas en el perfil
   function getSmartRecommendations() {
     const ctx = conversationContext;
@@ -502,20 +539,30 @@
       }
     }
 
-    // 4. Filtrar por zona (OPCIONAL)
+    // 4. Filtrar por zona (OPCIONAL) - MEJORADO con coincidencia más estricta
     if (ctx.zone && ctx.zone !== 'otra' && ctx.zone !== 'cualquiera') {
       const zoneFiltered = results.filter(p => {
         if (!p.neighborhood) return false;
         const neighborhood = p.neighborhood.toLowerCase();
-        return neighborhood.includes(ctx.zone.toLowerCase());
+        const searchZone = ctx.zone.toLowerCase();
+
+        // ⭐ MEJORA: Coincidencia más flexible pero precisa
+        // Buscar la zona como palabra completa o al inicio de la cadena
+        const regex = new RegExp(`\\b${searchZone}\\b|^${searchZone}`, 'i');
+        return regex.test(neighborhood);
       });
 
       if (zoneFiltered.length > 0) {
         console.log(`📍 Después de filtrar por zona (${ctx.zone}): ${zoneFiltered.length} propiedades`);
         results = zoneFiltered;
       } else {
-        console.log(`ℹ️ No hay propiedades en ${ctx.zone}, mostrando todas las zonas`);
-        // No filtrar por zona si no hay resultados
+        // ⚠️ NO hay propiedades en esa zona - guardar este estado para mostrar mensaje claro
+        console.warn(`⚠️ No hay ${ctx.propertyType}s en ${ctx.zone}`);
+        conversationContext.noResultsInZone = true;
+        conversationContext.requestedZone = ctx.zone;
+        saveContext();
+        // Retornar vacío para mostrar mensaje personalizado
+        return [];
       }
     }
 
@@ -561,8 +608,13 @@
         intro += '<br><br>💡 <b>Tip:</b> Estas propiedades están cerca de colegios y zonas familiares.';
       }
 
+      // ⭐ NUEVO: Agregar contador de propiedades seleccionadas
+      intro += '<br><br><div id="selected-props-counter" style="display:none;background:#e7f3ff;padding:10px;border-radius:8px;margin:10px 0;font-weight:600;color:#0066cc;"></div>';
+
       // Agregar opción de contacto con contexto completo
-      intro += '<br><br>¿Te gustaría agendar una visita?';
+      intro += '<br>💬 <b>Siguiente paso:</b><br>';
+      intro += '• Marca las propiedades que te interesan con el checkbox "Me interesa"<br>';
+      intro += '• Luego haz clic en el botón de abajo para contactar un asesor con tu selección<br><br>';
 
       // Crear mensaje de WhatsApp de forma inteligente según cantidad de resultados
       let waText = '';
@@ -603,35 +655,75 @@
         waText += `\nMe gustaría agendar una visita y conocer más detalles de las opciones disponibles.`;
       }
 
-      const waSummary = encodeURIComponent(waText);
-
+      // ⭐ BOTÓN MEJORADO: Se genera dinámicamente al hacer clic para incluir propiedades seleccionadas
       intro += `
         <br><br>
-        <a href="https://wa.me/${CONFIG.whatsappNumber}?text=${waSummary}"
-           target="_blank"
-           rel="noopener"
-           class="chat-whatsapp-link">
+        <button
+          onclick="window.chatbotSendToAdvisor()"
+          class="chat-whatsapp-link"
+          style="border:none;cursor:pointer;width:100%;text-align:center;">
           <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.789l4.94-1.293A11.96 11.96 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>
-          Hablar con un asesor (con mi perfil)
-        </a>
+          📱 Contactar asesor con mis propiedades de interés
+        </button>
       `;
     } else {
-      // ⭐ NO HAY RESULTADOS - Ofrecer contactar asesor con perfil completo
-      intro += '😔 <b>Lo siento</b>, actualmente no tenemos propiedades disponibles que coincidan exactamente con tu búsqueda.<br><br>';
+      // ⭐ NO HAY RESULTADOS - Mensaje personalizado según el motivo
 
-      intro += '📋 <b>Tu perfil de búsqueda:</b><br>';
       const opName = ctx.interest === 'comprar' ? 'Comprar' :
                      ctx.interest === 'arrendar' ? 'Arrendar' : 'Alojamiento';
-      intro += `• ${opName} ${ctx.propertyType || 'propiedad'}`;
-      if (ctx.zone && ctx.zone !== 'otra' && ctx.zone !== 'cualquiera') intro += ` en ${ctx.zone}`;
-      intro += `<br>`;
-      if (ctx.budget) intro += `• Presupuesto: ${formatPrice(ctx.budget)}<br>`;
-      if (ctx.beds) intro += `• ${ctx.beds}+ habitaciones<br>`;
 
-      intro += '<br>💡 <b>¿Qué puedes hacer?</b><br>';
-      intro += '• <b>Hablar con un asesor</b>: Te ayudaremos a encontrar opciones personalizadas<br>';
-      intro += '• <b>Recibir notificaciones</b>: Te avisamos cuando lleguen propiedades que coincidan<br>';
-      intro += '• <b>Ajustar criterios</b>: Podemos explorar otras zonas o presupuestos<br><br>';
+      // ⭐ NUEVO: Detectar si el problema es la zona específica
+      if (ctx.noResultsInZone && ctx.requestedZone) {
+        const zoneName = ctx.requestedZone.charAt(0).toUpperCase() + ctx.requestedZone.slice(1);
+        intro += `😔 <b>Lo siento</b>, actualmente no tenemos <b>${ctx.propertyType}s en ${zoneName}</b>.<br><br>`;
+
+        // Buscar alternativas en otras zonas (sin filtro de zona)
+        const alternativesCtx = { ...ctx };
+        delete alternativesCtx.zone;
+        const alternativeResults = getSmartRecommendationsWithoutZone(alternativesCtx);
+
+        if (alternativeResults.length > 0) {
+          intro += `💡 Pero encontré <b>${alternativeResults.length} ${ctx.propertyType}${alternativeResults.length > 1 ? 's' : ''}</b> similares en otras zonas:<br><br>`;
+
+          // Mostrar las alternativas
+          alternativeResults.slice(0, 3).forEach(p => {
+            intro += createPropertyCard(p);
+          });
+
+          intro += '<br>¿Te interesa alguna de estas opciones o prefieres que un asesor te contacte cuando haya propiedades en ' + zoneName + '?<br><br>';
+        } else {
+          intro += '📋 <b>Tu perfil de búsqueda:</b><br>';
+          intro += `• ${opName} ${ctx.propertyType || 'propiedad'} en ${zoneName}<br>`;
+          if (ctx.budget) intro += `• Presupuesto: ${formatPrice(ctx.budget)}<br>`;
+          if (ctx.beds) intro += `• ${ctx.beds}+ habitaciones<br>`;
+
+          intro += '<br>💡 <b>¿Qué puedes hacer?</b><br>';
+          intro += '• <b>Hablar con un asesor</b>: Te avisamos cuando haya propiedades en ' + zoneName + '<br>';
+          intro += '• <b>Explorar otras zonas</b>: Podemos buscar en zonas cercanas<br>';
+          intro += '• <b>Ajustar criterios</b>: Podemos explorar otros presupuestos o tipos<br><br>';
+        }
+
+        // Limpiar flags
+        ctx.noResultsInZone = false;
+        ctx.requestedZone = null;
+        saveContext();
+
+      } else {
+        // Mensaje genérico sin resultados
+        intro += '😔 <b>Lo siento</b>, actualmente no tenemos propiedades disponibles que coincidan exactamente con tu búsqueda.<br><br>';
+
+        intro += '📋 <b>Tu perfil de búsqueda:</b><br>';
+        intro += `• ${opName} ${ctx.propertyType || 'propiedad'}`;
+        if (ctx.zone && ctx.zone !== 'otra' && ctx.zone !== 'cualquiera') intro += ` en ${ctx.zone}`;
+        intro += `<br>`;
+        if (ctx.budget) intro += `• Presupuesto: ${formatPrice(ctx.budget)}<br>`;
+        if (ctx.beds) intro += `• ${ctx.beds}+ habitaciones<br>`;
+
+        intro += '<br>💡 <b>¿Qué puedes hacer?</b><br>';
+        intro += '• <b>Hablar con un asesor</b>: Te ayudaremos a encontrar opciones personalizadas<br>';
+        intro += '• <b>Recibir notificaciones</b>: Te avisamos cuando lleguen propiedades que coincidan<br>';
+        intro += '• <b>Ajustar criterios</b>: Podemos explorar otras zonas o presupuestos<br><br>';
+      }
 
       // Crear mensaje de WhatsApp con el perfil completo
       let waText = `Hola Altorra, estoy buscando una propiedad pero no encontré opciones en el sitio web.\n\n`;
@@ -1781,7 +1873,53 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     }, CONFIG.typingDelay);
   }
 
-  // Crear tarjeta de propiedad
+  // ⭐ NUEVA FUNCIONALIDAD: Gestión de propiedades de interés
+  const selectedProperties = [];
+
+  function togglePropertyInterest(propId, propData) {
+    const index = selectedProperties.findIndex(p => p.id === propId);
+    const checkbox = document.querySelector(`input[data-prop-id="${propId}"]`);
+
+    if (index > -1) {
+      // Ya está seleccionada - remover
+      selectedProperties.splice(index, 1);
+      if (checkbox) checkbox.checked = false;
+    } else {
+      // No está seleccionada - agregar
+      selectedProperties.push({
+        id: propId,
+        title: propData.title,
+        price: propData.price,
+        neighborhood: propData.neighborhood,
+        beds: propData.beds,
+        baths: propData.baths,
+        sqm: propData.sqm,
+        operation: propData.operation
+      });
+      if (checkbox) checkbox.checked = true;
+    }
+
+    // Actualizar contador si existe
+    updateSelectedCounter();
+  }
+
+  function updateSelectedCounter() {
+    const counter = document.getElementById('selected-props-counter');
+    if (counter) {
+      if (selectedProperties.length > 0) {
+        counter.textContent = `${selectedProperties.length} ${selectedProperties.length === 1 ? 'propiedad seleccionada' : 'propiedades seleccionadas'}`;
+        counter.style.display = 'block';
+      } else {
+        counter.style.display = 'none';
+      }
+    }
+  }
+
+  function isPropertySelected(propId) {
+    return selectedProperties.some(p => p.id === propId);
+  }
+
+  // Crear tarjeta de propiedad ⭐ MEJORADA con checkbox de interés
   function createPropertyCard(prop) {
     const imgSrc = prop.image || (Array.isArray(prop.images) && prop.images[0]) || '';
     const priceText = formatPrice(prop.price) + ' COP';
@@ -1790,17 +1928,94 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     if (prop.baths) specs.push(prop.baths + 'B');
     if (prop.sqm) specs.push(prop.sqm + ' m²');
 
+    const isSelected = isPropertySelected(prop.id);
+
     return `
-      <div class="chat-property-card" onclick="window.location.href='detalle-propiedad.html?id=${prop.id}'">
-        <img src="${imgSrc}" alt="${prop.title}" onerror="this.src='https://i.postimg.cc/0yYb8Y6r/placeholder.png'">
-        <div class="card-body">
-          <h4>${prop.title}</h4>
-          <div class="price">${priceText}</div>
-          <div class="specs">${specs.join(' · ')}</div>
+      <div class="chat-property-card">
+        <div class="property-interest-toggle">
+          <input
+            type="checkbox"
+            id="prop-${prop.id}"
+            data-prop-id="${prop.id}"
+            ${isSelected ? 'checked' : ''}
+            onchange="window.chatbotToggleInterest('${prop.id}', ${JSON.stringify(prop).replace(/"/g, '&quot;')})"
+          />
+          <label for="prop-${prop.id}">Me interesa</label>
+        </div>
+        <div class="card-clickable" onclick="window.location.href='detalle-propiedad.html?id=${prop.id}'">
+          <img src="${imgSrc}" alt="${prop.title}" onerror="this.src='https://i.postimg.cc/0yYb8Y6r/placeholder.png'">
+          <div class="card-body">
+            <h4>${prop.title}</h4>
+            <div class="price">${priceText}</div>
+            <div class="specs">${specs.join(' · ')}</div>
+          </div>
         </div>
       </div>
     `;
   }
+
+  // Exponer función globalmente para que los checkboxes puedan llamarla
+  window.chatbotToggleInterest = function(propId, propData) {
+    togglePropertyInterest(propId, propData);
+  };
+
+  // ⭐ NUEVA FUNCIÓN: Enviar propiedades seleccionadas al asesor por WhatsApp
+  window.chatbotSendToAdvisor = function() {
+    const ctx = conversationContext;
+    const opName = ctx.interest === 'comprar' ? 'Comprar' :
+                   ctx.interest === 'arrendar' ? 'Arrendar' : 'Alojamiento';
+
+    let waText = `Hola Altorra, me interesan las siguientes propiedades:\n\n`;
+
+    // Si el usuario seleccionó propiedades específicas, incluirlas
+    if (selectedProperties.length > 0) {
+      waText += `📋 *PROPIEDADES SELECCIONADAS (${selectedProperties.length}):*\n\n`;
+
+      selectedProperties.forEach((p, i) => {
+        const priceStr = p.price ? `$${(p.price/1000000).toFixed(0)}M` : '';
+        waText += `${i + 1}. *${p.title}*\n`;
+        waText += `   💰 ${priceStr}`;
+        if (p.beds || p.baths || p.sqm) {
+          waText += ` • `;
+          const specs = [];
+          if (p.beds) specs.push(`${p.beds}H`);
+          if (p.baths) specs.push(`${p.baths}B`);
+          if (p.sqm) specs.push(`${p.sqm}m²`);
+          waText += specs.join(' • ');
+        }
+        waText += `\n`;
+        if (p.neighborhood) waText += `   📍 ${p.neighborhood}\n`;
+        waText += `\n`;
+      });
+
+      waText += `\n`;
+    } else {
+      // Si no seleccionó ninguna, enviar perfil general
+      waText += `Estoy buscando propiedades con las siguientes características:\n\n`;
+    }
+
+    // Agregar contexto de búsqueda
+    waText += `🔍 *MI PERFIL DE BÚSQUEDA:*\n`;
+    waText += `• ${opName} ${ctx.propertyType || 'propiedad'}`;
+    if (ctx.zone && ctx.zone !== 'otra' && ctx.zone !== 'cualquiera') waText += ` en ${ctx.zone}`;
+    waText += `\n`;
+    if (ctx.budget) waText += `• Presupuesto: hasta ${formatPrice(ctx.budget)}\n`;
+    if (ctx.beds) waText += `• ${ctx.beds}+ habitaciones\n`;
+    if (ctx.purpose) {
+      const purposeText = ctx.purpose === 'vivienda' ? 'Para vivir' :
+                         ctx.purpose === 'inversion' ? 'Para inversión' : ctx.purpose;
+      waText += `• ${purposeText}\n`;
+    }
+
+    if (selectedProperties.length > 0) {
+      waText += `\n¿Podríamos agendar una visita a las propiedades seleccionadas?`;
+    } else {
+      waText += `\n¿Podrían ayudarme a encontrar opciones que se ajusten a mi perfil?`;
+    }
+
+    const waLink = `https://wa.me/${CONFIG.whatsappNumber}?text=${encodeURIComponent(waText)}`;
+    window.open(waLink, '_blank');
+  };
 
   // Buscar propiedades
   function searchProperties(query) {

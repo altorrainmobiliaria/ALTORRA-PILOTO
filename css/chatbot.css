@@ -319,12 +319,56 @@
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   margin-top: 8px;
-  cursor: pointer;
   transition: transform 0.2s ease;
+  position: relative;
 }
 
 .chat-property-card:hover {
   transform: translateY(-2px);
+}
+
+/* ⭐ NUEVO: Toggle de interés (checkbox) */
+.property-interest-toggle {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 6px 10px;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.property-interest-toggle:hover {
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.property-interest-toggle input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--chat-gold);
+}
+
+.property-interest-toggle label {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--chat-text);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Parte clickable de la card (no incluye el checkbox) */
+.card-clickable {
+  cursor: pointer;
 }
 
 .chat-property-card img {
