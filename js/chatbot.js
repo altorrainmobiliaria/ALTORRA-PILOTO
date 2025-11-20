@@ -88,9 +88,29 @@
     // Si no es reinicio duro, conservamos info de saludo
     if (!options.full) {
       conversationContext.hasGreetedUser = keepGreeting;
+    } else {
+      // Reinicio completo - limpiar historial también
+      conversationHistory = [];
     }
 
     saveContext();
+  }
+
+  // Generar transcripción completa de la conversación
+  function generateConversationTranscript() {
+    if (conversationHistory.length === 0) return '';
+
+    let transcript = '--- HISTORIAL DE CONVERSACIÓN ---\n\n';
+    conversationHistory.forEach(entry => {
+      // Limitar longitud de cada mensaje para WhatsApp
+      const shortMsg = entry.message.length > 150
+        ? entry.message.substring(0, 147) + '...'
+        : entry.message;
+      transcript += `[${entry.timestamp}] ${entry.sender}: ${shortMsg}\n`;
+    });
+    transcript += '\n--- FIN HISTORIAL ---';
+
+    return transcript;
   }
 
   // Estado del chatbot
@@ -98,6 +118,7 @@
   let isOpen = false;
   let hasGreeted = false;
   let welcomeBubbleShown = false;
+  let conversationHistory = []; // Historial completo de la conversación
 
   // Contexto inicial base de la conversación
   const INITIAL_CONTEXT = {
@@ -1015,9 +1036,12 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
 
   // Generar resumen del inmueble para WhatsApp
   function generateOwnerSummary(role) {
+    let summary = '';
+
     if (role === 'propietario_venta') {
       const d = conversationContext.ownerPropertyForSale;
-      return `Hola Altorra, soy propietario y quiero VENDER mi inmueble:\n` +
+      summary = `Hola Altorra, soy propietario y quiero VENDER mi inmueble:\n\n` +
+        `📋 DATOS DEL INMUEBLE:\n` +
         `• Tipo: ${d.type || 'No especificado'}\n` +
         `• Zona: ${d.zone || 'No especificada'}\n` +
         `• Valor: ${d.price ? formatPrice(d.price) : 'No especificado'}\n` +
@@ -1028,7 +1052,8 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
         `• Estado: ${d.condition || 'No especificado'}`;
     } else {
       const d = conversationContext.ownerPropertyForRent;
-      return `Hola Altorra, soy propietario y quiero ARRENDAR mi inmueble:\n` +
+      summary = `Hola Altorra, soy propietario y quiero ARRENDAR mi inmueble:\n\n` +
+        `📋 DATOS DEL INMUEBLE:\n` +
         `• Tipo: ${d.type || 'No especificado'}\n` +
         `• Zona: ${d.zone || 'No especificada'}\n` +
         `• Canon deseado: ${d.canon ? formatPrice(d.canon) : 'No especificado'}\n` +
@@ -1037,6 +1062,14 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
         `• Mascotas: ${d.pets || 'No especificado'}\n` +
         `• Disponible desde: ${d.availableFrom || 'No especificado'}`;
     }
+
+    // Agregar transcripción de la conversación
+    const transcript = generateConversationTranscript();
+    if (transcript) {
+      summary += `\n\n${transcript}`;
+    }
+
+    return summary;
   }
 
   // Manejar flujo de propietario
@@ -1269,6 +1302,16 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     messageDiv.className = `chat-message ${isBot ? 'bot' : 'user'}`;
     messageDiv.innerHTML = text;
     messagesContainer.appendChild(messageDiv);
+
+    // Guardar en historial (texto limpio sin HTML)
+    const cleanText = text.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+    if (cleanText) {
+      conversationHistory.push({
+        sender: isBot ? 'Bot' : 'Usuario',
+        message: cleanText,
+        timestamp: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
+      });
+    }
 
     // Agregar opciones si las hay
     if (options && isBot) {
