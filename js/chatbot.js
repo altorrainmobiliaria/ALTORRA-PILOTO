@@ -678,8 +678,8 @@
         intro += '<br><br>💡 <b>Tip:</b> Estas propiedades están cerca de colegios y zonas familiares.';
       }
 
-      // ⭐ NUEVO: Agregar contador de propiedades seleccionadas
-      intro += '<br><br><div id="selected-props-counter" style="display:none;background:#e7f3ff;padding:10px;border-radius:8px;margin:10px 0;font-weight:600;color:#0066cc;"></div>';
+      // ⭐ MEJORADO: Contador de propiedades seleccionadas más visible
+      intro += '<br><br><div id="selected-props-counter" style="display:none;background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);color:#fff;padding:12px 16px;border-radius:10px;margin:12px 0;font-weight:700;text-align:center;font-size:0.95rem;box-shadow:0 3px 10px rgba(102, 126, 234, 0.3);"></div>';
 
       // Agregar opción de contacto con contexto completo
       intro += '<br>💬 <b>Siguiente paso:</b><br>';
@@ -798,8 +798,8 @@
           intro += `• <b>Recibir notificaciones</b>: Te avisamos cuando haya ${ctx.propertyType}s en ${zoneName}<br>`;
           intro += `• <b>Hablar con un asesor</b>: Te ayudamos a encontrar la propiedad perfecta<br><br>`;
 
-          // Agregar contador de selección
-          intro += '<div id="selected-props-counter" style="display:none;background:#e7f3ff;padding:10px;border-radius:8px;margin:10px 0;font-weight:600;color:#0066cc;"></div>';
+          // ⭐ MEJORADO: Contador de selección más visible
+          intro += '<div id="selected-props-counter" style="display:none;background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);color:#fff;padding:12px 16px;border-radius:10px;margin:12px 0;font-weight:700;text-align:center;font-size:0.95rem;box-shadow:0 3px 10px rgba(102, 126, 234, 0.3);"></div>';
 
           // Botón de WhatsApp
           intro += `
@@ -2041,7 +2041,7 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     const counter = document.getElementById('selected-props-counter');
     if (counter) {
       if (selectedProperties.length > 0) {
-        counter.textContent = `${selectedProperties.length} ${selectedProperties.length === 1 ? 'propiedad seleccionada' : 'propiedades seleccionadas'}`;
+        counter.innerHTML = `✓ ${selectedProperties.length} ${selectedProperties.length === 1 ? 'propiedad seleccionada' : 'propiedades seleccionadas'} - Listo para enviar al asesor`;
         counter.style.display = 'block';
       } else {
         counter.style.display = 'none';
@@ -2972,13 +2972,29 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     const wantsContact = matchesSynonym(msg, 'contact') &&
       (/quiero|necesito|hablar|contactar|llamar/i.test(msg) || msg.length < 25);
     if (wantsContact) {
-      // Ir directamente a contacto
-      const waLink = `https://wa.me/${CONFIG.whatsappNumber}?text=${encodeURIComponent('Hola Altorra, quiero hablar con un asesor')}`;
-      const html = `¡Claro! Te comunico con un asesor de Altorra.<br><br>
-        <a href="${waLink}" target="_blank" rel="noopener" style="display:inline-block;background:#25d366;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">
-          💬 Chatear por WhatsApp
-        </a><br><br>
-        También puedes llamar al <b>${CONFIG.whatsappNumber}</b>.`;
+      // MEJORADO: Usar la función que incluye propiedades seleccionadas
+      let html = `¡Claro! Te comunico con un asesor de Altorra.<br><br>`;
+
+      // Si hay propiedades seleccionadas, mostrar contador
+      if (selectedProperties.length > 0) {
+        html += `✅ <b>Tienes ${selectedProperties.length} ${selectedProperties.length === 1 ? 'propiedad seleccionada' : 'propiedades seleccionadas'}</b><br><br>`;
+        html += `Al hacer clic en el botón de abajo, se enviarán automáticamente tus propiedades de interés junto con tu perfil de búsqueda.<br><br>`;
+      } else {
+        html += `💡 <i>Tip: Si ya viste propiedades que te interesan, puedes marcarlas con el checkbox "Me interesa" antes de contactar al asesor.</i><br><br>`;
+      }
+
+      // Botón que llama a la función que incluye propiedades seleccionadas
+      html += `
+        <button
+          onclick="window.chatbotSendToAdvisor()"
+          class="chat-whatsapp-link"
+          style="border:none;cursor:pointer;width:100%;text-align:center;">
+          <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.789l4.94-1.293A11.96 11.96 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>
+          ${selectedProperties.length > 0 ? '📱 Enviar propiedades seleccionadas al asesor' : '💬 Chatear con asesor por WhatsApp'}
+        </button>
+      `;
+
+      html += `<br><br>También puedes llamar al <b>${CONFIG.whatsappNumber}</b>.`;
 
       // CRÍTICO: Limpiar el contexto para que el bot no siga preguntando después
       conversationContext.lastQuestion = null;
@@ -3439,32 +3455,30 @@ Soy tu asistente virtual y puedo ayudarte con:<br><br>
           botReply(RESPONSES.precio);
           return;
         case 'contacto':
-          // Generar link de WhatsApp con contexto de la conversación
-          const ctxContact = conversationContext;
-          let waMessage = 'Hola Altorra, necesito hablar con un asesor';
-
-          // Agregar contexto si existe
-          if (ctxContact.interest || ctxContact.propertyType || ctxContact.zone) {
-            waMessage += '.\n\nMi búsqueda:\n';
-            if (ctxContact.interest) {
-              const opName = ctxContact.interest === 'comprar' ? 'Comprar' :
-                             ctxContact.interest === 'arrendar' ? 'Arrendar' : 'Alojamiento';
-              waMessage += `• Operación: ${opName}\n`;
-            }
-            if (ctxContact.propertyType) waMessage += `• Tipo: ${ctxContact.propertyType}\n`;
-            if (ctxContact.zone) waMessage += `• Zona: ${ctxContact.zone}\n`;
-            if (ctxContact.budget) waMessage += `• Presupuesto: $${(ctxContact.budget/1000000).toFixed(0)} millones\n`;
-            if (ctxContact.beds) waMessage += `• Habitaciones: ${ctxContact.beds}+\n`;
-          }
-
-          const waLinkContact = `https://wa.me/${CONFIG.whatsappNumber}?text=${encodeURIComponent(waMessage)}`;
-
+          // MEJORADO: Usar la función que incluye propiedades seleccionadas
           let contactResponse = `📞 <b>¡Te conecto con un asesor!</b><br><br>`;
           contactResponse += `Nuestro equipo está listo para ayudarte de forma personalizada.<br><br>`;
-          contactResponse += `<a href="${waLinkContact}" target="_blank" rel="noopener" class="chat-whatsapp-link">`;
-          contactResponse += `<svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.789l4.94-1.293A11.96 11.96 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>`;
-          contactResponse += `Hablar por WhatsApp</a><br><br>`;
-          contactResponse += `<b>Horario:</b> Lun-Vie 8am-6pm, Sáb 9am-1pm<br>`;
+
+          // Si hay propiedades seleccionadas, informar
+          if (selectedProperties.length > 0) {
+            contactResponse += `✅ <b>Tienes ${selectedProperties.length} ${selectedProperties.length === 1 ? 'propiedad seleccionada' : 'propiedades seleccionadas'}</b><br><br>`;
+            contactResponse += `Al hacer clic en el botón, se enviarán automáticamente tus propiedades de interés junto con tu perfil de búsqueda.<br><br>`;
+          } else if (conversationContext.interest || conversationContext.propertyType) {
+            contactResponse += `Se enviará tu perfil de búsqueda al asesor.<br><br>`;
+          }
+
+          // Botón que llama a la función con propiedades seleccionadas
+          contactResponse += `
+            <button
+              onclick="window.chatbotSendToAdvisor()"
+              class="chat-whatsapp-link"
+              style="border:none;cursor:pointer;width:100%;text-align:center;">
+              <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.789l4.94-1.293A11.96 11.96 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>
+              ${selectedProperties.length > 0 ? '📱 Enviar propiedades al asesor' : '💬 Hablar por WhatsApp'}
+            </button>
+          `;
+
+          contactResponse += `<br><br><b>Horario:</b> Lun-Vie 8am-6pm, Sáb 9am-1pm<br>`;
           contactResponse += `Por WhatsApp respondemos más rápido.`;
 
           // CRÍTICO: Limpiar el contexto para que el bot no siga preguntando después

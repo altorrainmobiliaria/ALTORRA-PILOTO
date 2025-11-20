@@ -327,43 +327,58 @@
   transform: translateY(-2px);
 }
 
-/* ⭐ NUEVO: Toggle de interés (checkbox) */
+/* ⭐ MEJORADO: Toggle de interés (checkbox) con mejor visibilidad */
 .property-interest-toggle {
   position: absolute;
   top: 8px;
   right: 8px;
   z-index: 10;
   background: rgba(255, 255, 255, 0.95);
-  padding: 6px 10px;
+  padding: 6px 12px;
   border-radius: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   display: flex;
   align-items: center;
   gap: 6px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .property-interest-toggle:hover {
   background: rgba(255, 255, 255, 1);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transform: translateY(-1px);
 }
 
 .property-interest-toggle input[type="checkbox"] {
   margin: 0;
   cursor: pointer;
-  width: 16px;
-  height: 16px;
-  accent-color: var(--chat-gold);
+  width: 18px;
+  height: 18px;
+  accent-color: #10b981; /* Verde para indicar selección */
+}
+
+.property-interest-toggle input[type="checkbox"]:checked {
+  accent-color: #059669; /* Verde más oscuro cuando está checked */
 }
 
 .property-interest-toggle label {
   margin: 0;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--chat-text);
   cursor: pointer;
   user-select: none;
+}
+
+/* Efecto visual cuando el checkbox está checked */
+.property-interest-toggle:has(input:checked) {
+  background: linear-gradient(135deg, #d4f4dd 0%, #d1fae5 100%);
+  border: 1px solid #10b981;
+}
+
+.property-interest-toggle:has(input:checked) label {
+  color: #047857;
 }
 
 /* Parte clickable de la card (no incluye el checkbox) */
