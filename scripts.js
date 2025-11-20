@@ -230,43 +230,9 @@ document.addEventListener('DOMContentLoaded', function() {
 })();
 
 
-/* ============== 4) Buscador rápido (home) -> redirección a listados o al detalle por Código ============== */
-document.addEventListener('DOMContentLoaded', function(){
-  const form = document.getElementById('quickSearch');
-  if(!form) return;
-  form.addEventListener('submit', async function(ev){
-    ev.preventDefault();
-        return; // duplicate handler disabled
-    
-    const op = (document.getElementById('op')?.value || 'comprar').toLowerCase();
-    const city = document.getElementById('f-city')?.value || '';
-    const type = document.getElementById('f-type')?.value || '';
-    const code = (document.getElementById('f-code')?.value || '').trim();
-    const budget = document.getElementById('f-budget')?.value || '';
+/* ============== 4) Buscador rápido (home) -> manejado por smart-search.js ============== */
 
-    // Si hay código, intentamos resolverlo aquí (para mejor UX)
-    if(code){
-      try{
-        let data; try{ data = await getJSONCached('properties/data.json', { ttlMs: 1000*60*60*6, revalidate:false }); }
-        catch(_){ try{ data = await getJSONCached('properties/data.json', { ttlMs: 1000*60*60*6, revalidate:false }); }
-        catch(__){ data = await getJSONCached('properties/data.json', { ttlMs: 1000*60*60*6, revalidate:false }); }}
-        const hit = (Array.isArray(data)?data:[]).find(function(p){ return String(p.id||'').toLowerCase() === code.toLowerCase(); });
-        if(hit){ window.location.href = 'detalle-propiedad.html?id=' + encodeURIComponent(code); return; }
-        // si no existe, seguimos a la página de la operación con el code para que muestre mensaje
-      }catch(_){ /* seguimos usando redirección a listados */ }
-    }
-
-    const page = op==='arrendar' ? 'propiedades-arrendar.html' : (op==='alojar' ? 'propiedades-alojamientos.html' : 'propiedades-comprar.html');
-    const params = new URLSearchParams();
-    if(city) params.set('city', city.trim());
-    if(type) params.set('type', type.trim());
-    if(code) params.set('code', code);
-    if(budget) params.set('budget', budget.trim());
-    const url = page + (params.toString() ? ('?' + params.toString()) : '');
-    window.location.href = url;
-  });
-});
- /* ============== 5) Miniaturas home → properties/data.json (con caché) ============== */
+/* ============== 5) Miniaturas home → properties/data.json (con caché) ============== */
 (function(){
   const cfg = [
     {operation:'comprar', targetId:'carouselVenta',    mode:'venta'},
