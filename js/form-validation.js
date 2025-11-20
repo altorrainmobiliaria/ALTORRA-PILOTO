@@ -91,7 +91,8 @@
 
   // Honeypot detection
   function checkHoneypot(form) {
-    const honeypot = form.querySelector('input[name="website_url"]');
+    // Check both possible honeypot names (FormSubmit uses _gotcha)
+    const honeypot = form.querySelector('input[name="_gotcha"]') || form.querySelector('input[name="website_url"]');
     if (honeypot && honeypot.value.trim() !== '') {
       console.warn('🍯 Honeypot triggered - likely spam');
       return false;
