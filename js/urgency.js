@@ -196,7 +196,7 @@
   function renderUrgencyElements(property, allProperties = [], options = {}) {
     const defaults = {
       showBadges: true,
-      showViews: true,
+      showViews: false,      // ⚠️ DESACTIVADO: Vistas simuladas (no reales)
       showInventory: true
     };
     const opts = { ...defaults, ...options };

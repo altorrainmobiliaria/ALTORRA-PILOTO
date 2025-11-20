@@ -69,7 +69,7 @@
     if (window.AltorraUrgency) {
       const urgency = window.AltorraUrgency.renderUrgencyElements(p, allProperties, {
         showBadges: true,
-        showViews: true,
+        showViews: false,       // ⚠️ DESACTIVADO: Solo datos reales
         showInventory: true
       });
       urgencyBadges = urgency.badges;
