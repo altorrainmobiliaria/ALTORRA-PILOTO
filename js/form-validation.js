@@ -22,9 +22,9 @@
       message: 'El nombre solo puede contener letras y espacios'
     },
     security: {
-      minFormTime: 3000,           // Minimum 3 seconds on page before submit
-      rateLimitWindow: 10 * 60 * 1000,  // 10 minutes
-      maxSubmissions: 3            // Max 3 submissions per window
+      minFormTime: 1000,           // Minimum 1 second on page before submit
+      rateLimitWindow: 30 * 60 * 1000,  // 30 minutes
+      maxSubmissions: 20           // Max 20 submissions per window (for testing)
     }
   };
 
@@ -535,6 +535,73 @@
 
           // Record this submission for rate limiting
           recordSubmission(formId);
+
+          // ===== ENVÍO CON EMAILJS =====
+          e.preventDefault(); // Prevenir envío tradicional
+
+          // Mostrar loading
+          showLoading(form);
+
+          // Detectar tipo de formulario y enviar con EmailJS
+          if (window.AltorraEmailService && window.AltorraEmailService.isConfigured()) {
+            let sendPromise;
+
+            if (formId === 'contactForm' || form.closest('.page-contact')) {
+              sendPromise = window.AltorraEmailService.processContactForm(form);
+            } else if (formId === 'publishForm' || form.action.includes('publicar')) {
+              sendPromise = window.AltorraEmailService.processPublishForm(form);
+            } else {
+              sendPromise = window.AltorraEmailService.processDetailForm(form);
+            }
+
+            sendPromise
+              .then(result => {
+                hideLoading(form);
+
+                if (result.success) {
+                  showToast(`✓ ¡Enviado correctamente! Radicado: ${result.radicado}`, 'success');
+
+                  // Limpiar formulario
+                  form.reset();
+                  form.querySelectorAll('.field-success, .field-error').forEach(el => {
+                    el.classList.remove('field-success', 'field-error');
+                  });
+
+                  // Disparar evento de éxito
+                  document.dispatchEvent(new CustomEvent('altorra:form-success', {
+                    detail: { formId, radicado: result.radicado }
+                  }));
+
+                  // Analytics
+                  if (window.AltorraAnalytics) {
+                    window.AltorraAnalytics.track('form_submit_success', {
+                      form: formId,
+                      radicado: result.radicado
+                    });
+                  }
+                } else {
+                  throw new Error(result.error || 'Error desconocido');
+                }
+              })
+              .catch(error => {
+                hideLoading(form);
+                console.error('Error al enviar formulario:', error);
+                showToast('✕ Error al enviar. Por favor intenta nuevamente.', 'error');
+
+                // Analytics
+                if (window.AltorraAnalytics) {
+                  window.AltorraAnalytics.track('form_submit_error', {
+                    form: formId,
+                    error: error.message
+                  });
+                }
+              });
+          } else {
+            // EmailJS no configurado - mostrar error
+            hideLoading(form);
+            showToast('⚠️ Servicio de email no configurado. Contacta al administrador.', 'error');
+            console.error('EmailJS no está configurado correctamente. Verifica js/email-service.js');
+          }
         }
       });
     });
