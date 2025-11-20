@@ -2463,6 +2463,13 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
           💬 Chatear por WhatsApp
         </a><br><br>
         También puedes llamar al <b>${CONFIG.whatsappNumber}</b>.`;
+
+      // CRÍTICO: Limpiar el contexto para que el bot no siga preguntando después
+      conversationContext.lastQuestion = null;
+      conversationContext.consultationPhase = null;
+      conversationContext.dataPoints = 0;
+      saveContext();
+
       botReply(html);
       return;
     }
@@ -2852,6 +2859,12 @@ Soy tu asistente virtual y puedo ayudarte con:<br><br>
           contactResponse += `Hablar por WhatsApp</a><br><br>`;
           contactResponse += `<b>Horario:</b> Lun-Vie 8am-6pm, Sáb 9am-1pm<br>`;
           contactResponse += `Por WhatsApp respondemos más rápido.`;
+
+          // CRÍTICO: Limpiar el contexto para que el bot no siga preguntando después
+          conversationContext.lastQuestion = null;
+          conversationContext.consultationPhase = null;
+          conversationContext.dataPoints = 0;
+          saveContext();
 
           botReply(contactResponse);
           return;
