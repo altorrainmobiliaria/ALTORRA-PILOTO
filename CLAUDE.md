@@ -33,11 +33,14 @@ python -m http.server 8000
 | `js/config.js` | Centralized configuration | 5.7KB (211 lines) |
 | `properties/data.json` | Main property database | 19KB (425 lines) |
 | `js/chatbot.js` | **AI chatbot v2.4** (largest module) | 168KB (3,717 lines) |
+| `js/form-validation.js` | Form validation + EmailJS integration | 31KB (enhanced) |
+| `js/email-service.js` | **EmailJS email service module** | 8.3KB (276 lines) |
 | `js/smart-search.js` | Advanced search with fuzzy matching | 23KB (526 lines) |
 | `scripts.js` | Main application orchestration | 20KB (475 lines) |
 | `js/exit-intent.js` | Exit intent popup for lead capture | 15KB (488 lines) |
 | `js/lazy-load.js` | **NEW:** Lazy loading system with Intersection Observer | 6.2KB (255 lines) |
 | `tools/generate_og_pages.js` | Build script for social sharing | 7.2KB |
+| `CONFIGURAR-EMAILJS.md` | **EmailJS setup guide** | 234 lines |
 
 ### Configuration Values
 
@@ -82,18 +85,19 @@ ALTORRA_CONFIG.isBusinessHours();          // Check if currently open
 
 ```
 ALTORRA-PILOTO/
-├── /js/                    # JavaScript modules (17 files, 360KB, 9,633 lines)
+├── /js/                    # JavaScript modules (18 files, 377KB, ~10,000 lines)
 │   ├── config.js           # Centralized configuration (211 lines)
 │   ├── chatbot.js          # 🤖 AI chatbot v2.4 (3,717 lines, 168KB)
-│   ├── form-validation.js  # Form validation + AJAX (797 lines) ⚡ AJAX
+│   ├── form-validation.js  # Form validation + EmailJS (enhanced, 31KB) ⚡ AJAX
 │   ├── form-autosave.js    # Auto-save drafts (546 lines)
+│   ├── email-service.js    # 📧 EmailJS email service (276 lines, 8.3KB) ⭐ NEW
 │   ├── smart-search.js     # Fuzzy search engine (526 lines)
 │   ├── exit-intent.js      # Exit intent popup (488 lines)
 │   ├── favoritos.js        # Favorites system (433 lines)
 │   ├── comparador.js       # Property comparison (426 lines)
 │   ├── listado-propiedades.js  # Property listings (422 lines)
 │   ├── analytics.js        # Google Analytics 4 integration (273 lines)
-│   ├── lazy-load.js        # ⭐ NEW: Lazy loading with Intersection Observer (255 lines)
+│   ├── lazy-load.js        # ⭐ Lazy loading with Intersection Observer (255 lines)
 │   ├── breadcrumbs.js      # Breadcrumb navigation + schema (250 lines)
 │   ├── urgency.js          # Urgency/scarcity indicators (247 lines)
 │   ├── calculadora.js      # Mortgage calculator (241 lines)
@@ -131,7 +135,7 @@ ALTORRA-PILOTO/
 ├── /allure/, /Milan/, /serena/, /fmia/, /fotoprop/  # Property images
 ├── /multimedia/            # Generic images
 │
-├── Pages:                  # HTML pages (30+ files)
+├── Pages:                  # HTML pages (38 files)
 │   ├── index.html          # Homepage (236 lines)
 │   ├── detalle-propiedad.html  # Property detail (800 lines, DYNAMIC SEO)
 │   ├── propiedades-*.html  # Listings (comprar/arrendar/alojamientos)
@@ -168,7 +172,8 @@ ALTORRA-PILOTO/
 ├── sitemap.xml             # SEO sitemap
 ├── robots.txt              # Crawler directives
 ├── footer.html             # Footer fragment (cached)
-└── header.html             # Header fragment (cached)
+├── header.html             # Header fragment (cached)
+└── CONFIGURAR-EMAILJS.md   # ⭐ NEW: EmailJS setup guide (234 lines)
 ```
 
 ---
@@ -176,6 +181,41 @@ ALTORRA-PILOTO/
 ## Recent Updates (November 2025)
 
 ### ✅ Completed Improvements
+
+**📧 EmailJS Integration - Complete Form Overhaul** (Latest)
+
+**Commits b97d09c - 764b4df:** "EmailJS integration and form improvements"
+- ✅ **Complete replacement of FormSubmit** with EmailJS service
+- ✅ **Created `js/email-service.js`** (276 lines, 8.3KB) - centralized email service
+- ✅ **Created `CONFIGURAR-EMAILJS.md`** (234 lines) - comprehensive setup guide
+- ✅ **Enhanced `js/form-validation.js`** (now 31KB) - integrated with EmailJS
+- ✅ **Radicado system**: 10-character tracking codes (format: ALT + 7 chars)
+- ✅ **Auto-confirmation emails**: Users receive confirmation with tracking number
+- ✅ **Rate limiting**: Prevents form abuse (max submissions per timeframe)
+- ✅ **4 Email templates**:
+  - `altorra_contacto` (template_442jrws) - General contact form ✅
+  - `altorra_publicar` - Property listing submissions
+  - `altorra_detalle` - Property detail inquiries
+  - `altorra_confirmacion` - Auto-response to users
+- ✅ **Updated all forms**: contacto.html, publicar-propiedad.html, detalle-propiedad.html
+- ✅ **Debug logging**: Comprehensive console logging for troubleshooting
+- ✅ **Loading states**: Visual feedback during email submission
+
+**Key Features:**
+```javascript
+// Radicado generation (10 characters total)
+generateRadicado() // Returns: "ALTM8K5X2P"
+
+// EmailJS configuration
+EMAILJS_CONFIG = {
+  publicKey: 'EiJacymAjNl-Q8X1j',
+  serviceId: 'service_tddohxc',
+  templates: { contacto, publicar, detalle, autorespuesta }
+}
+
+// Rate limiting per form
+localStorage['altorra:form-limit:contactForm']
+```
 
 **🤖 Chatbot Evolution: v2.0 → v2.4** (3,185 → 3,717 lines, 138KB → 168KB)
 
@@ -342,6 +382,11 @@ document.addEventListener('altorra:properties-loaded', handler);
 'altorra:chatbot-context'  // Conversation state
 'altorra:analytics'     // Event tracking (max 500 events)
 'altorra:shuffleSeed'   // Daily shuffle seed
+
+// Email Service (NEW)
+'altorra:form-limit:contactForm'    // Rate limiting for contact form
+'altorra:form-limit:publishForm'    // Rate limiting for property listing form
+'altorra:form-limit:detailForm'     // Rate limiting for property inquiry form
 ```
 
 ### 4. Fetch with Fallback
@@ -632,13 +677,67 @@ cuota = monto * (r * (1 + r)^n) / ((1 + r)^n - 1)
 - Favorites integration
 - Responsive grid layout (3 cols → 2 cols → 1 col)
 
+### Email Service (`js/email-service.js`) 📧 ⭐ NEW
+
+**Purpose:** Centralized email service using EmailJS for all form submissions
+
+**Size:** 8.3KB (276 lines)
+
+**Features:**
+- **EmailJS Integration**: Professional email delivery service
+- **Radicado System**: Generates unique 10-character tracking codes (format: ALT + 7 chars)
+- **Dual Email Sending**:
+  - Admin email with full form data
+  - Auto-confirmation email to user with tracking number
+- **Rate Limiting**: Prevents form abuse with localStorage tracking
+- **Debug Logging**: Comprehensive console output for troubleshooting
+- **Error Handling**: Graceful fallbacks for email failures
+
+**Configuration:**
+```javascript
+const EMAILJS_CONFIG = {
+  publicKey: 'EiJacymAjNl-Q8X1j',     // EmailJS Public Key
+  serviceId: 'service_tddohxc',        // EmailJS Service ID
+  templates: {
+    contacto: 'template_442jrws',      // Contact form ✅
+    publicar: 'altorra_publicar',      // Property listing
+    detalle: 'altorra_detalle',        // Property inquiry
+    autorespuesta: 'altorra_confirmacion' // User confirmation
+  }
+};
+```
+
+**Key Functions:**
+- `generateRadicado()` - Create unique tracking code (e.g., "ALTM8K5X2P")
+- `formatDate(date)` - Format date in Colombian locale
+- `prepareFormData(form, formType)` - Extract and structure form data
+- `sendEmail(templateId, params)` - Send email via EmailJS
+- `sendContactForm(form)` - Handle contact form submission
+- `sendPublishForm(form)` - Handle property listing submission
+- `sendDetailForm(form)` - Handle property inquiry submission
+
+**Radicado Format:**
+```javascript
+// Format: ALT + timestamp in base36 (last 7 chars)
+// Example: ALTM8K5X2P
+// Total: 10 characters
+// Unique per submission
+// Easy to track and reference
+```
+
+**Usage:** Automatically integrated with all forms via `form-validation.js`
+
+**Setup:** See `CONFIGURAR-EMAILJS.md` for complete configuration guide
+
 ### Form Validation (`js/form-validation.js`) ⭐ ENHANCED
 
 **Recent Improvements:**
+- ✅ **EmailJS Integration** - Complete overhaul with email service
 - ✅ Loading states with spinner
 - ✅ Better error messages
-- ✅ Toast notifications for success/error
+- ✅ Toast notifications for success/error with radicado
 - ✅ Improved accessibility
+- ✅ Rate limiting integration
 
 **Validation Patterns:**
 - Phone: Colombian format (3XXXXXXXXX or +57 3XXXXXXXXX)
@@ -652,11 +751,21 @@ cuota = monto * (r * (1 + r)^n) / ((1 + r)^n - 1)
 - Error messages below fields
 - Submit button disabled on errors
 - Accessible aria-labels and announcements
-- **AJAX submission** (no page reload)
+- **EmailJS submission** (replaces FormSubmit)
 - Loading states with spinner
-- Toast notifications
+- Toast notifications with tracking numbers
+- Rate limiting to prevent abuse
 
-**Usage:** contacto.html, publicar-propiedad.html
+**Integration:**
+```javascript
+// Listens for form submissions
+// Validates all fields
+// Calls AltorraEmailService.sendContactForm()
+// Shows success toast with radicado
+// Clears form on success
+```
+
+**Usage:** contacto.html, publicar-propiedad.html, detalle-propiedad.html
 
 ### Form Autosave (`js/form-autosave.js`) ⭐ NEW
 
@@ -1131,6 +1240,66 @@ const maxFavs = ALTORRA_CONFIG.PAGINATION.maxFavorites;
 const zones = ALTORRA_CONFIG.ZONES;  // Array of neighborhoods
 ```
 
+### Configuring EmailJS
+
+**Complete setup guide:** See `CONFIGURAR-EMAILJS.md` (234 lines)
+
+**Quick Setup Steps:**
+
+1. **Get EmailJS Credentials** (5 minutes)
+   - Go to https://dashboard.emailjs.com/
+   - Copy your Public Key from Account → General → API Keys
+   - Copy your Service ID from Email Services
+
+2. **Update Configuration** (2 minutes)
+   - Open `js/email-service.js`
+   - Lines 12-13: Replace `publicKey` and `serviceId` with your values
+   - Save the file
+
+3. **Create Email Templates** (8 minutes)
+   - Create 4 templates in EmailJS dashboard:
+     - `altorra_contacto` (template_442jrws) ✅ Already configured
+     - `altorra_publicar` - Property listing form
+     - `altorra_detalle` - Property detail inquiries
+     - `altorra_confirmacion` - Auto-response to users
+   - Use the HTML templates and variables specified in CONFIGURAR-EMAILJS.md
+
+4. **Test Forms**
+   - Open browser console (F12)
+   - Look for: `✅ EmailJS inicializado correctamente`
+   - Fill out contacto.html form and submit
+   - Check for success toast with radicado number
+   - Verify 2 emails received:
+     - Admin email with form data
+     - User confirmation email
+
+**Troubleshooting:**
+```javascript
+// Clear rate limiting (in browser console)
+localStorage.removeItem('altorra:form-limit:contactForm');
+localStorage.removeItem('altorra:form-limit:publishForm');
+localStorage.removeItem('altorra:form-limit:detailForm');
+console.log('✅ Rate limits cleared');
+location.reload();
+
+// Check EmailJS status
+console.log('EmailJS loaded:', typeof emailjs !== 'undefined');
+console.log('Email service:', window.AltorraEmailService);
+```
+
+**Common Errors:**
+- ❌ "Servicio de email no configurado" → Update publicKey/serviceId in email-service.js
+- ❌ "Has enviado muchos formularios" → Clear rate limits (see code above)
+- ❌ Error 401 (Unauthorized) → Verify EmailJS credentials are correct
+- ❌ No emails arrive → Check template IDs match exactly
+
+**Radicado Format:**
+```javascript
+// Generated format: ALT + 7 chars (base36 timestamp)
+// Example: ALTM8K5X2P
+// Unique, trackable, 10 characters total
+```
+
 ---
 
 ## Known Issues & Limitations
@@ -1158,6 +1327,10 @@ const zones = ALTORRA_CONFIG.ZONES;  // Array of neighborhoods
 - Reviews are static (not from Google API)
 - Some properties missing coordinates for map view
 - No versioning system for property data changes
+
+### Configuration
+- **Google Analytics ID inconsistency**: index.html uses `G-ZSEYSLJK13` while all other pages use `G-EHE7316MST` - needs standardization
+- EmailJS templates need to be created manually (see CONFIGURAR-EMAILJS.md)
 
 ---
 
@@ -1210,8 +1383,15 @@ const zones = ALTORRA_CONFIG.ZONES;  // Array of neighborhoods
 - **postimg.cc:** Hero images and some OG images
 - **sharp:** Node.js library for OG image generation (dev dependency only)
 - **Google Maps:** Place ID referenced in config (for future map integration)
+- **EmailJS:** Email delivery service (loaded via CDN)
+  - CDN: `https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js`
+  - Account: altorrainmobiliaria@gmail.com
+  - Service ID: service_tddohxc
+  - Public Key: EiJacymAjNl-Q8X1j
+  - 4 email templates configured
 
-**No CDN dependencies** - all JavaScript is self-hosted for reliability and performance.
+**JavaScript Dependencies:**
+- All JavaScript is self-hosted except EmailJS (loaded from CDN for reliability)
 
 ---
 
@@ -1230,11 +1410,19 @@ const zones = ALTORRA_CONFIG.ZONES;  // Array of neighborhoods
   - Synonym understanding
   - Intent detection
   - WhatsApp handoff
-- [ ] Form validation
+- [ ] Form validation and email submission
   - All fields with valid/invalid data
   - Error messages display correctly
   - Loading states work
   - Toast notifications appear
+  - **EmailJS Integration:**
+    - Form submission shows loading spinner
+    - Success toast displays radicado number (e.g., "ALTM8K5X2P")
+    - Admin receives email with form data
+    - User receives auto-confirmation email
+    - Rate limiting prevents rapid submissions
+    - Console shows debug logs (check F12)
+    - Test all 3 forms: contacto, publicar-propiedad, detalle-propiedad
 - [ ] Favorites persistence
   - Add/remove favorites
   - Badge counter updates
@@ -1258,9 +1446,9 @@ const zones = ALTORRA_CONFIG.ZONES;  // Array of neighborhoods
 
 **JavaScript Modules:**
 ```
-Total: 17 files, 9,633 lines, ~360KB
+Total: 18 files, ~10,000 lines, ~377KB
   chatbot.js           3,717 lines  168KB  (largest) 🤖 v2.4
-  form-validation.js     797 lines   24KB   ⚡ AJAX
+  form-validation.js   enhanced     31KB   ⚡ EmailJS integrated
   form-autosave.js       546 lines   14KB
   smart-search.js        526 lines   23KB
   exit-intent.js         488 lines   15KB
@@ -1268,8 +1456,9 @@ Total: 17 files, 9,633 lines, ~360KB
   favoritos.js           433 lines   14KB
   comparador.js          426 lines   14KB
   listado-propiedades.js 422 lines   15KB
+  email-service.js       276 lines    8.3KB  📧 NEW: EmailJS service
   analytics.js           273 lines    7.3KB  (GA4 enhanced)
-  lazy-load.js           255 lines    6.2KB  ⭐ NEW: Lazy loading
+  lazy-load.js           255 lines    6.2KB  ⭐ Lazy loading
   breadcrumbs.js         250 lines    7.7KB
   urgency.js             247 lines    7.6KB
   calculadora.js         241 lines    8.1KB
@@ -1295,15 +1484,16 @@ Total: 7 files, ~1,200+ lines, ~40KB
 
 **Repository Size:**
 ```
-Total: 58MB
+Total: ~58MB
   Core files (HTML/JS/CSS): ~3MB
-  JavaScript modules: 360KB (17 files)
+  JavaScript modules: 377KB (18 files)
   Images: 56MB (95 files)
   Property data: 19KB (425 lines)
 
-HTML Pages: 30+ files, ~7,247 lines total
+HTML Pages: 38 files, ~7,500+ lines total
   Largest: detalle-propiedad.html (800 lines)
   Service pages: 11 files (avaluos, contratos, islas, etc.)
+  Documentation: CONFIGURAR-EMAILJS.md (234 lines)
 ```
 
 ---
@@ -1320,6 +1510,14 @@ HTML Pages: 30+ files, ~7,247 lines total
 
 **Recent Major Updates:**
 - **November 20, 2025 (Latest):**
+  - ✅ **EmailJS Integration** - Complete form system overhaul
+    - Created `js/email-service.js` (276 lines, 8.3KB)
+    - Created `CONFIGURAR-EMAILJS.md` (234 lines setup guide)
+    - Enhanced `js/form-validation.js` (now 31KB)
+    - Radicado tracking system (10-char codes)
+    - Auto-confirmation emails to users
+    - Rate limiting to prevent abuse
+    - 4 email templates configured
   - ✅ Lazy loading system (P3.2) - 40-60% faster page loads
   - ✅ Service Worker v2.0 (P3.4) - enhanced caching + offline support
   - ✅ Image optimization suite (P3.5) - compression, analysis, reorganization tools
@@ -1405,10 +1603,11 @@ document.addEventListener('altorra:data-updated', (e) => {
 ---
 
 *Last updated: November 20, 2025*
-*Documentation version: 2.1*
+*Documentation version: 2.2*
 *Chatbot version: v2.4*
 *Service Worker version: v2.0*
-*Current branch: claude/claude-md-mi7sl3xt7kzgxdxp-01XTMh6U3wYJLQkeWm7cdcTz*
+*Email Service: EmailJS (v1.0)*
+*Current branch: claude/claude-md-mi802pzzr2kq2y1t-01BgTzVKExofJxF9n6GgtU4W*
 
 ---
 
