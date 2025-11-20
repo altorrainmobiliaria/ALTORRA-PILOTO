@@ -12,7 +12,7 @@
     publicKey: 'YOUR_PUBLIC_KEY_HERE',  // ⚠️ CAMBIAR POR TU PUBLIC KEY
     serviceId: 'YOUR_SERVICE_ID_HERE',   // ⚠️ CAMBIAR POR TU SERVICE ID
     templates: {
-      contacto: 'altorra_contacto',      // Template para formulario de contacto
+      contacto: 'template_442jrws',      // Template ID del formulario de contacto ✅
       publicar: 'altorra_publicar',      // Template para publicar propiedad
       detalle: 'altorra_detalle',        // Template para consultas desde detalle
       autorespuesta: 'altorra_confirmacion'  // Template de confirmación al usuario
