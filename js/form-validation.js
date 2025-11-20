@@ -20,8 +20,115 @@
       minLength: 3,
       pattern: /^[a-záéíóúñA-ZÁÉÍÓÚÑ\s]+$/,
       message: 'El nombre solo puede contener letras y espacios'
+    },
+    security: {
+      minFormTime: 3000,           // Minimum 3 seconds on page before submit
+      rateLimitWindow: 10 * 60 * 1000,  // 10 minutes
+      maxSubmissions: 3            // Max 3 submissions per window
     }
   };
+
+  // ===== SECURITY FEATURES =====
+
+  // Track form timestamps (when user first saw the form)
+  const formLoadTimes = new Map();
+
+  // Rate limiting storage
+  function getRateLimitKey(formId) {
+    return `altorra:form-limit:${formId}`;
+  }
+
+  function checkRateLimit(formId) {
+    try {
+      const key = getRateLimitKey(formId);
+      const data = localStorage.getItem(key);
+      if (!data) return true;
+
+      const submissions = JSON.parse(data);
+      const now = Date.now();
+
+      // Filter out old submissions outside the window
+      const recentSubmissions = submissions.filter(
+        timestamp => (now - timestamp) < CONFIG.security.rateLimitWindow
+      );
+
+      // Update storage with cleaned data
+      if (recentSubmissions.length === 0) {
+        localStorage.removeItem(key);
+        return true;
+      }
+
+      // Check if limit exceeded
+      if (recentSubmissions.length >= CONFIG.security.maxSubmissions) {
+        return false;
+      }
+
+      return true;
+    } catch (e) {
+      console.warn('Rate limit check failed:', e);
+      return true; // Fail open
+    }
+  }
+
+  function recordSubmission(formId) {
+    try {
+      const key = getRateLimitKey(formId);
+      const data = localStorage.getItem(key);
+      const submissions = data ? JSON.parse(data) : [];
+
+      submissions.push(Date.now());
+
+      // Keep only recent submissions
+      const recentSubmissions = submissions.filter(
+        timestamp => (Date.now() - timestamp) < CONFIG.security.rateLimitWindow
+      );
+
+      localStorage.setItem(key, JSON.stringify(recentSubmissions));
+    } catch (e) {
+      console.warn('Failed to record submission:', e);
+    }
+  }
+
+  // Honeypot detection
+  function checkHoneypot(form) {
+    const honeypot = form.querySelector('input[name="website_url"]');
+    if (honeypot && honeypot.value.trim() !== '') {
+      console.warn('🍯 Honeypot triggered - likely spam');
+      return false;
+    }
+    return true;
+  }
+
+  // Timestamp validation (anti-bot: must spend minimum time on form)
+  function checkFormTiming(form) {
+    const formId = form.id || form.action;
+    const loadTime = formLoadTimes.get(formId);
+
+    if (!loadTime) {
+      console.warn('No load time recorded for form');
+      return true; // Fail open
+    }
+
+    const timeSpent = Date.now() - loadTime;
+    if (timeSpent < CONFIG.security.minFormTime) {
+      console.warn(`Form submitted too fast: ${timeSpent}ms (min: ${CONFIG.security.minFormTime}ms)`);
+      return false;
+    }
+
+    return true;
+  }
+
+  // Initialize form timestamp
+  function initFormTimestamp(form) {
+    const formId = form.id || form.action;
+    formLoadTimes.set(formId, Date.now());
+
+    // Also populate hidden timestamp field if exists
+    const timestampField = form.querySelector('input[name="_formtime"]');
+    if (timestampField) {
+      timestampField.value = Date.now().toString();
+    }
+  }
 
   // Estilos para mensajes de error Y loading states
   const ERROR_STYLES = `
@@ -307,24 +414,55 @@
   // Inicializar en todos los formularios
   document.addEventListener('DOMContentLoaded', () => {
     const forms = document.querySelectorAll('form');
-    
+
     forms.forEach(form => {
       // Ignorar formularios de búsqueda
       if (form.id === 'quickSearch' || form.classList.contains('search-box')) return;
-      
+
+      // Initialize timestamp tracking
+      initFormTimestamp(form);
+
       initRealtimeValidation(form);
-      
+
       form.addEventListener('submit', (e) => {
+        // ===== SECURITY CHECKS FIRST =====
+        const formId = form.id || 'form';
+
+        // Check honeypot
+        if (!checkHoneypot(form)) {
+          e.preventDefault();
+          console.warn('🚫 Form blocked: Honeypot detected spam');
+          showToast('Error al enviar el formulario. Intenta nuevamente.', 'error');
+          return;
+        }
+
+        // Check timing (anti-bot)
+        if (!checkFormTiming(form)) {
+          e.preventDefault();
+          console.warn('🚫 Form blocked: Submitted too fast');
+          showToast('Por favor, tómate un momento para revisar el formulario.', 'error');
+          return;
+        }
+
+        // Check rate limit
+        if (!checkRateLimit(formId)) {
+          e.preventDefault();
+          console.warn('🚫 Form blocked: Rate limit exceeded');
+          showToast('Has enviado muchos formularios. Intenta nuevamente en unos minutos.', 'error');
+          return;
+        }
+
+        // ===== VALIDATION CHECKS =====
         if (!validateForm(form)) {
           e.preventDefault();
-          
+
           // Scroll al primer error
           const firstError = form.querySelector('.field-error input, .field-error textarea, .field-error select');
           if (firstError) {
             firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
             firstError.focus();
           }
-          
+
           // Mostrar mensaje global
           const existingAlert = form.querySelector('.form-alert');
           if (!existingAlert) {
@@ -335,6 +473,10 @@
             form.insertBefore(alert, form.firstChild);
             setTimeout(() => alert.remove(), 5000);
           }
+        } else {
+          // Form is valid and passed security checks
+          // Record this submission for rate limiting
+          recordSubmission(formId);
         }
       });
     });
@@ -434,9 +576,14 @@
     validateName,
     showLoading,
     hideLoading,
-    showToast
+    showToast,
+    // Security features
+    checkHoneypot,
+    checkRateLimit,
+    checkFormTiming,
+    initFormTimestamp
   };
 
-  console.log('✅ Form validation + loading states loaded');
+  console.log('✅ Form validation + security (honeypot, rate limit, timing) loaded');
 
 })();

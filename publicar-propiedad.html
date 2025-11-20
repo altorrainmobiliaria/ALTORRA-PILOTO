@@ -268,23 +268,29 @@
       <!-- Configuración para FormSubmit -->
       <input type="hidden" name="_subject" value="Solicitud para publicar propiedad"/>
       <input type="hidden" name="_next" value="https://altorrainmobiliaria.github.io/gracias.html"/>
-      <input type="hidden" name="_captcha" value="false"/>
+      <input type="hidden" name="_captcha" value="true"/>
       <input type="hidden" name="_template" value="table"/>
-      <input type="text" name="_honey" style="display:none"/>
+
+      <!-- Honeypot mejorado (anti-spam) -->
+      <input type="text" name="website_url" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+      <!-- Timestamp para validación -->
+      <input type="hidden" name="_formtime" id="formtime" value="" />
+
       <div class="grid two">
         <label>Nombre completo
-          <input type="text" name="Nombre" autocomplete="name" required />
+          <input type="text" name="Nombre" autocomplete="name" maxlength="100" required />
         </label>
         <label>Correo electrónico
-          <input type="email" name="Email" autocomplete="email" required />
+          <input type="email" name="Email" autocomplete="email" maxlength="150" required />
         </label>
       </div>
       <div class="grid two">
         <label>Teléfono de contacto
-          <input type="tel" name="Teléfono" autocomplete="tel" required />
+          <input type="tel" name="Teléfono" autocomplete="tel" maxlength="20" required />
         </label>
         <label>Ciudad
-          <input type="text" name="Ciudad" required />
+          <input type="text" name="Ciudad" maxlength="100" required />
         </label>
       </div>
       <div class="grid two">
@@ -306,10 +312,10 @@
         </label>
       </div>
       <label>Precio estimado (COP)
-        <input type="number" name="Precio" min="0" inputmode="numeric" />
+        <input type="number" name="Precio" min="0" max="99999999999" inputmode="numeric" />
       </label>
       <label>Descripción de la propiedad
-        <textarea name="Descripción" placeholder="Cuéntanos: habitaciones, baños, m², parqueadero, amenidades, cercanías..." required></textarea>
+        <textarea name="Descripción" placeholder="Cuéntanos: habitaciones, baños, m², parqueadero, amenidades, cercanías..." maxlength="1500" required></textarea>
       </label>
       <button type="submit">Enviar solicitud</button>
     </form>
