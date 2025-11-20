@@ -25,6 +25,107 @@
     'ocho': 8
   };
 
+  // ============================================
+  // DICCIONARIO DE SINÓNIMOS E INTELIGENCIA NATURAL
+  // ============================================
+
+  // Normalizar texto: quitar acentos, lowercase, espacios extra
+  function normalizeText(text) {
+    return text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Quitar acentos
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  // Sinónimos para comandos de navegación
+  const SYNONYMS = {
+    // Volver atrás / reiniciar
+    back: ['atras', 'atrás', 'volver', 'regresar', 'ir atras', 'ir atrás', 'back', 'anterior', 'retroceder', 'salir', 'cancelar', 'menu', 'menú', 'inicio'],
+
+    // Confirmaciones positivas
+    yes: ['si', 'sí', 'ok', 'okay', 'vale', 'dale', 'listo', 'claro', 'bueno', 'bien', 'perfecto', 'exacto', 'correcto', 'afirmativo', 'por supuesto', 'obvio', 'seguro', 'ya', 'aja', 'ajá', 'simón', 'eso', 'así es'],
+
+    // Negaciones
+    no: ['no', 'nop', 'nope', 'nel', 'negativo', 'para nada', 'ninguno', 'ninguna', 'nunca', 'jamas', 'jamás'],
+
+    // Operación: Comprar
+    buy: ['comprar', 'compra', 'adquirir', 'invertir', 'inversion', 'inversión', 'venta', 'en venta', 'para compra'],
+
+    // Operación: Arrendar
+    rent: ['arrendar', 'arriendo', 'alquilar', 'alquiler', 'rentar', 'renta', 'mensual', 'arrendamiento'],
+
+    // Operación: Alojamiento
+    stay: ['alojamiento', 'hospedaje', 'vacaciones', 'dias', 'días', 'temporal', 'turismo', 'hotel', 'airbnb', 'noche', 'noches', 'finde', 'fin de semana'],
+
+    // Propietario
+    owner: ['propietario', 'dueño', 'dueña', 'tengo una', 'tengo un', 'mi propiedad', 'mi casa', 'mi apartamento', 'mi apto', 'mi inmueble', 'vender mi', 'arrendar mi'],
+
+    // Tipos de propiedad
+    apartment: ['apartamento', 'apto', 'aparta', 'depa', 'departamento', 'piso', 'flat'],
+    house: ['casa', 'casita', 'vivienda', 'chalet', 'townhouse'],
+    lot: ['lote', 'terreno', 'predio', 'solar', 'parcela'],
+    office: ['oficina', 'local', 'comercial', 'negocio', 'bodega'],
+
+    // Contacto / Asesor
+    contact: ['asesor', 'asesora', 'contacto', 'contactar', 'hablar', 'llamar', 'whatsapp', 'telefono', 'teléfono', 'numero', 'número', 'ayuda humana', 'persona real'],
+
+    // Saludos
+    greeting: ['hola', 'buenos', 'buenas', 'hey', 'hi', 'hello', 'saludos', 'que tal', 'qué tal', 'ey', 'alo', 'aló'],
+
+    // Despedidas
+    goodbye: ['adios', 'adiós', 'chao', 'chau', 'bye', 'hasta luego', 'nos vemos', 'me voy', 'gracias por todo'],
+
+    // Agradecimientos
+    thanks: ['gracias', 'thank', 'agradezco', 'muy amable', 'te agradezco', 'mil gracias'],
+
+    // Zonas de Cartagena
+    bocagrande: ['bocagrande', 'boca grande', 'bocagrade'],
+    manga: ['manga'],
+    centro: ['centro', 'historico', 'histórico', 'amurallado', 'ciudad vieja'],
+    getsemani: ['getsemani', 'getsemaní', 'getsemany'],
+    castillogrande: ['castillogrande', 'castillo grande'],
+    crespo: ['crespo'],
+    laguito: ['laguito', 'el laguito'],
+    piedelapopa: ['pie de la popa', 'pie la popa', 'la popa'],
+    serena: ['serena del mar', 'serena', 'barcelona de indias'],
+    country: ['country', 'barrio country'],
+    parqueheredia: ['parque heredia', 'milan', 'milán'],
+
+    // Características
+    pool: ['piscina', 'alberca', 'pool'],
+    parking: ['parqueadero', 'parking', 'garage', 'garaje', 'estacionamiento', 'carro', 'vehiculo', 'vehículo'],
+    furnished: ['amoblado', 'amueblado', 'muebles', 'equipado'],
+    aircon: ['aire acondicionado', 'aire', 'ac', 'clima'],
+    view: ['vista', 'panoramica', 'panorámica', 'vista al mar']
+  };
+
+  // Función para verificar si el mensaje contiene algún sinónimo de una categoría
+  function matchesSynonym(text, category) {
+    const normalized = normalizeText(text);
+    const synonyms = SYNONYMS[category];
+    if (!synonyms) return false;
+
+    return synonyms.some(syn => {
+      const normalizedSyn = normalizeText(syn);
+      // Buscar como palabra completa o como parte del texto
+      const regex = new RegExp(`\\b${normalizedSyn}\\b|^${normalizedSyn}|${normalizedSyn}$`, 'i');
+      return regex.test(normalized);
+    });
+  }
+
+  // Función para detectar múltiples categorías en un mensaje
+  function detectCategories(text) {
+    const detected = [];
+    for (const category of Object.keys(SYNONYMS)) {
+      if (matchesSynonym(text, category)) {
+        detected.push(category);
+      }
+    }
+    return detected;
+  }
+
   // Función para parsear presupuesto en múltiples formatos
   function parseBudget(msg) {
     const text = msg.toLowerCase();
@@ -805,8 +906,13 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     // Solo números (ej: "3", "200", "1800000")
     if (/^\d+$/.test(text)) return true;
 
-    // Confirmaciones simples
-    if (/^(s[ií]|no|ok|vale|bien|listo|claro|bueno|perfecto|exacto|correcto)$/i.test(text)) return true;
+    // Confirmaciones simples - usando diccionario de sinónimos
+    if (len < 20 && (matchesSynonym(text, 'yes') || matchesSynonym(text, 'no'))) {
+      // Pero solo si no parece un comando de navegación
+      if (!matchesSynonym(text, 'back') && !matchesSynonym(text, 'contact')) {
+        return true;
+      }
+    }
 
     // Formato de presupuesto/dinero sin contexto adicional
     if (/^\$?\s*[\d\.,]+\s*(m|millones?|mil)?$/i.test(text)) return true;
@@ -815,14 +921,17 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     // Números con unidades simples (habitaciones, baños, personas, metros)
     if (/^\d+\s*(habitacion|habitaciones|cuartos?|alcobas?|ba[ñn]os?|personas?|m2|metros?)$/i.test(text)) return true;
 
-    // Respuestas de opciones típicas del flujo
-    if (/^(apartamento|apto|casa|lote|oficina|local)$/i.test(text)) return true;
+    // Respuestas de opciones típicas del flujo - usando diccionario de sinónimos
+    if (len < 20 && (matchesSynonym(text, 'apartment') || matchesSynonym(text, 'house') ||
+        matchesSynonym(text, 'lot') || matchesSynonym(text, 'office'))) return true;
     if (/^(vivienda|inversi[oó]n|trabajo|negocio)$/i.test(text)) return true;
     if (/^(solo|pareja|familia)$/i.test(text)) return true;
     if (/^(urgente|flexible|sin prisa)$/i.test(text)) return true;
 
-    // Zonas simples sin contexto
-    if (/^(bocagrande|manga|centro|getseman[ií]|crespo|pie de la popa|castillogrande)$/i.test(text)) return true;
+    // Zonas simples sin contexto - usando diccionario de sinónimos
+    if (len < 25 && (matchesSynonym(text, 'bocagrande') || matchesSynonym(text, 'manga') ||
+        matchesSynonym(text, 'centro'))) return true;
+    if (/^(crespo|pie de la popa|castillogrande|serena|parque heredia)$/i.test(text)) return true;
 
     // Fechas simples
     if (/^(del \d+ al \d+|esta semana|pr[oó]xima semana|\d+ d[ií]as?)$/i.test(text)) return true;
@@ -844,8 +953,8 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
       return true;
     }
 
-    // Solicitudes de contacto con asesor (debe interrumpir el flujo)
-    if (/hablar con.*asesor|contactar.*asesor|asesor|whatsapp|llamar|contacto/i.test(text)) {
+    // Solicitudes de contacto con asesor (usando diccionario de sinónimos)
+    if (matchesSynonym(text, 'contact')) {
       return true;
     }
 
@@ -854,25 +963,26 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
       return true;
     }
 
-    // Cambios explícitos de operación/modo
-    const operationChangePatterns = [
-      /quiero (comprar|arrendar|alquilar|alojamiento|hospedaje)/i,
-      /busco (para )?(comprar|arrendar|alquilar|alojamiento)/i,
-      /necesito (comprar|arrendar|alquilar|alojamiento)/i,
-      /me interesa (comprar|arrendar|alquilar|alojamiento)/i,
-      /(comprar|arrendar|alquilar|alojamiento|hospedaje) (una?|un) (propiedad|casa|apartamento|inmueble)/i,
-      /^(comprar|arrendar|alojamiento|hospedaje)$/i,
-      /alojamiento por d[ií]as/i,
-      /por d[ií]as/i,
-      /vacaciones/i
-    ];
-
-    for (const pattern of operationChangePatterns) {
-      if (pattern.test(text)) return true;
+    // Cambios explícitos de operación/modo (usando diccionario de sinónimos)
+    // Detectar cambio a comprar
+    if (matchesSynonym(text, 'buy') && /quiero|busco|necesito|me interesa|deseo/i.test(text)) {
+      return true;
+    }
+    // Detectar cambio a arrendar
+    if (matchesSynonym(text, 'rent') && /quiero|busco|necesito|me interesa|deseo/i.test(text)) {
+      return true;
+    }
+    // Detectar cambio a alojamiento
+    if (matchesSynonym(text, 'stay') && /quiero|busco|necesito|me interesa|deseo/i.test(text)) {
+      return true;
+    }
+    // Comando directo de operación
+    if (/^(comprar|arrendar|alquilar|alojamiento|hospedaje|por dias|por días)$/i.test(text)) {
+      return true;
     }
 
     // Intenciones de propietario (siempre son globales)
-    if (/soy propietario|tengo (una?|un) (propiedad|casa|apartamento|inmueble)|quiero (vender|arrendar) mi|vender mi|arrendar mi/i.test(text)) {
+    if (matchesSynonym(text, 'owner')) {
       return true;
     }
 
@@ -884,13 +994,13 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
       }
     }
 
-    // Saludos (reinician contexto implícitamente)
-    if (/^(hola|buenos d[ií]as|buenas tardes|buenas noches|hey|hi)\b/i.test(text)) {
+    // Saludos (usando diccionario de sinónimos)
+    if (matchesSynonym(text, 'greeting') && text.length < 30) {
       return true;
     }
 
-    // Despedidas
-    if (/^(adi[oó]s|chao|hasta luego|nos vemos|bye|me voy)\b/i.test(text)) {
+    // Despedidas (usando diccionario de sinónimos)
+    if (matchesSynonym(text, 'goodbye')) {
       return true;
     }
 
@@ -946,12 +1056,12 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
       saveContext();
     }
 
-    // Tipo de propiedad
+    // Tipo de propiedad - usando diccionario de sinónimos
     if (last === 'propertyType' && !conversationContext.propertyType) {
-      if (/apartamento|apto|aparta/i.test(text)) conversationContext.propertyType = 'apartamento';
-      else if (/\bcasa\b/i.test(text)) conversationContext.propertyType = 'casa';
-      else if (/lote|terreno/i.test(text)) conversationContext.propertyType = 'lote';
-      else if (/oficina/i.test(text)) conversationContext.propertyType = 'oficina';
+      if (matchesSynonym(text, 'apartment')) conversationContext.propertyType = 'apartamento';
+      else if (matchesSynonym(text, 'house')) conversationContext.propertyType = 'casa';
+      else if (matchesSynonym(text, 'lot')) conversationContext.propertyType = 'lote';
+      else if (matchesSynonym(text, 'office')) conversationContext.propertyType = 'oficina';
       saveContext();
     }
 
@@ -2004,14 +2114,35 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
 
   // Función inteligente para detectar zona con aliases y variaciones
   function detectZone(msg) {
-    // Primero buscar en aliases (frases compuestas)
+    // Primero buscar usando el diccionario de sinónimos de zonas
+    const zoneCategories = [
+      { category: 'bocagrande', zone: 'bocagrande' },
+      { category: 'manga', zone: 'manga' },
+      { category: 'centro', zone: 'centro' },
+      { category: 'getsemani', zone: 'getsemani' },
+      { category: 'castillogrande', zone: 'castillogrande' },
+      { category: 'crespo', zone: 'crespo' },
+      { category: 'laguito', zone: 'laguito' },
+      { category: 'piedelapopa', zone: 'pie de la popa' },
+      { category: 'serena', zone: 'serena del mar' },
+      { category: 'country', zone: 'country' },
+      { category: 'parqueheredia', zone: 'parque heredia' }
+    ];
+
+    for (const { category, zone } of zoneCategories) {
+      if (matchesSynonym(msg, category)) {
+        return zone;
+      }
+    }
+
+    // Luego buscar en aliases (frases compuestas)
     for (const [alias, zoneKey] of Object.entries(SITE_KNOWLEDGE.zoneAliases)) {
       if (msg.includes(alias)) {
         return zoneKey;
       }
     }
 
-    // Luego buscar directamente en las zonas
+    // Finalmente buscar directamente en las zonas
     for (const zone of Object.keys(SITE_KNOWLEDGE.zones)) {
       if (msg.includes(zone)) {
         return zone;
@@ -2041,11 +2172,12 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
 
     if (!msg.match(isOwnerPattern)) {
       // Solo si NO es un propietario, entonces buscar operación de compra/arriendo
-      if (msg.match(/comprar|compra|en venta|busco.*venta|inversión|inversion|adquirir|busco.*para.*comprar|quiero.*comprar|necesito.*comprar/i)) {
+      // Usando diccionario de sinónimos para mejor detección
+      if (matchesSynonym(msg, 'buy')) {
         criteria.operation = 'comprar';
-      } else if (msg.match(/arrendar|arriendo|alquiler|alquilar|rentar|renta|busco.*arriendo|necesito.*arrendar|mensual|busco.*para.*arrendar/i)) {
+      } else if (matchesSynonym(msg, 'rent')) {
         criteria.operation = 'arrendar';
-      } else if (msg.match(/días|dias|alojamiento|hospedaje|vacaciones|temporal|por.*noche|semana.*santa|fin.*semana/i)) {
+      } else if (matchesSynonym(msg, 'stay')) {
         criteria.operation = 'dias';
       }
     }
@@ -2066,21 +2198,19 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
       }
     }
 
-    // Detectar tipo de propiedad - mejorado
-    const typePatterns = {
-      'apartamento': /apartamento|apto|aparta|depa|departamento/i,
-      'casa': /\bcasa\b|casita|vivienda/i,
-      'lote': /\blote\b|terreno|predio/i,
-      'oficina': /oficina/i,
-      'local': /local\s*comercial|\blocal\b/i,
-      'bodega': /bodega|almacén|almacen/i,
-      'finca': /finca|parcela|hacienda|granja/i
-    };
-    for (const [type, pattern] of Object.entries(typePatterns)) {
-      if (msg.match(pattern)) {
-        criteria.type = type;
-        break;
-      }
+    // Detectar tipo de propiedad - usando diccionario de sinónimos
+    if (matchesSynonym(msg, 'apartment')) {
+      criteria.type = 'apartamento';
+    } else if (matchesSynonym(msg, 'house')) {
+      criteria.type = 'casa';
+    } else if (matchesSynonym(msg, 'lot')) {
+      criteria.type = 'lote';
+    } else if (matchesSynonym(msg, 'office')) {
+      criteria.type = 'oficina';
+    } else if (msg.match(/local\s*comercial|\blocal\b/i)) {
+      criteria.type = 'local';
+    } else if (msg.match(/finca|parcela|hacienda|granja/i)) {
+      criteria.type = 'finca';
     }
 
     // Detectar zona usando la función inteligente
@@ -2255,42 +2385,71 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     // COMANDOS GLOBALES / CAMBIO DE CONTEXTO
     // ===============================
 
-    // Volver al inicio / menú principal
-    if (/^(atr[aá]s|volver|regresar|quiero regresar|ir al inicio|menu|menú)$/i.test(msg)) {
+    // Volver al inicio / menú principal (usando diccionario de sinónimos)
+    if (matchesSynonym(msg, 'back') && msg.length < 30) {
       resetConversation(); // limpiamos flujo pero conservamos que ya se saludó
       botReply('Listo, volvamos al inicio. ¿Qué deseas hacer ahora?', QUICK_OPTIONS);
       return;
     }
 
     // Reiniciar completamente la conversación
-    if (/^(reiniciar chat|reiniciar|empezar de nuevo|nuevo chat|borrar conversaci[oó]n)$/i.test(msg)) {
+    if (/reiniciar|empezar de nuevo|nuevo chat|borrar conversaci[oó]n|desde cero/i.test(msg)) {
       resetConversation({ full: true });
       botReply('De acuerdo, empezamos desde cero. ¿Qué necesitas hoy?', QUICK_OPTIONS);
       return;
     }
 
     // Cambiar explícitamente de modo principal, aunque esté en medio de otro flujo
-    if (/^quiero arrendar|^busco arriendo|arrendar (una |un )?(propiedad|casa|apartamento|apto)/i.test(msg)) {
+    // Usar diccionario de sinónimos para detectar intención
+
+    // Detectar intención de arrendar
+    const wantsRent = matchesSynonym(msg, 'rent') &&
+      (/quiero|busco|necesito|me interesa|deseo/i.test(msg) || msg.length < 20);
+    if (wantsRent && !matchesSynonym(msg, 'owner')) {
       resetConversation();
       handleOption('arrendar');
       return;
     }
 
-    if (/^quiero comprar|^busco comprar|^busco.*para comprar|comprar (una |un )?(propiedad|casa|apartamento|apto|lote|oficina)/i.test(msg)) {
+    // Detectar intención de comprar
+    const wantsBuy = matchesSynonym(msg, 'buy') &&
+      (/quiero|busco|necesito|me interesa|deseo/i.test(msg) || msg.length < 20);
+    if (wantsBuy && !matchesSynonym(msg, 'owner')) {
       resetConversation();
       handleOption('comprar');
       return;
     }
 
-    if (/^alojamiento|^quiero alojamiento|^busco alojamiento|alojamiento por d[ií]as|hospedaje|por d[ií]as/i.test(msg)) {
+    // Detectar intención de alojamiento/hospedaje
+    const wantsStay = matchesSynonym(msg, 'stay') &&
+      (/quiero|busco|necesito|me interesa|deseo/i.test(msg) || msg.length < 20);
+    if (wantsStay) {
       resetConversation();
       handleOption('alojamiento');
       return;
     }
 
-    if (/^soy propietario\b|^tengo una propiedad\b|^tengo un apartamento\b|^tengo una casa\b/i.test(msg)) {
+    // Detectar intención de propietario
+    const isOwner = matchesSynonym(msg, 'owner') ||
+      /^soy propietario|^soy dueño|^tengo (una |un )?(propiedad|casa|apartamento|apto|inmueble)/i.test(msg);
+    if (isOwner) {
       resetConversation();
       handleOption('propietario');
+      return;
+    }
+
+    // Detectar intención de contactar asesor
+    const wantsContact = matchesSynonym(msg, 'contact') &&
+      (/quiero|necesito|hablar|contactar|llamar/i.test(msg) || msg.length < 25);
+    if (wantsContact) {
+      // Ir directamente a contacto
+      const waLink = `https://wa.me/${CONFIG.whatsappNumber}?text=${encodeURIComponent('Hola Altorra, quiero hablar con un asesor')}`;
+      const html = `¡Claro! Te comunico con un asesor de Altorra.<br><br>
+        <a href="${waLink}" target="_blank" rel="noopener" style="display:inline-block;background:#25d366;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">
+          💬 Chatear por WhatsApp
+        </a><br><br>
+        También puedes llamar al <b>${CONFIG.whatsappNumber}</b>.`;
+      botReply(html);
       return;
     }
 
@@ -2582,11 +2741,11 @@ Soy tu asistente virtual y puedo ayudarte con:<br><br>
             conversationContext.consultationPhase === 'discovery' ||
             conversationContext.interest;
 
-          // Palabras que son claramente agradecimiento
-          const isClearThanks = msg.match(/gracias|muchas gracias|agradezco|te agradezco|muy amable/i);
+          // Palabras que son claramente agradecimiento - usando diccionario de sinónimos
+          const isClearThanks = matchesSynonym(msg, 'thanks');
 
-          // Palabras de confirmación que podrían ser continuación
-          const isConfirmation = msg.match(/^(ok|bien|bueno|listo|vale|perfecto|claro|entendido|de acuerdo|sí|si)$/i);
+          // Palabras de confirmación que podrían ser continuación - usando diccionario de sinónimos
+          const isConfirmation = matchesSynonym(msg, 'yes') && msg.length < 20;
 
           if (isActiveFlow && isConfirmation && !isClearThanks) {
             // Es una confirmación en flujo activo - pedir siguiente información
