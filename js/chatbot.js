@@ -51,54 +51,54 @@
     no: ['no', 'nop', 'nope', 'nel', 'negativo', 'para nada', 'ninguno', 'ninguna', 'nunca', 'jamas', 'jamás'],
 
     // Operación: Comprar
-    buy: ['comprar', 'compra', 'adquirir', 'invertir', 'inversion', 'inversión', 'venta', 'en venta', 'para compra'],
+    buy: ['comprar', 'compra', 'adquirir', 'invertir', 'inversion', 'inversión', 'venta', 'en venta', 'para compra', 'adquisición', 'adquisicion', 'propiedad en venta', 'inmueble en venta', 'quiero comprar', 'busco comprar', 'interesa comprar', 'deseo comprar', 'compraría', 'compraria'],
 
     // Operación: Arrendar
-    rent: ['arrendar', 'arriendo', 'alquilar', 'alquiler', 'rentar', 'renta', 'mensual', 'arrendamiento'],
+    rent: ['arrendar', 'arriendo', 'alquilar', 'alquiler', 'rentar', 'renta', 'mensual', 'arrendamiento', 'arrendatario', 'inquilino', 'quiero arrendar', 'busco arrendar', 'interesa arrendar', 'deseo arrendar', 'para arrendar', 'en arriendo', 'en alquiler', 'arrendaria', 'arrendar\u00eda', 'alquilaría', 'alquilaria'],
 
     // Operación: Alojamiento
-    stay: ['alojamiento', 'hospedaje', 'vacaciones', 'dias', 'días', 'temporal', 'turismo', 'hotel', 'airbnb', 'noche', 'noches', 'finde', 'fin de semana'],
+    stay: ['alojamiento', 'hospedaje', 'vacaciones', 'dias', 'días', 'temporal', 'turismo', 'hotel', 'airbnb', 'noche', 'noches', 'finde', 'fin de semana', 'vacacional', 'temporada', 'corta estadia', 'corta estadía', 'short stay', 'por días', 'estadia temporal', 'estadía temporal', 'turístico', 'turistico', 'temporalmente', 'unos dias', 'unos días'],
 
     // Propietario
-    owner: ['propietario', 'dueño', 'dueña', 'tengo una', 'tengo un', 'mi propiedad', 'mi casa', 'mi apartamento', 'mi apto', 'mi inmueble', 'vender mi', 'arrendar mi'],
+    owner: ['propietario', 'dueño', 'dueña', 'tengo una', 'tengo un', 'mi propiedad', 'mi casa', 'mi apartamento', 'mi apto', 'mi inmueble', 'vender mi', 'arrendar mi', 'soy dueño', 'soy dueña', 'soy propietario', 'soy propietaria', 'poseo', 'tengo propiedad', 'tengo inmueble', 'quiero publicar', 'quiero anunciar'],
 
     // Tipos de propiedad
-    apartment: ['apartamento', 'apto', 'aparta', 'depa', 'departamento', 'piso', 'flat'],
-    house: ['casa', 'casita', 'vivienda', 'chalet', 'townhouse'],
-    lot: ['lote', 'terreno', 'predio', 'solar', 'parcela'],
-    office: ['oficina', 'local', 'comercial', 'negocio', 'bodega'],
+    apartment: ['apartamento', 'apto', 'aparta', 'depa', 'departamento', 'piso', 'flat', 'apartaestudio', 'studio', 'penthouse', 'ático', 'atico', 'duplex', 'dúplex', 'apartamentos', 'aptos'],
+    house: ['casa', 'casita', 'vivienda', 'chalet', 'townhouse', 'residencia', 'hogar', 'casa unifamiliar', 'villa', 'cabaña', 'cabana', 'cottage', 'casas'],
+    lot: ['lote', 'terreno', 'predio', 'solar', 'parcela', 'tierra', 'finca', 'terreno urbano', 'terreno rural', 'lote urbanizable', 'lote sin construir', 'lotes', 'terrenos'],
+    office: ['oficina', 'local', 'comercial', 'negocio', 'bodega', 'espacio comercial', 'consultorio', 'local comercial', 'oficina comercial', 'espacio de trabajo', 'oficinas', 'locales'],
 
     // Contacto / Asesor
-    contact: ['asesor', 'asesora', 'contacto', 'contactar', 'hablar', 'llamar', 'whatsapp', 'telefono', 'teléfono', 'numero', 'número', 'ayuda humana', 'persona real'],
+    contact: ['asesor', 'asesora', 'contacto', 'contactar', 'hablar', 'llamar', 'whatsapp', 'telefono', 'teléfono', 'numero', 'número', 'ayuda humana', 'persona real', 'agente', 'representante', 'consejero', 'asistencia', 'comunicar', 'comunicarse', 'escribir', 'chatear', 'conversar', 'llamada', 'mensaje', 'hablar con alguien', 'persona', 'humano'],
 
     // Saludos
-    greeting: ['hola', 'buenos', 'buenas', 'hey', 'hi', 'hello', 'saludos', 'que tal', 'qué tal', 'ey', 'alo', 'aló'],
+    greeting: ['hola', 'buenos', 'buenas', 'hey', 'hi', 'hello', 'saludos', 'que tal', 'qué tal', 'ey', 'alo', 'aló', 'buen dia', 'buen día', 'buenas tardes', 'buenas noches', 'holi', 'holaa', 'holaaa', 'que hubo', 'qué hubo', 'como estas', 'cómo estás', 'como va', 'cómo va', 'buenas dias'],
 
     // Despedidas
-    goodbye: ['adios', 'adiós', 'chao', 'chau', 'bye', 'hasta luego', 'nos vemos', 'me voy', 'gracias por todo'],
+    goodbye: ['adios', 'adiós', 'chao', 'chau', 'bye', 'hasta luego', 'nos vemos', 'me voy', 'gracias por todo', 'hasta pronto', 'nos hablamos', 'hasta la proxima', 'hasta la próxima', 'me retiro', 'ya me voy', 'ciao', 'goodbye', 'see you', 'hasta mañana', 'que estes bien', 'que estés bien', 'cuídate', 'cuidate'],
 
     // Agradecimientos
-    thanks: ['gracias', 'thank', 'agradezco', 'muy amable', 'te agradezco', 'mil gracias'],
+    thanks: ['gracias', 'thank', 'agradezco', 'muy amable', 'te agradezco', 'mil gracias', 'muchas gracias', 'gracias por la ayuda', 'gracias por tu ayuda', 'agradecido', 'agradecida', 'thank you', 'thanks', 'grax', 'graciass', 'graciasss', 'te lo agradezco', 'super gracias'],
 
     // Zonas de Cartagena
-    bocagrande: ['bocagrande', 'boca grande', 'bocagrade'],
-    manga: ['manga'],
-    centro: ['centro', 'historico', 'histórico', 'amurallado', 'ciudad vieja'],
-    getsemani: ['getsemani', 'getsemaní', 'getsemany'],
-    castillogrande: ['castillogrande', 'castillo grande'],
-    crespo: ['crespo'],
-    laguito: ['laguito', 'el laguito'],
-    piedelapopa: ['pie de la popa', 'pie la popa', 'la popa'],
-    serena: ['serena del mar', 'serena', 'barcelona de indias'],
-    country: ['country', 'barrio country'],
-    parqueheredia: ['parque heredia', 'milan', 'milán'],
+    bocagrande: ['bocagrande', 'boca grande', 'bocagrade', 'boca', 'zona norte', 'sector bocagrande', 'playa bocagrande'],
+    manga: ['manga', 'la manga', 'barrio manga', 'zona manga'],
+    centro: ['centro', 'historico', 'histórico', 'amurallado', 'ciudad vieja', 'ciudad amurallada', 'centro historico', 'centro histórico', 'casco antiguo', 'casco histórico'],
+    getsemani: ['getsemani', 'getsemaní', 'getsemany', 'barrio getsemani', 'barrio getsemaní'],
+    castillogrande: ['castillogrande', 'castillo grande', 'castillo', 'zona castillogrande'],
+    crespo: ['crespo', 'barrio crespo', 'zona crespo'],
+    laguito: ['laguito', 'el laguito', 'barrio laguito', 'zona laguito'],
+    piedelapopa: ['pie de la popa', 'pie la popa', 'la popa', 'popa', 'barrio popa', 'cerro de la popa'],
+    serena: ['serena del mar', 'serena', 'barcelona de indias', 'la serena', 'sector serena'],
+    country: ['country', 'barrio country', 'el country', 'zona country'],
+    parqueheredia: ['parque heredia', 'milan', 'milán', 'parque heredia milan', 'parque heredia milán', 'zona milan', 'zona milán'],
 
     // Características
-    pool: ['piscina', 'alberca', 'pool'],
-    parking: ['parqueadero', 'parking', 'garage', 'garaje', 'estacionamiento', 'carro', 'vehiculo', 'vehículo'],
-    furnished: ['amoblado', 'amueblado', 'muebles', 'equipado'],
-    aircon: ['aire acondicionado', 'aire', 'ac', 'clima'],
-    view: ['vista', 'panoramica', 'panorámica', 'vista al mar']
+    pool: ['piscina', 'alberca', 'pool', 'pileta', 'natación', 'natacion', 'jacuzzi', 'turco', 'sauna', 'zona húmeda', 'zona humeda', 'área de piscina', 'area de piscina', 'con piscina', 'tiene piscina'],
+    parking: ['parqueadero', 'parking', 'garage', 'garaje', 'estacionamiento', 'carro', 'vehiculo', 'vehículo', 'parqueo', 'plaza de garaje', 'cubierto', 'parqueadero cubierto', 'plaza de parking', 'con parqueadero', 'tiene parqueadero', 'estacionamiento cubierto'],
+    furnished: ['amoblado', 'amueblado', 'muebles', 'equipado', 'con muebles', 'mobiliario', 'completamente amoblado', 'semi amoblado', 'semi-amoblado', 'con electrodomésticos', 'con electrodomesticos', 'equipada', 'amoblada'],
+    aircon: ['aire acondicionado', 'aire', 'ac', 'clima', 'climatizado', 'climatización', 'climatizacion', 'a/c', 'aire central', 'split', 'con aire', 'tiene aire', 'climatizada'],
+    view: ['vista', 'panoramica', 'panorámica', 'vista al mar', 'frente al mar', 'vista mar', 'balcón', 'balcon', 'terraza', 'vista ciudad', 'vista panorámica', 'vista panoramica', 'con vista', 'vista hermosa', 'con balcón', 'con balcon', 'con terraza']
   };
 
   // Función para verificar si el mensaje contiene algún sinónimo de una categoría
@@ -367,8 +367,13 @@
 
     const questions = CONSULTATION_QUESTIONS[interest];
 
-    // Orden de preguntas
-    const questionOrder = ['purpose', 'propertyType', 'zone', 'budget', 'beds'];
+    // ⭐ ORDEN CORRECTO: Preguntas OBLIGATORIAS primero
+    // 1. propertyType (OBLIGATORIO) - para saber qué busca
+    // 2. zone (RECOMENDADO) - para filtrar ubicación
+    // 3. budget (OBLIGATORIO) - para filtrar por precio
+    // 4. purpose (OPCIONAL) - para personalizar recomendación
+    // 5. beds (OPCIONAL) - para afinar búsqueda
+    const questionOrder = ['propertyType', 'zone', 'budget', 'purpose', 'beds'];
 
     for (const field of questionOrder) {
       if (questions[field] && !ctx[field]) {
@@ -382,8 +387,21 @@
   // Función para verificar si tenemos suficiente información para recomendar
   function hasEnoughInfoToRecommend() {
     const ctx = conversationContext;
-    let points = 0;
 
+    // ⭐ CAMBIO CRÍTICO: Campos OBLIGATORIOS para hacer recomendaciones
+    // NO se puede recomendar sin estos 3 campos básicos
+    const hasRequiredFields =
+      ctx.interest &&           // comprar/arrendar/dias
+      ctx.propertyType &&       // apartamento/casa/lote
+      ctx.budget;               // presupuesto (crítico para filtrar)
+
+    // Si no tiene los campos obligatorios, NO está listo
+    if (!hasRequiredFields) {
+      return false;
+    }
+
+    // Contar puntos de datos para analytics
+    let points = 0;
     if (ctx.interest) points++;
     if (ctx.propertyType) points++;
     if (ctx.zone) points++;
@@ -393,8 +411,9 @@
 
     conversationContext.dataPoints = points;
 
-    // Necesitamos al menos 3 puntos de datos para recomendar
-    return points >= 3;
+    // Con los 3 campos obligatorios, ya podemos recomendar
+    // (zone es opcional - si no la tiene, busca en todas las zonas)
+    return true;
   }
 
   // Función de puntuación para propiedades
@@ -446,35 +465,71 @@
     const ctx = conversationContext;
     let results = [...properties];
 
-    // Filtrar por operación (lo imprescindible)
-    results = filterByOperation(results, ctx.interest);
+    console.log(`🔍 Búsqueda iniciada: ${results.length} propiedades en inventario`);
 
-    // Filtrar estrictamente por tipo de propiedad si se especificó
+    // 1. Filtrar por operación (OBLIGATORIO)
+    results = filterByOperation(results, ctx.interest);
+    console.log(`📊 Después de filtrar por operación (${ctx.interest}): ${results.length} propiedades`);
+
+    // 2. Filtrar por tipo de propiedad (OBLIGATORIO)
     if (ctx.propertyType) {
       const typeFiltered = results.filter(p => p.type === ctx.propertyType);
+      console.log(`🏠 Después de filtrar por tipo (${ctx.propertyType}): ${typeFiltered.length} propiedades`);
+
       if (typeFiltered.length > 0) {
         results = typeFiltered;
       } else {
-        // No hay propiedades del tipo especificado - retornar vacío
-        // para que el llamador pueda informar al usuario
+        // No hay propiedades del tipo especificado
+        console.warn(`⚠️ No hay ${ctx.propertyType}s disponibles para ${ctx.interest}`);
         return [];
       }
     }
 
-    // Calcular puntuación para cada propiedad
+    // 3. Filtrar por presupuesto (OBLIGATORIO) - con margen del 20%
+    if (ctx.budget) {
+      const maxBudget = ctx.budget * 1.2; // Permitir 20% más
+      const budgetFiltered = results.filter(p => p.price && p.price <= maxBudget);
+      console.log(`💰 Después de filtrar por presupuesto (hasta ${formatPrice(maxBudget)}): ${budgetFiltered.length} propiedades`);
+
+      if (budgetFiltered.length > 0) {
+        results = budgetFiltered;
+      } else {
+        // No hay propiedades dentro del presupuesto
+        console.warn(`⚠️ No hay propiedades dentro del presupuesto de ${formatPrice(ctx.budget)}`);
+        // Retornar las 3 más cercanas al presupuesto
+        results.sort((a, b) => Math.abs(a.price - ctx.budget) - Math.abs(b.price - ctx.budget));
+        return results.slice(0, 3);
+      }
+    }
+
+    // 4. Filtrar por zona (OPCIONAL)
+    if (ctx.zone && ctx.zone !== 'otra' && ctx.zone !== 'cualquiera') {
+      const zoneFiltered = results.filter(p => {
+        if (!p.neighborhood) return false;
+        const neighborhood = p.neighborhood.toLowerCase();
+        return neighborhood.includes(ctx.zone.toLowerCase());
+      });
+
+      if (zoneFiltered.length > 0) {
+        console.log(`📍 Después de filtrar por zona (${ctx.zone}): ${zoneFiltered.length} propiedades`);
+        results = zoneFiltered;
+      } else {
+        console.log(`ℹ️ No hay propiedades en ${ctx.zone}, mostrando todas las zonas`);
+        // No filtrar por zona si no hay resultados
+      }
+    }
+
+    // 5. Calcular puntuación para cada propiedad
     results.forEach(p => {
       p._score = scoreProperty(p, ctx);
     });
 
-    // Ordenar por puntuación
+    // 6. Ordenar por puntuación (mayor a menor)
     results.sort((a, b) => b._score - a._score);
 
-    // Si todas tienen score 0, al menos están filtradas por operación y tipo
-    // Ordenar por presupuesto si existe
-    if (results.length > 0 && results[0]._score === 0 && ctx.budget) {
-      results.sort((a, b) => Math.abs(a.price - ctx.budget) - Math.abs(b.price - ctx.budget));
-    }
+    console.log(`✅ Recomendaciones finales: ${Math.min(results.length, 3)} propiedades`);
 
+    // 7. Retornar máximo 3 propiedades
     return results.slice(0, 3);
   }
 
@@ -561,11 +616,49 @@
         </a>
       `;
     } else {
-      intro += 'No encontré propiedades exactas con estos criterios, pero puedo ajustar la búsqueda.<br><br>';
-      intro += '¿Qué prefieres:<br>';
-      intro += '• Ampliar el presupuesto<br>';
-      intro += '• Explorar otras zonas<br>';
-      intro += '• Hablar con un asesor para opciones personalizadas';
+      // ⭐ NO HAY RESULTADOS - Ofrecer contactar asesor con perfil completo
+      intro += '😔 <b>Lo siento</b>, actualmente no tenemos propiedades disponibles que coincidan exactamente con tu búsqueda.<br><br>';
+
+      intro += '📋 <b>Tu perfil de búsqueda:</b><br>';
+      const opName = ctx.interest === 'comprar' ? 'Comprar' :
+                     ctx.interest === 'arrendar' ? 'Arrendar' : 'Alojamiento';
+      intro += `• ${opName} ${ctx.propertyType || 'propiedad'}`;
+      if (ctx.zone && ctx.zone !== 'otra' && ctx.zone !== 'cualquiera') intro += ` en ${ctx.zone}`;
+      intro += `<br>`;
+      if (ctx.budget) intro += `• Presupuesto: ${formatPrice(ctx.budget)}<br>`;
+      if (ctx.beds) intro += `• ${ctx.beds}+ habitaciones<br>`;
+
+      intro += '<br>💡 <b>¿Qué puedes hacer?</b><br>';
+      intro += '• <b>Hablar con un asesor</b>: Te ayudaremos a encontrar opciones personalizadas<br>';
+      intro += '• <b>Recibir notificaciones</b>: Te avisamos cuando lleguen propiedades que coincidan<br>';
+      intro += '• <b>Ajustar criterios</b>: Podemos explorar otras zonas o presupuestos<br><br>';
+
+      // Crear mensaje de WhatsApp con el perfil completo
+      let waText = `Hola Altorra, estoy buscando una propiedad pero no encontré opciones en el sitio web.\n\n`;
+      waText += `Mi perfil de búsqueda:\n`;
+      waText += `• ${opName} ${ctx.propertyType || 'propiedad'}`;
+      if (ctx.zone && ctx.zone !== 'otra' && ctx.zone !== 'cualquiera') waText += ` en ${ctx.zone}`;
+      waText += `\n`;
+      if (ctx.budget) waText += `• Presupuesto: ${formatPrice(ctx.budget)}\n`;
+      if (ctx.beds) waText += `• ${ctx.beds}+ habitaciones\n`;
+      if (ctx.purpose) {
+        const purposeText = ctx.purpose === 'vivienda' ? 'Para vivir' :
+                           ctx.purpose === 'inversion' ? 'Para inversión' : ctx.purpose;
+        waText += `• ${purposeText}\n`;
+      }
+      waText += `\n¿Podrían ayudarme a encontrar opciones que se ajusten a mi perfil o avisarme cuando haya nuevas propiedades disponibles?`;
+
+      const waSummary = encodeURIComponent(waText);
+
+      intro += `
+        <a href="https://wa.me/${CONFIG.whatsappNumber}?text=${waSummary}"
+           target="_blank"
+           rel="noopener"
+           class="chat-whatsapp-link">
+          <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.789l4.94-1.293A11.96 11.96 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>
+          📱 Contactar asesor con mi perfil
+        </a>
+      `;
     }
 
     return intro;
@@ -2676,6 +2769,45 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     }
 
     // ========== FIN DETECCIÓN DE PROPIETARIOS ==========
+
+    // ========== MANEJO POST-RECOMENDACIÓN ==========
+    // Si ya mostramos recomendaciones y el usuario responde, manejar apropiadamente
+    if (conversationContext.consultationPhase === 'recommendation') {
+      // Si el usuario dice "NO" después de ver recomendaciones, ofrecer alternativas
+      if (matchesSynonym(msg, 'no') && msg.length < 30) {
+        // Limpiar fase de consultoría para no seguir preguntando
+        conversationContext.consultationPhase = null;
+        conversationContext.lastQuestion = null;
+        saveContext();
+
+        // Ofrecer opciones útiles
+        const html = `Entiendo. ¿Qué te gustaría hacer?`;
+        const options = [
+          { text: '🔄 Ajustar criterios de búsqueda', action: 'adjust_criteria' },
+          { text: '🏠 Ver todas las propiedades', action: 'view_all' },
+          { text: '🔍 Nueva búsqueda', action: 'restart' },
+          { text: '📱 Ver opciones de contacto', action: 'contact_info' }
+        ];
+        botReply(html, options);
+        return;
+      }
+
+      // Si el usuario dice "SI" o quiere contactar, ya tiene el botón de WhatsApp
+      // Limpiar el contexto y agradecer
+      if (matchesSynonym(msg, 'yes') && msg.length < 30) {
+        conversationContext.consultationPhase = null;
+        conversationContext.lastQuestion = null;
+        saveContext();
+
+        botReply('¡Perfecto! Puedes usar el botón de WhatsApp arriba para contactar a un asesor con toda la información. 😊<br><br>¿Hay algo más en lo que pueda ayudarte?', QUICK_OPTIONS);
+        return;
+      }
+
+      // Si el mensaje no es ni sí ni no, pero estamos en fase de recomendación,
+      // limpiar el contexto y procesar como mensaje normal
+      conversationContext.consultationPhase = null;
+      // No limpiar lastQuestion aquí, dejarlo para el flujo normal
+    }
 
     // ========== DETECCIÓN INTELIGENTE: RESPUESTA A SLOT ==========
     // Si hay una pregunta pendiente del flujo de consultoría, procesar la respuesta
