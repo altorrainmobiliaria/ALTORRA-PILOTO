@@ -348,23 +348,30 @@
     // Filtrar por operación (lo imprescindible)
     results = filterByOperation(results, ctx.interest);
 
+    // Filtrar estrictamente por tipo de propiedad si se especificó
+    if (ctx.propertyType) {
+      const typeFiltered = results.filter(p => p.type === ctx.propertyType);
+      if (typeFiltered.length > 0) {
+        results = typeFiltered;
+      } else {
+        // No hay propiedades del tipo especificado - retornar vacío
+        // para que el llamador pueda informar al usuario
+        return [];
+      }
+    }
+
     // Calcular puntuación para cada propiedad
     results.forEach(p => {
       p._score = scoreProperty(p, ctx);
     });
 
-    // Filtrar propiedades con alguna afinidad y ordenar por puntuación
-    results = results
-      .filter(p => p._score > 0)
-      .sort((a, b) => b._score - a._score);
+    // Ordenar por puntuación
+    results.sort((a, b) => b._score - a._score);
 
-    // Si no hay resultados con puntuación, mostrar los mejores sin filtro estricto
-    if (results.length === 0) {
-      results = filterByOperation([...properties], ctx.interest);
-      // Ordenar por presupuesto si existe
-      if (ctx.budget) {
-        results.sort((a, b) => Math.abs(a.price - ctx.budget) - Math.abs(b.price - ctx.budget));
-      }
+    // Si todas tienen score 0, al menos están filtradas por operación y tipo
+    // Ordenar por presupuesto si existe
+    if (results.length > 0 && results[0]._score === 0 && ctx.budget) {
+      results.sort((a, b) => Math.abs(a.price - ctx.budget) - Math.abs(b.price - ctx.budget));
     }
 
     return results.slice(0, 3);
@@ -1667,12 +1674,24 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
       case 'owner_set_venta':
         addMessage('Quiero vender mi propiedad', false);
         conversationContext.role = 'propietario_venta';
+        // Resetear datos del propietario para empezar limpio
+        conversationContext.ownerPropertyForSale = {
+          type: null, zone: null, price: null, sqm: null,
+          beds: null, baths: null, parking: null, condition: null
+        };
+        conversationContext.lastQuestion = null;
         handleOwnerFlow('propietario_venta', true);
         break;
 
       case 'owner_set_arriendo':
         addMessage('Quiero arrendar mi propiedad', false);
         conversationContext.role = 'propietario_arriendo';
+        // Resetear datos del propietario para empezar limpio
+        conversationContext.ownerPropertyForRent = {
+          type: null, zone: null, canon: null, beds: null,
+          furnished: null, pets: null, availableFrom: null
+        };
+        conversationContext.lastQuestion = null;
         handleOwnerFlow('propietario_arriendo', true);
         break;
 
@@ -2273,10 +2292,24 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
 
     // Si ya es propietario y responde algo, procesar como continuación del flujo
     if (conversationContext.role && conversationContext.role.startsWith('propietario_')) {
-      // Aplicar la respuesta a la pregunta pendiente
-      applyOwnerAnswer(msg);
-      handleOwnerFlow(conversationContext.role, false);
-      return;
+      // Primero verificar si es una nueva intención global (cambio de tema)
+      if (isNewGlobalIntent(msg)) {
+        // El usuario quiere cambiar de tema - limpiar rol y lastQuestion
+        conversationContext.role = null;
+        conversationContext.lastQuestion = null;
+        saveContext();
+        // Continuar procesando como mensaje nuevo (no aplicar al flujo de propietario)
+      } else if (isSlotResponse(msg)) {
+        // Es respuesta al slot - aplicar y continuar flujo
+        applyOwnerAnswer(msg);
+        handleOwnerFlow(conversationContext.role, false);
+        return;
+      } else {
+        // Mensaje ambiguo - intentar aplicar como respuesta
+        applyOwnerAnswer(msg);
+        handleOwnerFlow(conversationContext.role, false);
+        return;
+      }
     }
 
     // ========== FIN DETECCIÓN DE PROPIETARIOS ==========
