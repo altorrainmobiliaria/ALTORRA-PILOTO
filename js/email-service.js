@@ -77,6 +77,14 @@
       throw new Error('EmailJS no está cargado. Verifica que el script esté incluido en la página.');
     }
 
+    // 🐛 DEBUG: Mostrar configuración antes de enviar
+    console.log('🔧 Config EmailJS:', {
+      serviceId: EMAILJS_CONFIG.serviceId,
+      templateId: templateId,
+      publicKey: EMAILJS_CONFIG.publicKey.substring(0, 10) + '...'
+    });
+    console.log('📤 Enviando email con params:', params);
+
     try {
       const response = await emailjs.send(
         EMAILJS_CONFIG.serviceId,
@@ -85,17 +93,24 @@
         EMAILJS_CONFIG.publicKey
       );
 
+      console.log('✅ Email enviado exitosamente:', response);
+
       return {
         success: true,
         response: response,
         messageId: response.text
       };
     } catch (error) {
-      console.error('Error sending email:', error);
+      console.error('❌ Error sending email:', error);
+      console.error('❌ Error details:', {
+        message: error.text || error.message,
+        status: error.status,
+        full: error
+      });
       return {
         success: false,
-        error: error,
-        message: error.text || 'Error desconocido'
+        error: error.text || error.message || 'Error desconocido',
+        errorObject: error
       };
     }
   }
@@ -104,8 +119,11 @@
   async function processContactForm(form) {
     const data = prepareFormData(form, 'contacto');
 
-    // Enviar email a ALTORRA
-    const result = await sendEmail(EMAILJS_CONFIG.templates.contacto, {
+    // 🐛 DEBUG: Verificar datos extraídos del formulario
+    console.log('📋 Datos del formulario:', data);
+
+    // Preparar parámetros para EmailJS
+    const emailParams = {
       radicado: data.radicado,
       nombre: data.Nombre || data.nombre || '',
       email: data.Email || data.email || '',
@@ -113,7 +131,16 @@
       motivo: data.Motivo || data.motivo || 'No especificado',
       mensaje: data.Mensaje || data.mensaje || '',
       fecha: data.fecha
-    });
+    };
+
+    // 🐛 DEBUG: Verificar parámetros que se envían a EmailJS
+    console.log('📧 Parámetros para EmailJS:', emailParams);
+
+    // Enviar email a ALTORRA
+    const result = await sendEmail(EMAILJS_CONFIG.templates.contacto, emailParams);
+
+    // 🐛 DEBUG: Verificar resultado del envío
+    console.log('📊 Resultado de sendEmail:', result);
 
     // ⏸️ AUTORESPUESTA DESACTIVADA TEMPORALMENTE
     // (Activar cuando se cree el template altorra_confirmacion en EmailJS)
@@ -127,11 +154,16 @@
     }
     */
 
-    return {
+    const finalResult = {
       success: result.success,
       radicado: data.radicado,
       error: result.error
     };
+
+    // 🐛 DEBUG: Verificar qué se retorna
+    console.log('🎯 Retornando:', finalResult);
+
+    return finalResult;
   }
 
   // ===== PROCESAR FORMULARIO DE PUBLICAR PROPIEDAD =====
