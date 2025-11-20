@@ -331,6 +331,121 @@
 
 ---
 
+### ✅ Chatbot - Bucle con agradecimientos "gracias" (CRÍTICO - 20 Nov 2025)
+**Archivo modificado**: `js/chatbot.js`
+**Líneas modificadas**: ~60 líneas en 3 funciones
+
+**Descripción del problema**: Cuando el usuario escribía "gracias" durante un flujo activo (ej: en pregunta de zona), el bot entraba en bucle infinito repitiendo la misma pregunta. Esto ocurría porque "gracias" se clasificaba incorrectamente como respuesta de slot (slot response) en lugar de intención global.
+
+**Reproducción del bug**:
+```
+Usuario: "Quiero comprar"
+Bot: "¿Qué tipo de propiedad te interesa?"
+Usuario: "Apartamento"
+Bot: "¿Qué zona de Cartagena prefieres?"
+Usuario: "gracias"
+Bot: "¿Qué zona de Cartagena prefieres?" ← BUCLE INFINITO
+Usuario: "gracias"
+Bot: "¿Qué zona de Cartagena prefieres?" ← REPITE
+```
+
+**Causa raíz identificada**:
+- `isSlotResponse()` (línea 952 original) clasificaba cualquier mensaje corto (< 25 caracteres) sin verbos de intención como "respuesta de slot"
+- "gracias" (7 caracteres) pasaba este filtro
+- Se guardaba "gracias" como valor de zona
+- El bot continuaba con la siguiente pregunta → BUCLE
+
+**Soluciones implementadas**:
+
+1. **Parchada función `isSlotResponse()`** (líneas 915-972):
+   ```javascript
+   // ⚠️ CRÍTICO: Nunca clasificar agradecimientos/despedidas como slot response
+   if (matchesSynonym(text, 'thanks') || matchesSynonym(text, 'goodbye')) {
+     return false;
+   }
+
+   // Excluir también al final del algoritmo
+   if (matchesSynonym(text, 'greeting')) return false;
+   if (matchesSynonym(text, 'thanks')) return false;
+   if (matchesSynonym(text, 'goodbye')) return false;
+   if (matchesSynonym(text, 'back')) return false;
+   if (matchesSynonym(text, 'contact')) return false;
+   ```
+   - ✅ Agradecimientos y despedidas NUNCA son slot responses
+   - ✅ Verifica al inicio y al final del algoritmo
+   - ✅ Previene clasificación incorrecta
+
+2. **Mejorada función `isNewGlobalIntent()`** (líneas 978-986):
+   ```javascript
+   // ⚠️ CRÍTICO: Agradecimientos y despedidas siempre son intenciones globales
+   if (matchesSynonym(text, 'thanks')) {
+     return true;
+   }
+
+   if (matchesSynonym(text, 'goodbye')) {
+     return true;
+   }
+   ```
+   - ✅ Detecta agradecimientos como intención global prioritaria
+   - ✅ Detecta despedidas como intención global prioritaria
+   - ✅ Se verifica ANTES de cualquier otra lógica
+
+3. **Agregado manejo explícito en `processMessage()`** (líneas 2539-2567):
+   ```javascript
+   // ⚠️ CRÍTICO: Manejo de agradecimientos y despedidas
+   if (matchesSynonym(msg, 'thanks')) {
+     conversationContext.lastQuestion = null;
+     conversationContext.consultationPhase = null;
+     if (conversationContext.role && conversationContext.role.startsWith('propietario_')) {
+       conversationContext.role = null;
+     }
+     saveContext();
+     botReply(RESPONSES.gracias);
+     return;
+   }
+
+   if (matchesSynonym(msg, 'goodbye')) {
+     // ... similar cleanup
+     botReply('¡Hasta pronto! 👋 ...');
+     return;
+   }
+   ```
+   - ✅ Limpia completamente el contexto de flujo activo
+   - ✅ Responde apropiadamente
+   - ✅ Termina la ejecución (return) sin continuar flujo
+
+**Palabras detectadas** (vía sinónimos en líneas 81-82):
+- **Agradecimientos**: gracias, thank, agradezco, muy amable, te agradezco, mil gracias
+- **Despedidas**: adios, adiós, chao, chau, bye, hasta luego, nos vemos, me voy, gracias por todo
+
+**Resultado**:
+- ✅ "gracias" ahora cierra el flujo y responde correctamente
+- ✅ NO se guarda "gracias" como respuesta de zona/precio/etc
+- ✅ El bot NO repite la pregunta
+- ✅ Despedidas funcionan igual que agradecimientos
+- ✅ El contexto se limpia completamente
+
+**Testing realizado**:
+1. ✅ Test 1: "Quiero comprar" → "Apartamento" → "gracias" → Bot responde con mensaje de agradecimiento
+2. ✅ Test 2: "Soy propietario" → "Quiero vender" → (en pregunta) "gracias" → Bot cierra flujo
+3. ✅ Test 3: "Busco arriendo" → "adiós" → Bot se despide correctamente
+4. ✅ Test 4: "gracias" múltiples veces → Bot NO entra en bucle
+
+**Impacto**:
+- UX crítica restaurada - usuarios pueden terminar conversaciones naturalmente
+- Previene frustración de bucles infinitos
+- Bot más natural y humano
+- Mejora significativa en satisfacción del usuario
+
+**Archivos afectados**:
+- `js/chatbot.js` (3 funciones modificadas: isSlotResponse, isNewGlobalIntent, processMessage)
+
+**Estado**: ✅ Corregido y probado
+**Prioridad**: CRÍTICA (completado)
+**Commit**: Pendiente
+
+---
+
 ## 📚 Notas para Desarrolladores / IAs
 
 ### Convenciones de código

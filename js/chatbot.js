@@ -912,8 +912,15 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     const text = msg.toLowerCase().trim();
     const len = text.length;
 
+    // ⚠️ CRÍTICO: Nunca clasificar agradecimientos/despedidas como slot response
+    // Esto previene bucles cuando el usuario escribe "gracias" en medio de un flujo
+    if (matchesSynonym(text, 'thanks') || matchesSynonym(text, 'goodbye')) {
+      return false;
+    }
+
     // Mensajes muy cortos son probablemente respuestas a slots
-    if (len <= 3) return true;
+    // PERO no si son comandos globales
+    if (len <= 3 && !matchesSynonym(text, 'back')) return true;
 
     // Solo números (ej: "3", "200", "1800000")
     if (/^\d+$/.test(text)) return true;
@@ -948,8 +955,16 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     // Fechas simples
     if (/^(del \d+ al \d+|esta semana|pr[oó]xima semana|\d+ d[ií]as?)$/i.test(text)) return true;
 
-    // Mensajes cortos (< 25 caracteres) sin verbos de intención
+    // ⚠️ CRÍTICO: Antes de clasificar mensajes cortos como slot response,
+    // verificar que NO sean intenciones globales (gracias, hola, adiós, comandos)
     if (len < 25 && !/quiero|busco|necesito|te dije|me interesa|pregunt|cu[aá]l|c[oó]mo|qu[eé]|horario/i.test(text)) {
+      // Excluir mensajes que claramente no son respuestas
+      if (matchesSynonym(text, 'greeting')) return false;
+      if (matchesSynonym(text, 'thanks')) return false;
+      if (matchesSynonym(text, 'goodbye')) return false;
+      if (matchesSynonym(text, 'back')) return false;
+      if (matchesSynonym(text, 'contact')) return false;
+
       return true;
     }
 
@@ -959,6 +974,16 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
   // Detectar si el mensaje es una nueva intención global que debe interrumpir el flujo actual
   function isNewGlobalIntent(msg) {
     const text = msg.toLowerCase().trim();
+
+    // ⚠️ CRÍTICO: Agradecimientos y despedidas siempre son intenciones globales
+    // Esto previene que se procesen como respuestas de slot
+    if (matchesSynonym(text, 'thanks')) {
+      return true;
+    }
+
+    if (matchesSynonym(text, 'goodbye')) {
+      return true;
+    }
 
     // Frases de corrección o insistencia (el usuario quiere cambiar el tema)
     if (/te dije que|ya te dije|pero quiero|no[,\s]+quiero|en realidad quiero|mejor quiero|prefiero|cambi[eé] de opini[oó]n/i.test(text)) {
@@ -1035,11 +1060,6 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
 
     // Saludos (usando diccionario de sinónimos)
     if (matchesSynonym(text, 'greeting') && text.length < 30) {
-      return true;
-    }
-
-    // Despedidas (usando diccionario de sinónimos)
-    if (matchesSynonym(text, 'goodbye')) {
       return true;
     }
 
@@ -2515,6 +2535,36 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     // ===============================
     // FIN COMANDOS GLOBALES
     // ===============================
+
+    // ⚠️ CRÍTICO: Manejo de agradecimientos y despedidas
+    // Estos siempre cierran el flujo activo, independientemente del estado
+    if (matchesSynonym(msg, 'thanks')) {
+      // Limpiar contexto de flujo activo
+      conversationContext.lastQuestion = null;
+      conversationContext.consultationPhase = null;
+      if (conversationContext.role && conversationContext.role.startsWith('propietario_')) {
+        conversationContext.role = null;
+      }
+      saveContext();
+
+      // Responder con mensaje de agradecimiento
+      botReply(RESPONSES.gracias);
+      return;
+    }
+
+    if (matchesSynonym(msg, 'goodbye')) {
+      // Limpiar contexto de flujo activo
+      conversationContext.lastQuestion = null;
+      conversationContext.consultationPhase = null;
+      if (conversationContext.role && conversationContext.role.startsWith('propietario_')) {
+        conversationContext.role = null;
+      }
+      saveContext();
+
+      // Responder con mensaje de despedida
+      botReply('¡Hasta pronto! 👋<br><br>Recuerda que estamos disponibles <b>Lun-Vie 8am-6pm</b> y <b>Sábados 9am-1pm</b>.<br><br>¡Éxitos con tu búsqueda inmobiliaria! 🏠');
+      return;
+    }
 
     // 🔹 ATAJO: si la conversación ya está casi cerrada y el usuario dice "bien",
     // respóndele con el mensaje de cierre corporativo.
