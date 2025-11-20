@@ -1,0 +1,424 @@
+/* ========================================
+   ALTORRA - EXIT INTENT POPUP STYLES
+   Modal de captura de leads con exit intent
+   ======================================== */
+
+/* ===== OVERLAY ===== */
+.exit-intent-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+
+  /* Animation */
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.exit-intent-overlay.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ===== MODAL ===== */
+.exit-intent-modal {
+  position: relative;
+  background: #ffffff;
+  border-radius: 20px;
+  max-width: 540px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+
+  /* Animation */
+  transform: scale(0.9) translateY(20px);
+  transition: transform 0.3s ease;
+}
+
+.exit-intent-overlay.visible .exit-intent-modal {
+  transform: scale(1) translateY(0);
+}
+
+/* ===== CLOSE BUTTON ===== */
+.exit-intent-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 50%;
+  font-size: 20px;
+  line-height: 1;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.exit-intent-close:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #111827;
+  transform: rotate(90deg);
+}
+
+.exit-intent-close:focus {
+  outline: 2px solid var(--gold, #d4af37);
+  outline-offset: 2px;
+}
+
+/* ===== CONTENT ===== */
+.exit-intent-content {
+  padding: 40px 32px;
+  text-align: center;
+}
+
+/* Icon */
+.exit-intent-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  animation: bounceIn 0.6s ease;
+}
+
+.exit-intent-icon.success {
+  font-size: 64px;
+  color: #10b981;
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Title */
+.exit-intent-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 12px;
+  line-height: 1.2;
+}
+
+/* Description */
+.exit-intent-description {
+  font-size: 1rem;
+  color: #6b7280;
+  line-height: 1.6;
+  margin: 0 0 24px;
+}
+
+.exit-intent-description strong {
+  color: var(--gold, #d4af37);
+  font-weight: 700;
+}
+
+/* ===== FORM ===== */
+.exit-intent-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.exit-intent-field {
+  width: 100%;
+}
+
+.exit-intent-field input,
+.exit-intent-field select {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-family: inherit;
+  color: #111827;
+  background: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.exit-intent-field input:focus,
+.exit-intent-field select:focus {
+  outline: none;
+  border-color: var(--gold, #d4af37);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+.exit-intent-field input::placeholder {
+  color: #9ca3af;
+}
+
+.exit-intent-field input:invalid:not(:placeholder-shown),
+.exit-intent-field select:invalid:not([value=""]) {
+  border-color: #ef4444;
+}
+
+.exit-intent-field input:valid:not(:placeholder-shown),
+.exit-intent-field select:valid:not([value=""]) {
+  border-color: #10b981;
+}
+
+/* Select styling */
+.exit-intent-field select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%236b7280' d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+/* Submit Button */
+.exit-intent-submit {
+  width: 100%;
+  padding: 16px 24px;
+  margin-top: 8px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--gold, #d4af37) 0%, #b8941f 100%);
+  color: #ffffff;
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.exit-intent-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+  background: linear-gradient(135deg, #e0bd45 0%, #c9a32a 100%);
+}
+
+.exit-intent-submit:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.exit-intent-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.exit-intent-submit:focus {
+  outline: 2px solid var(--gold, #d4af37);
+  outline-offset: 2px;
+}
+
+/* Loading spinner */
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Privacy */
+.exit-intent-privacy {
+  margin: 12px 0 0;
+  font-size: 0.85rem;
+  color: #9ca3af;
+  line-height: 1.4;
+}
+
+.exit-intent-privacy a {
+  color: var(--gold, #d4af37);
+  text-decoration: underline;
+}
+
+.exit-intent-privacy a:hover {
+  color: #b8941f;
+}
+
+/* ===== SUCCESS STATE ===== */
+.exit-intent-success {
+  padding: 20px 0;
+}
+
+.exit-intent-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #25d366 0%, #20ba5a 100%);
+  color: #ffffff;
+  font-weight: 700;
+  text-decoration: none;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+}
+
+.exit-intent-whatsapp:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+  background: linear-gradient(135deg, #2ee673 0%, #25d366 100%);
+}
+
+/* ===== SCREEN READER ONLY ===== */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 640px) {
+  .exit-intent-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .exit-intent-modal {
+    max-height: 95vh;
+    border-radius: 20px 20px 0 0;
+    max-width: 100%;
+  }
+
+  .exit-intent-content {
+    padding: 32px 24px;
+  }
+
+  .exit-intent-title {
+    font-size: 1.5rem;
+  }
+
+  .exit-intent-description {
+    font-size: 0.95rem;
+  }
+
+  .exit-intent-field input,
+  .exit-intent-field select {
+    padding: 12px 14px;
+    font-size: 16px; /* Prevent iOS zoom */
+  }
+
+  .exit-intent-submit {
+    padding: 14px 20px;
+    font-size: 1rem;
+  }
+
+  /* Animation for mobile (slide up) */
+  .exit-intent-modal {
+    transform: translateY(100%);
+  }
+
+  .exit-intent-overlay.visible .exit-intent-modal {
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 400px) {
+  .exit-intent-content {
+    padding: 24px 20px;
+  }
+
+  .exit-intent-title {
+    font-size: 1.35rem;
+  }
+
+  .exit-intent-icon {
+    font-size: 40px;
+  }
+}
+
+/* ===== ACCESSIBILITY ===== */
+@media (prefers-reduced-motion: reduce) {
+  .exit-intent-overlay,
+  .exit-intent-modal,
+  .exit-intent-close,
+  .exit-intent-submit,
+  .exit-intent-icon {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .exit-intent-modal {
+    border: 2px solid #000000;
+  }
+
+  .exit-intent-field input,
+  .exit-intent-field select {
+    border-width: 3px;
+  }
+}
+
+/* Dark mode support (optional) */
+@media (prefers-color-scheme: dark) {
+  .exit-intent-modal {
+    background: #1f2937;
+  }
+
+  .exit-intent-title {
+    color: #f3f4f6;
+  }
+
+  .exit-intent-description {
+    color: #d1d5db;
+  }
+
+  .exit-intent-field input,
+  .exit-intent-field select {
+    background: #111827;
+    border-color: #374151;
+    color: #f3f4f6;
+  }
+
+  .exit-intent-field input::placeholder {
+    color: #6b7280;
+  }
+
+  .exit-intent-close {
+    background: rgba(255, 255, 255, 0.1);
+    color: #d1d5db;
+  }
+
+  .exit-intent-close:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #f3f4f6;
+  }
+}

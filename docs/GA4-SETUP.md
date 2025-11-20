@@ -90,6 +90,12 @@ measurementId: 'G-EHE7316MST', // ✅ ID real de GA4 del sitio
 
 **✅ ESTADO**: El Measurement ID `G-EHE7316MST` ya está configurado en todas las páginas.
 
+**ℹ️ NOTA**: El repositorio contiene 22 archivos `.html` en total, pero solo 19 requieren el snippet de GA4:
+- ✅ **19 páginas principales** (listadas arriba) - Actualizadas con GA4
+- ❌ **header.html** - Componente cargado por `header-footer.js` (sin `<head>`)
+- ❌ **footer.html** - Componente cargado por `header-footer.js` (sin `<head>`)
+- ❌ **googlec4e47cae776946d9.html** - Archivo de verificación de Google Search Console (1 línea de texto)
+
 ---
 
 ## 📋 Paso 3: Verificar Instalación
