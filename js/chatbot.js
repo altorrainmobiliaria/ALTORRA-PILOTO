@@ -534,7 +534,7 @@
     ],
     comprar: '🏡 <b>Propiedades en Venta</b><br><br>Contamos con apartamentos, casas, lotes y oficinas en las mejores zonas de Cartagena.<br><br>Te acompañamos en todo el proceso de compra con respaldo jurídico y notarial.<br><br>👉 <a href="propiedades-comprar.html" style="color:#d4af37;font-weight:600;">Ver propiedades en venta</a><br><br>¿Qué tipo de propiedad buscas y cuál es tu presupuesto?',
     arrendar: '🔑 <b>Arriendos en Cartagena</b><br><br>Contamos con propiedades en arriendo en las mejores zonas de la ciudad, con contratos respaldados legalmente.<br><br>👉 <a href="propiedades-arrendar.html" style="color:#d4af37;font-weight:600;">Ver propiedades en arriendo</a><br><br>¿Qué tipo de propiedad buscas y en qué zona?',
-    alojamiento: '🌴 <b>Alojamientos por Días</b><br><br>Contamos con propiedades amobladas en las mejores zonas turísticas de Cartagena para estadías cortas.<br><br>Cada propiedad tiene diferentes características y amenidades. Un asesor te brindará información detallada según tus necesidades.<br><br>👉 <a href="propiedades-alojamiento.html" style="color:#d4af37;font-weight:600;">Ver alojamientos disponibles</a><br><br>¿Cuántas personas serán y qué fechas tienes en mente?',
+    alojamiento: '🌴 <b>Alojamientos por Días</b><br><br>Contamos con propiedades amobladas en las mejores zonas turísticas de Cartagena para estadías cortas.<br><br>Cada propiedad tiene diferentes características y amenidades. Un asesor te brindará información detallada según tus necesidades.<br><br>👉 <a href="propiedades-alojamientos.html" style="color:#d4af37;font-weight:600;">Ver alojamientos disponibles</a><br><br>¿Cuántas personas serán y qué fechas tienes en mente?',
     precio: '💰 <b>Rangos de Precio</b><br><br>Dime tu presupuesto y te muestro las mejores opciones:<br><br>• <b>Compra:</b> Desde $150 millones<br>• <b>Arriendo:</b> Desde $1.5 millones/mes<br>• <b>Por días:</b> Desde $200.000/noche<br><br>Ejemplo: "apartamento hasta 300 millones" o "arriendo hasta 2 millones"',
     ubicacion: '📍 <b>Zonas de Cartagena</b><br><br>• <b>Bocagrande</b> - Playa, restaurantes, vida nocturna. Ideal inversión turística.<br>• <b>Manga</b> - Tradicional, central, familiar. Buenos precios.<br>• <b>Centro Histórico</b> - Encanto colonial. Ideal Airbnb.<br>• <b>Castillogrande</b> - Exclusiva, familiar, cerca a playa.<br>• <b>Crespo</b> - Cerca al aeropuerto, tranquila.<br>• <b>Laguito</b> - Frente al mar, turística.<br><br>¿Cuál zona te interesa explorar?',
     contacto: '📞 <b>Contacto Directo</b><br><br>• <b>WhatsApp:</b> +57 300 243 9810<br>• <b>Email:</b> altorrainmobiliaria@gmail.com<br>• <b>Ciudad:</b> Cartagena de Indias<br><br>👉 <a href="contacto.html" style="color:#d4af37;font-weight:600;">Ir a página de contacto</a><br><br>¿Prefieres que te contactemos nosotros?',
@@ -1131,10 +1131,10 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     { text: 'Soy propietario', action: 'propietario' }
   ];
 
-  // Opciones para propietarios
+  // Opciones para propietarios - conectan directo al flujo de consultoría
   const PROPIETARIO_OPTIONS = [
-    { text: 'Quiero vender mi propiedad', action: 'propietario_venta' },
-    { text: 'Quiero arrendar mi propiedad', action: 'propietario_arriendos' },
+    { text: 'Quiero vender mi propiedad', action: 'owner_set_venta' },
+    { text: 'Quiero arrendar mi propiedad', action: 'owner_set_arriendo' },
     { text: 'Contactar asesor', action: 'whatsapp' }
   ];
 
@@ -1922,6 +1922,19 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
   // Procesar mensaje del usuario con inteligencia mejorada
   function processMessage(message) {
     const msg = message.toLowerCase().trim();
+
+    // 🔹 ATAJO: si la conversación ya está casi cerrada y el usuario dice "bien",
+    // respóndele con el mensaje de cierre corporativo.
+    const isFlowActive =
+      conversationContext.lastQuestion ||
+      conversationContext.consultationPhase === 'discovery' ||
+      (conversationContext.role && conversationContext.role.startsWith('propietario_'));
+
+    if (!isFlowActive && /^(bien|muy bien|todo bien|ok bien)$/.test(msg)) {
+      botReply(RESPONSES.gracias);
+      return;
+    }
+
     const { intent, score } = analyzeIntent(msg);
     const criteria = extractSearchCriteria(msg);
 
@@ -2225,10 +2238,10 @@ Soy tu asistente virtual y puedo ayudarte con:<br><br>
           handleOption('propietario');
           return;
         case 'propietarioArriendos':
-          handleOption('propietario_arriendos');
+          handleOption('owner_set_arriendo');
           return;
         case 'propietarioVenta':
-          handleOption('propietario_venta');
+          handleOption('owner_set_venta');
           return;
         case 'comparar':
           botReply(RESPONSES.comparar);
