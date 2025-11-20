@@ -225,10 +225,10 @@
 
 ## 📊 Resumen de la Semana 1
 
-**Tareas completadas**: 9 de 10 (90%)
-**Archivos creados**: 10 (config.js + 3 páginas de servicios + breadcrumbs.js + breadcrumbs.css + ga4-script.html + GA4-SETUP.md + urgency.js + urgency.css)
-**Archivos modificados**: 44 (7 originales + 14 con breadcrumbs + 19 con GA4 + 4 con urgency)
-**Líneas de código agregadas**: ~2,600+
+**Tareas completadas**: ✅ 10 de 10 (100%)
+**Archivos creados**: 12 (config.js + 3 páginas de servicios + breadcrumbs.js + breadcrumbs.css + ga4-script.html + GA4-SETUP.md + urgency.js + urgency.css + exit-intent.js + exit-intent.css)
+**Archivos modificados**: 49 (7 originales + 14 con breadcrumbs + 19 con GA4 + 4 con urgency + 5 con exit intent)
+**Líneas de código agregadas**: ~3,540+
 **Líneas de código eliminadas**: ~35
 **Commits realizados**: 7 (pendiente 1)
 **Branch**: `claude/claude-md-mi73c11i9bdd5od9-01XitTMhnwzfwRHEiyJPtWut`
@@ -241,6 +241,7 @@
 - ✅ Bugs críticos (chatbot rígido, bucle con "gracias")
 - ✅ Analytics (GA4 + local tracking, 13 eventos personalizados, GDPR compliance)
 - ✅ Conversión (badges de urgencia, indicadores de escasez, validación social)
+- ✅ Lead capture (exit intent popup con detección inteligente y control de frecuencia)
 
 ---
 
@@ -475,11 +476,115 @@ CONFIG = {
 
 **Commit**: Pendiente
 
-### ⏳ TAREA 9: Crear exit intent popup
-**Estado**: Pendiente
-**Descripción**: Modal que aparece cuando el usuario intenta salir del sitio
-**Archivo a crear**: `js/exit-intent.js`
-**Estimado**: 2 horas
+### ✅ TAREA 9: Crear exit intent popup
+**Estado**: ✅ Completada (20 Nov 2025)
+**Descripción**: Modal de captura de leads que aparece cuando el usuario intenta salir del sitio
+
+**Archivos creados**:
+1. `js/exit-intent.js` (520 líneas) - Módulo completo con detección y formulario
+2. `css/exit-intent.css` (420 líneas) - Estilos con animaciones y responsividad
+
+**Archivos modificados**:
+1. `index.html` - Agregado CSS y JS
+2. `detalle-propiedad.html` - Agregado CSS y JS
+3. `propiedades-comprar.html` - Agregado CSS y JS
+4. `propiedades-arrendar.html` - Agregado CSS y JS
+5. `propiedades-alojamientos.html` - Agregado CSS y JS
+
+**Funcionalidades implementadas**:
+
+**1. js/exit-intent.js - Detección y captura de leads**:
+- ✅ **Detección de exit intent**:
+  - Desktop: Mouse cerca del borde superior (threshold: 30px)
+  - Móvil: Scroll hacia arriba rápido (>200px) o timer de 45 segundos
+  - Delay de 3 segundos antes de activar detección (evita falsos positivos)
+- ✅ **Control de frecuencia**:
+  - Cooldown de 7 días entre visualizaciones
+  - No mostrar más si el usuario ya envió el formulario
+  - Control por sesión (1 vez máximo por sesión)
+  - Storage key: `altorra:exit-intent`
+- ✅ **Formulario de captura**:
+  - Campos: Nombre, Email, Teléfono, Interés (select)
+  - Validación HTML5 con patterns
+  - Loading state con spinner
+  - Mensaje de éxito con link a WhatsApp
+- ✅ **Exclusión de páginas**: No se muestra en `/gracias.html`, `/404.html`, `/privacidad.html`
+- ✅ **Integración con Analytics**: Eventos `exit_intent_shown`, `exit_intent_closed`, `exit_intent_submitted`
+- ✅ **API pública**: `AltorraExitIntent.show()`, `.hide()`, `.enable()`, `.disable()`, `.reset()`
+- ✅ **Accesibilidad**:
+  - ARIA roles (dialog, modal)
+  - Keyboard navigation (ESC para cerrar)
+  - Focus management
+  - Labels para screen readers
+
+**2. css/exit-intent.css - Diseño responsive y accesible**:
+- ✅ **Overlay con backdrop blur** - Efecto glassmorphism
+- ✅ **Modal centrado** con max-width 540px
+- ✅ **Animaciones suaves**:
+  - Fade in + scale para desktop
+  - Slide up desde abajo para móvil
+  - Bounce animation para el icono
+  - Pulse animation para botón de WhatsApp
+- ✅ **Formulario estilizado**:
+  - Inputs con border interactivo (cambia color con validación)
+  - Select custom con chevron SVG
+  - Botón con gradiente dorado
+  - Loading spinner CSS-only
+- ✅ **Estados visuales**:
+  - Invalid state (border rojo)
+  - Valid state (border verde)
+  - Disabled state para botón
+  - Hover effects
+- ✅ **Responsive design**:
+  - Desktop: Modal centrado con border-radius completo
+  - Móvil: Modal en bottom sheet con border-radius solo arriba
+  - Font-size 16px en móvil (previene zoom en iOS)
+- ✅ **Accesibilidad**:
+  - `prefers-reduced-motion` - Desactiva animaciones
+  - `prefers-contrast: high` - Aumenta contraste
+  - `prefers-color-scheme: dark` - Soporte para dark mode
+- ✅ **Success state**: Diseño especial con icono de checkmark y botón de WhatsApp
+
+**3. Integración en páginas**:
+- ✅ 5 páginas principales con exit intent activo
+- ✅ CSS cargado después de `style.css`
+- ✅ JS cargado con `defer` al final del `<head>`
+- ✅ Orden correcto de carga de scripts
+
+**Configuración disponible** (líneas 10-22 en exit-intent.js):
+```javascript
+CONFIG = {
+  enabled: true,
+  cooldownDays: 7,              // No mostrar por X días
+  threshold: 30,                // Píxeles desde borde superior
+  delay: 3000,                  // Delay antes de activar detección
+  mobileScrollThreshold: 200,   // Scroll hacia arriba para activar
+  mobileTimeDelay: 45000,       // Timer en móvil (45 segundos)
+  trackEvents: true             // Integración con analytics
+}
+```
+
+**Eventos de Analytics rastreados**:
+- `exit_intent_shown` - Popup mostrado (parámetros: page)
+- `exit_intent_closed` - Popup cerrado sin enviar
+- `exit_intent_submitted` - Formulario enviado (parámetros: interest, page)
+
+**Código de ejemplo para testing**:
+```javascript
+// Forzar mostrar popup (consola)
+AltorraExitIntent.show();
+
+// Reset cooldown (volver a ver popup)
+AltorraExitIntent.reset();
+
+// Deshabilitar temporalmente
+AltorraExitIntent.disable();
+
+// Ver configuración actual
+AltorraExitIntent.getConfig();
+```
+
+**Commit**: Pendiente
 
 ### ✅ TAREA 10: Integrar Google Analytics 4
 **Estado**: ✅ Completada (20 Nov 2025)
