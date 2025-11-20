@@ -30,11 +30,12 @@ python -m http.server 8000
 
 | File | Purpose | Size |
 |------|---------|------|
-| `js/config.js` | **NEW:** Centralized configuration | 5.7KB (211 lines) |
-| `properties/data.json` | Main property database | 9KB |
-| `js/chatbot.js` | AI chatbot (largest module) | 138KB (3,185 lines) |
+| `js/config.js` | Centralized configuration | 5.7KB (211 lines) |
+| `properties/data.json` | Main property database | 9KB (219 lines) |
+| `js/chatbot.js` | **AI chatbot v2.4** (largest module) | 168KB (3,717 lines) |
 | `js/smart-search.js` | Advanced search with fuzzy matching | 23KB (526 lines) |
 | `scripts.js` | Main application orchestration | 20KB (480 lines) |
+| `js/exit-intent.js` | **NEW:** Exit intent popup for lead capture | 13KB (488 lines) |
 | `tools/generate_og_pages.js` | Build script for social sharing | 7.2KB |
 
 ### Configuration Values
@@ -80,19 +81,22 @@ ALTORRA_CONFIG.isBusinessHours();          // Check if currently open
 
 ```
 ALTORRA-PILOTO/
-├── /js/                    # JavaScript modules (16 files, 255KB, 6,581 lines)
-│   ├── config.js           # ⭐ NEW: Centralized configuration (211 lines)
-│   ├── chatbot.js          # AI chatbot v2.0 (3,185 lines, 138KB)
+├── /js/                    # JavaScript modules (15 files, 315KB, 8,222 lines)
+│   ├── config.js           # Centralized configuration (211 lines)
+│   ├── chatbot.js          # 🤖 AI chatbot v2.4 (3,717 lines, 168KB)
 │   ├── smart-search.js     # Fuzzy search engine (526 lines)
+│   ├── exit-intent.js      # ⭐ NEW: Exit intent popup (488 lines)
+│   ├── listado-propiedades.js  # Property listings (422 lines)
 │   ├── comparador.js       # Property comparison (426 lines)
-│   ├── calculadora.js      # Mortgage calculator (241 lines)
 │   ├── favoritos.js        # Favorites system (433 lines)
-│   ├── listado-propiedades.js  # Property listings (407 lines)
-│   ├── form-validation.js  # Form validation - ENHANCED (442 lines)
+│   ├── form-validation.js  # Form validation (442 lines)
+│   ├── analytics.js        # Google Analytics 4 integration (273 lines)
+│   ├── urgency.js          # ⭐ NEW: Urgency/scarcity indicators (247 lines)
+│   ├── breadcrumbs.js      # ⭐ NEW: Breadcrumb navigation + schema (250 lines)
+│   ├── calculadora.js      # Mortgage calculator (241 lines)
+│   ├── utils.js            # Shared utilities (227 lines)
 │   ├── cache-manager.js    # Smart caching (165 lines)
-│   ├── analytics.js        # Privacy-friendly analytics (164 lines)
-│   ├── performance.js      # Performance optimizations (154 lines)
-│   └── utils.js            # Shared utilities (227 lines)
+│   └── performance.js      # Performance optimizations (154 lines)
 │
 ├── /css/                   # Feature stylesheets (24KB total)
 │   ├── chatbot.css         # Chat UI styles (8.8KB)
@@ -149,24 +153,79 @@ ALTORRA-PILOTO/
 
 ### ✅ Completed Improvements
 
+**🤖 Chatbot Evolution: v2.0 → v2.4** (3,185 → 3,717 lines, 138KB → 168KB)
+
+**Commit 8f54c06 - v2.4:** "Integración completa del sistema de selección de propiedades"
+- ✅ Property selection system with checkboxes ("Me interesa")
+- ✅ Unified contact flow that includes selected properties
+- ✅ Dynamic button text: "Enviar propiedades seleccionadas" vs "Chatear con asesor"
+- ✅ Improved visual counter with gradient styling
+- ✅ Enhanced checkbox feedback and visibility
+- ✅ Consistent WhatsApp handoff with property details
+
+**Commit 862f709 - v2.3:** "Sistema de recomendaciones inteligentes"
+- ✅ Smart recommendations when no exact matches found
+- ✅ New `analyzePropertyMatch()` function with scoring system
+- ✅ Transparent messaging with ✓/✗ symbols for criteria
+- ✅ Intelligent scoring: operation +3, type +3, zone +3, budget +2, beds +1
+- ✅ Better handling of partial matches
+
+**Commit a4e266c - v2.2:** "Filtro de zona corregido + Sistema de selección"
+- ✅ Fixed zone filtering logic
+- ✅ Initial property selection system implementation
+- ✅ Improved property recommendation accuracy
+
+**Commit 694166b - v2.1:** "Arreglos críticos del flujo consultivo + vocabulario expandido"
+- ✅ Fixed rigid conversation flows
+- ✅ Expanded synonym vocabulary (50+ mappings)
+- ✅ Better context awareness
+- ✅ Data contamination prevention
+- ✅ Improved type filtering
+
+**⭐ New Features & Modules**
+
+**Commit a404b7b:** "Exit intent popup con captura de leads"
+- ✅ **Created `js/exit-intent.js`** (488 lines) - exit intent detection
+- ✅ Lead capture form triggered on exit attempt
+- ✅ Mobile detection with scroll-based triggers
+- ✅ 7-day cooldown period
+- ✅ Analytics integration for conversion tracking
+
+**Commit 8ff1208:** "Sistema de urgencia y escasez para propiedades"
+- ✅ **Created `js/urgency.js`** (247 lines) - urgency indicators
+- ✅ "Nuevo" badge for properties <7 days old
+- ✅ "Popular" badge based on view metrics
+- ✅ "Pocas disponibles" for low inventory categories
+- ✅ Dynamic view count generation with decay factor
+
+**Commit 909d9e8:** "Implementar breadcrumbs con schema markup"
+- ✅ **Created `js/breadcrumbs.js`** (250 lines) - navigation breadcrumbs
+- ✅ Automatic breadcrumb generation for all pages
+- ✅ JSON-LD schema markup for SEO
+- ✅ Configurable routes for properties and services
+
+**Commit da68d16:** "Integración completa de Google Analytics 4"
+- ✅ Enhanced `js/analytics.js` (164 → 273 lines)
+- ✅ Real GA4 integration (Measurement ID: G-EHE7316MST)
+- ✅ Event tracking for user interactions
+- ✅ Privacy-friendly implementation
+
+**Earlier Improvements**
+
 **Commit 3d876ec:** "Chatbot improvements: Fix rigid flows and add intent detection"
-- ✅ Enhanced synonym system with 50+ mappings for natural language understanding
-- ✅ Added intent detection layer to better understand user requests
-- ✅ Fixed conversation flow rigidity - now handles non-linear conversations
-- ✅ Better context awareness and data contamination prevention
-- ✅ Improved type filtering and WhatsApp message formatting
+- ✅ Enhanced synonym system with 50+ mappings
+- ✅ Added intent detection layer
+- ✅ Fixed conversation flow rigidity
 
 **Commit 382d8ff:** "Week 1 Quick Wins: Part 2 - Service pages, dynamic SEO, and form UX"
 - ✅ Created 5 new service pages (800+ lines total)
-- ✅ Dynamic meta tags in detalle-propiedad.html (72 lines)
-- ✅ Enhanced form validation with loading states and better UX
-- ✅ Updated documentation (MEJORAS.md)
+- ✅ Dynamic meta tags in detalle-propiedad.html
+- ✅ Enhanced form validation with loading states
 
 **Commit 2581ed8:** "Week 1 Quick Wins: Part 1 - Critical fixes and config centralization"
 - ✅ **Created `js/config.js`** - centralized configuration (211 lines)
 - ✅ Removed 35 lines of duplicate dead code from scripts.js
 - ✅ Fixed typo in footer.html styling
-- ✅ Integrated config.js into index.html
 
 ---
 
@@ -364,25 +423,41 @@ ALTORRA_CONFIG.isBusinessHours();  // true/false
 // Supports natural language: "apto 3 hab bocagrande 400m"
 ```
 
-### Chatbot (`js/chatbot.js`) - Version 2.0 ⭐ IMPROVED
+### Chatbot (`js/chatbot.js`) - Version 2.4 🤖
 
-**Size:** 138KB (3,185 lines) - largest module
+**Size:** 168KB (3,717 lines) - largest module
 
-**Recent Improvements:**
+**v2.4 Features (Latest):**
+- ✅ Property selection system with "Me interesa" checkboxes
+- ✅ Unified contact flow (`chatbotSendToAdvisor()`)
+- ✅ Selected properties automatically included in WhatsApp message
+- ✅ Dynamic button text based on selections
+- ✅ Visual counter with gradient styling (purple/blue)
+- ✅ Enhanced checkbox feedback
+- ✅ Smart property bundling in advisor messages
+
+**v2.3 Features:**
+- ✅ Intelligent recommendations system (`analyzePropertyMatch()`)
+- ✅ Scoring algorithm for partial matches (operation +3, type +3, zone +3, budget +2, beds +1)
+- ✅ Transparent criteria display (✓/✗ symbols)
+- ✅ Smart fallback when no exact matches found
+
+**v2.1-v2.2 Features:**
 - ✅ Intent detection layer for better understanding
 - ✅ Enhanced synonym system (50+ mappings)
 - ✅ Fixed rigid conversation flows
 - ✅ Data contamination prevention
-- ✅ Better type filtering
+- ✅ Better type and zone filtering
 - ✅ WhatsApp message length limiting
 - ✅ Bot stops asking questions after contact is requested
 
-**Features:**
+**Core Features:**
 - Context-aware conversation with session persistence
 - Natural language budget extraction
 - Property recommendations based on user preferences
 - WhatsApp handoff with conversation history
 - Comprehensive synonym understanding
+- Multi-property selection and comparison
 
 **State Management:**
 ```javascript
@@ -524,6 +599,128 @@ cuota = monto * (r * (1 + r)^n) / ((1 + r)^n - 1)
 - Accessible aria-labels and announcements
 
 **Usage:** contacto.html, publicar-propiedad.html
+
+### Urgency & Scarcity (`js/urgency.js`) ⭐ NEW
+
+**Purpose:** Add psychological triggers to increase conversion rates
+
+**Features:**
+- **"Nuevo" Badge**: Properties added within last 7 days
+- **"Popular" Badge**: High-traffic properties (view-based metrics)
+- **"Pocas disponibles" Badge**: Low inventory alert for property categories
+- **Dynamic View Counter**: Realistic view counts with decay factor
+- **Time-based Decay**: Older properties get reduced view multiplier (0.85 factor)
+
+**Configuration:**
+```javascript
+const CONFIG = {
+  newPropertyDays: 7,           // Days to show "Nuevo" badge
+  hotPropertyDays: 14,          // Days to consider for "Popular"
+  minViewsPerDay: 15,           // Minimum views per day
+  maxViewsPerDay: 120,          // Maximum views per day
+  viewDecayFactor: 0.85,        // Decay for older properties
+  lowInventoryThreshold: 3      // Threshold for "Pocas disponibles"
+};
+```
+
+**Key Functions:**
+- `isNew(property)` - Check if property is new
+- `isHot(property)` - Check if property is popular
+- `generateViewCount(property)` - Generate realistic view count
+- `hasLowInventory(properties, type, operation)` - Check inventory levels
+- `addUrgencyBadges(cardElement, property)` - Add badges to property cards
+
+**Usage:** Automatically called on property listings pages
+
+### Breadcrumbs (`js/breadcrumbs.js`) ⭐ NEW
+
+**Purpose:** Improve navigation UX and SEO with breadcrumb trails
+
+**Features:**
+- Automatic breadcrumb generation for all pages
+- JSON-LD schema markup for search engines
+- Configurable routes for different page types
+- Responsive design with mobile optimization
+- Accessibility with aria-labels
+
+**Breadcrumb Routes:**
+- Properties: index → propiedades-comprar/arrendar/alojamientos → detalle
+- Services: index → servicios → specific service page
+- Other pages: index → current page
+
+**Schema Markup:**
+```javascript
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Inicio",
+      "item": "https://altorrainmobiliaria.github.io/"
+    },
+    // ... more items
+  ]
+}
+```
+
+**Key Functions:**
+- `getBreadcrumbsForPage(pathname)` - Get breadcrumb config
+- `generateBreadcrumbHTML(breadcrumbs)` - Generate HTML markup
+- `generateBreadcrumbSchema(breadcrumbs)` - Generate JSON-LD
+- `injectBreadcrumbs()` - Inject into page
+
+**Usage:** Automatically initializes on DOM load
+
+### Exit Intent Popup (`js/exit-intent.js`) ⭐ NEW
+
+**Purpose:** Capture leads when users are about to leave the site
+
+**Features:**
+- **Mouse Exit Detection**: Triggers when cursor moves toward browser top (desktop)
+- **Mobile Scroll Detection**: Triggers on upward scroll or after time delay
+- **Smart Frequency Control**: 7-day cooldown, session tracking
+- **Form Integration**: Contact form with validation
+- **Analytics Tracking**: Events for popup shown, closed, submitted
+- **Persistent Storage**: Remembers user interactions
+
+**Configuration:**
+```javascript
+const CONFIG = {
+  enabled: true,
+  cooldownDays: 7,              // Don't show again for 7 days
+  threshold: 30,                // Pixels from top to trigger
+  delay: 3000,                  // Initial delay before activation
+  mobileScrollThreshold: 200,   // Scroll up distance for mobile
+  mobileTimeDelay: 45000        // 45s delay for mobile
+};
+```
+
+**Trigger Conditions:**
+- Desktop: Mouse moves to top 30px within 3 seconds of page load
+- Mobile: Scroll up 200px OR 45 seconds elapsed
+- Only if not shown in last 7 days
+- Only if form not previously submitted
+- Only once per session
+
+**Key Functions:**
+- `hasBeenShownRecently()` - Check cooldown period
+- `markAsShown()` - Record popup display
+- `markAsSubmitted()` - Permanently disable after submission
+- `showPopup()` - Display popup with fade-in
+- `closePopup()` - Close with fade-out
+- `initExitIntent()` - Initialize detection
+
+**Storage:**
+```javascript
+localStorage['altorra:exit-intent'] = {
+  lastShown: timestamp,
+  submitted: boolean
+};
+```
+
+**Usage:** Automatically initializes on DOM load if enabled
 
 ### Dynamic SEO (detalle-propiedad.html) ⭐ NEW
 
@@ -695,18 +892,31 @@ node tools/generate_og_pages.js
 
 ### Modifying the Chatbot
 
-Key areas in `js/chatbot.js`:
-- **Line ~50-150:** Synonym dictionaries and word mappings
-- **Line ~200-300:** `CONSULTATION_QUESTIONS` - Question flow configuration
-- **Line ~400:** `conversationContext` - State management object
-- **Line ~800:** `processMessage()` - Main message handler with intent detection
-- **Line ~1500:** `generateResponse()` - Response generation logic
-- **Line ~2000:** `recommendProperties()` - Property matching algorithm
+Key areas in `js/chatbot.js` (v2.4, 3,717 lines):
+- **Line ~1-50:** Configuration and imports
+- **Line ~50-150:** Synonym dictionaries and word mappings (SYNONYMS object)
+- **Line ~200-350:** `CONSULTATION_QUESTIONS` - Question flow configuration
+- **Line ~400-450:** `conversationContext` - State management object
+- **Line ~463-520:** `analyzePropertyMatch()` - v2.3 scoring system
+- **Line ~523-568:** `getSmartRecommendationsWithoutZone()` - Smart fallback recommendations
+- **Line ~800-1000:** `processMessage()` - Main message handler with intent detection
+- **Line ~1500-1700:** `generateResponse()` - Response generation logic
+- **Line ~2000-2200:** `recommendProperties()` - Property matching algorithm
+- **Line ~2974-3006:** `chatbotSendToAdvisor()` - v2.4 unified contact flow with selections
+- **Line ~3457-3491:** Contact case handler - integrates with send to advisor
+
+**v2.4 New Features:**
+- Property selection checkboxes system
+- `chatbotSendToAdvisor()` - unified WhatsApp contact function
+- Dynamic button text based on selections
+- Visual counter with gradient styling
 
 **Testing Tips:**
 - Clear localStorage to reset conversation: `localStorage.removeItem('altorra:chatbot-context')`
+- Test property selection: Click "Me interesa" checkboxes and verify they appear in WhatsApp message
 - Test various natural language inputs: "apto 3 hab bocagrande", ">400m", "back", etc.
 - Verify synonym system: "casa" should match "vivienda", "apto" should match "apartamento"
+- Test recommendation scoring: Try searches with partial matches to see ✓/✗ indicators
 
 ### Updating Styles
 
@@ -777,19 +987,23 @@ const zones = ALTORRA_CONFIG.ZONES;  // Array of neighborhoods
 ## Improvement Priorities
 
 ### High Priority
-1. ~~Split `chatbot.js` into smaller modules~~ - Still needed (138KB)
+1. ~~Split `chatbot.js` into smaller modules~~ - Still needed (now 168KB, 3,717 lines)
 2. ~~Create centralized `config.js` for constants~~ ✅ **DONE!**
-3. Add user-facing error notifications (network failures, etc.)
-4. Implement critical CSS extraction
-5. Compress images (target <200KB per image)
+3. ~~Add urgency/scarcity indicators~~ ✅ **DONE!**
+4. ~~Add exit intent popup~~ ✅ **DONE!**
+5. Add user-facing error notifications (network failures, etc.)
+6. Implement critical CSS extraction
+7. Compress images (target <200KB per image)
 
 ### Medium Priority
-1. Cache search index for faster initial load
-2. Add property data versioning and change tracking
-3. Improve image compression and lazy loading
-4. ~~Add loading states for async operations~~ ✅ **DONE!**
-5. Implement keyboard navigation in carousels
-6. Add map view to property detail pages
+1. ~~Implement breadcrumbs with schema markup~~ ✅ **DONE!**
+2. ~~Add Google Analytics 4~~ ✅ **DONE!**
+3. Cache search index for faster initial load
+4. Add property data versioning and change tracking
+5. Improve image compression and lazy loading
+6. ~~Add loading states for async operations~~ ✅ **DONE!**
+7. Implement keyboard navigation in carousels
+8. Add map view to property detail pages
 
 ### Long-term
 1. Backend API integration for real-time inventory
@@ -866,21 +1080,24 @@ const zones = ALTORRA_CONFIG.ZONES;  // Array of neighborhoods
 
 **JavaScript Modules:**
 ```
-Total: 6,581 lines, 255KB
-  chatbot.js           3,185 lines  138KB  (largest)
+Total: 15 files, 8,222 lines, 315KB
+  chatbot.js           3,717 lines  168KB  (largest) 🤖 v2.4
   smart-search.js        526 lines   23KB
+  exit-intent.js         488 lines   13KB  ⭐ NEW
   scripts.js             480 lines   20KB
-  listado-propiedades.js 407 lines   15KB
+  form-validation.js     442 lines   13KB
   favoritos.js           433 lines   14KB
   comparador.js          426 lines   14KB
-  form-validation.js     442 lines   13KB
+  listado-propiedades.js 422 lines   15KB
+  analytics.js           273 lines    8.9KB  (GA4 enhanced)
+  urgency.js             247 lines    7.2KB  ⭐ NEW
+  breadcrumbs.js         250 lines    7.0KB  ⭐ NEW
   calculadora.js         241 lines    8.1KB
-  header-footer.js       ~190 lines   7.9KB
   utils.js               227 lines    6.4KB
-  config.js              211 lines    5.7KB  ⭐ NEW
+  config.js              211 lines    5.7KB
   cache-manager.js       165 lines    5.4KB
-  analytics.js           164 lines    4.3KB
   performance.js         154 lines    4.2KB
+  header-footer.js       ~190 lines   7.9KB
 ```
 
 **CSS Files:**
@@ -896,9 +1113,10 @@ Total: ~1,000+ lines, 37KB
 **Repository Size:**
 ```
 Total: 58MB
-  Core files (HTML/JS/CSS): <2MB
+  Core files (HTML/JS/CSS): ~2.5MB
+  JavaScript modules: 315KB (15 files)
   Images: 56MB (95 files)
-  Property data: 9KB
+  Property data: 9KB (219 lines)
 ```
 
 ---
@@ -910,10 +1128,22 @@ Total: 58MB
 - Cache Version: `2025-09-07.1` (scripts.js)
 - Header Cache: `2025-09-07.2` (header-footer.js)
 - Config Version: `1.0.0` (config.js)
+- Chatbot Version: `v2.4` (js/chatbot.js)
+- Analytics: GA4 G-EHE7316MST (js/analytics.js)
 
 **Recent Major Updates:**
-- **November 20, 2025:** Centralized configuration system, chatbot v2.0, dynamic SEO
-- **November 2025:** Service pages added, form validation enhanced
+- **November 20, 2025:**
+  - Chatbot v2.4 with property selection system
+  - Exit intent popup (lead capture)
+  - Urgency/scarcity indicators
+  - Breadcrumbs with schema markup
+  - Google Analytics 4 integration
+- **November 2025 (earlier):**
+  - Centralized configuration system
+  - Chatbot v2.0-v2.3 (intent detection, recommendations)
+  - Service pages added
+  - Form validation enhanced
+  - Dynamic SEO for property pages
 - **September 2025:** Initial deployment with core features
 
 ---
@@ -979,4 +1209,6 @@ document.addEventListener('altorra:data-updated', (e) => {
 ---
 
 *Last updated: November 20, 2025*
-*Current branch: claude/claude-md-mi73c11i9bdd5od9-01XitTMhnwzfwRHEiyJPtWut*
+*Documentation version: 2.0*
+*Chatbot version: v2.4*
+*Current branch: claude/claude-md-mi7o4mlij8q381pg-014Wa6NUNHPTb6dYj614BR47*
