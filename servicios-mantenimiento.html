@@ -13,6 +13,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600;800&display=swap" rel="stylesheet" />
   <link rel="prefetch" href="index.html" as="document" />
+  <link href="css/breadcrumbs.css" rel="stylesheet"/>
   <style>
     :root{
       --gold:#d4af37;
@@ -102,6 +103,11 @@
   </style>
 </head>
 <body data-home="index.html">
+  <!-- Breadcrumbs -->
+  <div style="max-width: var(--page-max); margin: 0 auto; padding: 0 16px;">
+    <div id="breadcrumb-container"></div>
+  </div>
+
   <main class="wrap" role="main">
     <section class="card" aria-labelledby="t1">
       <div class="logo" aria-hidden="true">
@@ -143,6 +149,7 @@
     <meta http-equiv="refresh" content="10; url=index.html">
   </noscript>
 
+  <script defer src="js/breadcrumbs.js"></script>
   <script>
     (function(){
       const home = document.body.dataset.home || 'index.html';

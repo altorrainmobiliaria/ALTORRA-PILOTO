@@ -26,6 +26,7 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <link href="css/breadcrumbs.css" rel="stylesheet"/>
   <script src="header-footer.js" defer></script>
 
   <!-- Estilos SOLO para esta página -->
@@ -139,6 +140,11 @@
 <body class="page-contact">
   <!-- Header externo -->
   <div id="header-placeholder"></div>
+
+  <!-- Breadcrumbs -->
+  <div style="max-width: var(--page-max); margin: 0 auto; padding: 0 16px;">
+    <div id="breadcrumb-container"></div>
+  </div>
 
   <!-- HERO -->
   <section class="hero-contact" aria-label="Hero de Contacto">
@@ -343,5 +349,6 @@
   </a>
   <script defer src="js/form-validation.js"></script>
   <script defer src="js/favoritos.js"></script>
+  <script defer src="js/breadcrumbs.js"></script>
 </body>
 </html>

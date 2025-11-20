@@ -1,0 +1,164 @@
+/* ========================================
+   ALTORRA BREADCRUMBS - Estilos
+   ======================================== */
+
+.altorra-breadcrumb {
+  background: transparent;
+  padding: 0;
+  margin: 0 0 1.5rem 0;
+  font-size: 0.875rem;
+}
+
+.altorra-breadcrumb .breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 0.75rem 0;
+  margin: 0;
+  list-style: none;
+  background: transparent;
+  border-radius: 0;
+}
+
+.altorra-breadcrumb .breadcrumb-item {
+  display: flex;
+  align-items: center;
+  color: #6b7280;
+  font-weight: 400;
+  transition: color 0.2s ease;
+}
+
+.altorra-breadcrumb .breadcrumb-item a {
+  color: #6b7280;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.altorra-breadcrumb .breadcrumb-item a:hover {
+  color: #d4af37;
+  text-decoration: none;
+}
+
+.altorra-breadcrumb .breadcrumb-item a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: #d4af37;
+  transition: width 0.3s ease;
+}
+
+.altorra-breadcrumb .breadcrumb-item a:hover::after {
+  width: 100%;
+}
+
+.altorra-breadcrumb .breadcrumb-item.active {
+  color: #111827;
+  font-weight: 500;
+}
+
+/* Separador entre items */
+.altorra-breadcrumb .breadcrumb-item + .breadcrumb-item::before {
+  content: '›';
+  padding: 0 0.5rem;
+  color: #d1d5db;
+  font-size: 1rem;
+  font-weight: 300;
+}
+
+/* Variante con flecha */
+.altorra-breadcrumb.arrow-separator .breadcrumb-item + .breadcrumb-item::before {
+  content: '→';
+}
+
+/* Variante con slash */
+.altorra-breadcrumb.slash-separator .breadcrumb-item + .breadcrumb-item::before {
+  content: '/';
+}
+
+/* Responsive */
+@media (max-width: 560px) {
+  .altorra-breadcrumb {
+    font-size: 0.813rem;
+    margin-bottom: 1rem;
+  }
+
+  .altorra-breadcrumb .breadcrumb {
+    padding: 0.5rem 0;
+  }
+
+  .altorra-breadcrumb .breadcrumb-item + .breadcrumb-item::before {
+    padding: 0 0.375rem;
+    font-size: 0.875rem;
+  }
+
+  /* En mobile, truncar breadcrumbs largos */
+  .altorra-breadcrumb .breadcrumb-item {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .altorra-breadcrumb .breadcrumb-item.active {
+    max-width: 200px;
+  }
+}
+
+/* Dark mode support (opcional) */
+@media (prefers-color-scheme: dark) {
+  .altorra-breadcrumb .breadcrumb-item {
+    color: #9ca3af;
+  }
+
+  .altorra-breadcrumb .breadcrumb-item a {
+    color: #9ca3af;
+  }
+
+  .altorra-breadcrumb .breadcrumb-item.active {
+    color: #f3f4f6;
+  }
+
+  .altorra-breadcrumb .breadcrumb-item + .breadcrumb-item::before {
+    color: #4b5563;
+  }
+}
+
+/* Animación de entrada */
+.altorra-breadcrumb {
+  animation: breadcrumbFadeIn 0.3s ease-out;
+}
+
+@keyframes breadcrumbFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Variante compacta (para headers pequeños) */
+.altorra-breadcrumb.compact {
+  margin-bottom: 0.75rem;
+}
+
+.altorra-breadcrumb.compact .breadcrumb {
+  padding: 0.5rem 0;
+}
+
+/* Variante con fondo (opcional) */
+.altorra-breadcrumb.with-background {
+  background: #f9fafb;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.altorra-breadcrumb.with-background .breadcrumb {
+  padding: 0;
+}

@@ -14,6 +14,7 @@
   <!-- Tipografía y estilos globales -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <link href="css/breadcrumbs.css" rel="stylesheet"/>
   <!-- Estilos específicos de publicación de propiedades -->
   <style>
     /* Hero de la página de publicación */
@@ -220,6 +221,12 @@
   <a class="skip-link" href="#mainContent">Saltar al contenido principal</a>
   <!-- Inyección del encabezado -->
   <div id="header-placeholder"></div>
+
+  <!-- Breadcrumbs -->
+  <div style="max-width: var(--page-max); margin: 0 auto; padding: 0 16px;">
+    <div id="breadcrumb-container"></div>
+  </div>
+
   <!-- Hero e información introductoria -->
   <section class="hero-publish" aria-label="Publica tu propiedad con Altorra">
     <img class="bg" src="/multimedia/hero-house.webp" alt="Casa moderna y elegante" />
@@ -304,6 +311,7 @@
   <!-- Inyección del header y footer -->
   <script src="header-footer.js" defer></script>
   <script defer src="js/form-validation.js"></script>
+  <script defer src="js/breadcrumbs.js"></script>
 
 </body>
 </html>
