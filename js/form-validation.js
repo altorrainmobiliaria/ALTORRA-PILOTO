@@ -596,25 +596,131 @@
     }, 4000);
   }
 
-  // Interceptar envío de formularios para agregar loading states
+  // ===== AJAX FORM SUBMISSION =====
+
+  /**
+   * Submit form via AJAX instead of full page reload
+   * @param {HTMLFormElement} form - The form to submit
+   * @returns {Promise<boolean>} - Success status
+   */
+  async function submitFormAjax(form) {
+    try {
+      // Create FormData from form
+      const formData = new FormData(form);
+
+      // Get form action URL
+      const actionUrl = form.action;
+
+      // Send via fetch with JSON accept header for FormSubmit.co
+      const response = await fetch(actionUrl, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Accept': 'application/json'  // FormSubmit.co returns JSON with this header
+        }
+      });
+
+      // Check response
+      if (response.ok) {
+        // Success!
+        console.log('✅ Form submitted successfully via AJAX');
+
+        // Announce to screen readers
+        announceToScreenReader('Formulario enviado correctamente. Gracias por contactarnos.', form);
+
+        // Show success message
+        showToast('¡Mensaje enviado correctamente! Te contactaremos pronto.', 'success');
+
+        // Reset form
+        form.reset();
+
+        // Clear all field states
+        form.querySelectorAll('.field-success, .field-error').forEach(el => {
+          el.classList.remove('field-success', 'field-error');
+        });
+
+        // Remove all aria-invalid attributes
+        form.querySelectorAll('[aria-invalid]').forEach(el => {
+          el.removeAttribute('aria-invalid');
+        });
+
+        // Track analytics if available
+        if (window.AltorraAnalytics) {
+          window.AltorraAnalytics.track('form_submit', {
+            form: form.id || 'unknown',
+            method: 'ajax'
+          });
+        }
+
+        return true;
+      } else {
+        // Error response
+        console.error('❌ Form submission failed:', response.status, response.statusText);
+
+        // Try to parse error message
+        let errorMessage = 'Error al enviar el formulario. Por favor intenta nuevamente.';
+        try {
+          const errorData = await response.json();
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } catch (e) {
+          // Couldn't parse JSON, use default message
+        }
+
+        // Announce to screen readers
+        announceToScreenReader(errorMessage, form);
+
+        // Show error toast
+        showToast(errorMessage, 'error');
+
+        return false;
+      }
+    } catch (error) {
+      // Network error or other exception
+      console.error('❌ Form submission error:', error);
+
+      const errorMessage = 'Error de conexión. Verifica tu internet e intenta nuevamente.';
+
+      // Announce to screen readers
+      announceToScreenReader(errorMessage, form);
+
+      // Show error toast
+      showToast(errorMessage, 'error');
+
+      return false;
+    }
+  }
+
+  // Interceptar envío de formularios para AJAX + loading states
   function interceptFormSubmit() {
-    document.addEventListener('submit', (e) => {
+    document.addEventListener('submit', async (e) => {
       const form = e.target;
 
       // Ignorar formularios de búsqueda o que ya tienen handler personalizado
       if (form.id === 'quickSearch' || form.classList.contains('search-box')) return;
       if (form.hasAttribute('data-no-intercept')) return;
 
-      // Solo aplicar loading si el formulario es válido
-      if (validateForm(form)) {
-        showLoading(form);
+      // Prevent default form submission (we'll handle via AJAX)
+      e.preventDefault();
 
-        // Si el form va a formsubmit.co, simular success después de envío
-        if (form.action && form.action.includes('formsubmit.co')) {
-          // FormSubmit.co redirige, así que no podemos detectar success/error
-          // Mostramos loading hasta que la página cambie
-          console.log('📤 Formulario enviándose a FormSubmit.co...');
-        }
+      // Solo continuar si el formulario es válido
+      if (!validateForm(form)) {
+        return;
+      }
+
+      // Show loading state
+      showLoading(form);
+
+      // Submit via AJAX
+      const success = await submitFormAjax(form);
+
+      // Hide loading state
+      hideLoading(form);
+
+      // Reset form timestamp if successful (allow immediate resubmission)
+      if (success) {
+        initFormTimestamp(form);
       }
     });
   }
@@ -635,6 +741,8 @@
     showLoading,
     hideLoading,
     showToast,
+    // AJAX features
+    submitFormAjax,
     // Security features
     checkHoneypot,
     checkRateLimit,
@@ -647,6 +755,6 @@
     markValid
   };
 
-  console.log('✅ Form validation + security + accessibility (ARIA, fieldsets, live regions) loaded');
+  console.log('✅ Form validation + AJAX + security + accessibility loaded');
 
 })();

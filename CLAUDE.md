@@ -81,15 +81,16 @@ ALTORRA_CONFIG.isBusinessHours();          // Check if currently open
 
 ```
 ALTORRA-PILOTO/
-├── /js/                    # JavaScript modules (15 files, 315KB, 8,222 lines)
+├── /js/                    # JavaScript modules (16 files, 345KB, 8,850 lines)
 │   ├── config.js           # Centralized configuration (211 lines)
 │   ├── chatbot.js          # 🤖 AI chatbot v2.4 (3,717 lines, 168KB)
+│   ├── form-validation.js  # Form validation + AJAX (760 lines) ⚡ AJAX
+│   ├── form-autosave.js    # ⭐ NEW: Auto-save drafts (628 lines)
 │   ├── smart-search.js     # Fuzzy search engine (526 lines)
 │   ├── exit-intent.js      # ⭐ NEW: Exit intent popup (488 lines)
 │   ├── listado-propiedades.js  # Property listings (422 lines)
 │   ├── comparador.js       # Property comparison (426 lines)
 │   ├── favoritos.js        # Favorites system (433 lines)
-│   ├── form-validation.js  # Form validation (442 lines)
 │   ├── analytics.js        # Google Analytics 4 integration (273 lines)
 │   ├── urgency.js          # ⭐ NEW: Urgency/scarcity indicators (247 lines)
 │   ├── breadcrumbs.js      # ⭐ NEW: Breadcrumb navigation + schema (250 lines)
@@ -597,6 +598,72 @@ cuota = monto * (r * (1 + r)^n) / ((1 + r)^n - 1)
 - Error messages below fields
 - Submit button disabled on errors
 - Accessible aria-labels and announcements
+- **AJAX submission** (no page reload)
+- Loading states with spinner
+- Toast notifications
+
+**Usage:** contacto.html, publicar-propiedad.html
+
+### Form Autosave (`js/form-autosave.js`) ⭐ NEW
+
+**Purpose:** Automatically save form drafts to prevent data loss
+
+**Features:**
+- **Auto-save on input**: Saves form data to localStorage after 2s of inactivity
+- **Draft recovery**: Shows notification banner when returning to form with saved draft
+- **Manual controls**: "Restore" or "Delete" draft options
+- **Visual indicators**: Small "Saving..." / "Saved ✓" indicator during auto-save
+- **Smart expiration**: Drafts expire after 7 days
+- **Privacy-safe**: Only saves to localStorage, never sent to server
+- **Excluded fields**: Skips honeypots, hidden fields, and security tokens
+
+**Configuration:**
+```javascript
+const CONFIG = {
+  storagePrefix: 'altorra:draft:',     // localStorage key prefix
+  saveDelay: 2000,                     // Debounce delay (2 seconds)
+  maxDraftAge: 7 * 24 * 60 * 60 * 1000,  // 7 days expiration
+  enabledForms: ['contactForm', 'publishForm'],  // Forms with autosave
+  showNotifications: true              // Show toast on restore/delete
+};
+```
+
+**Key Functions:**
+- `saveDraft(formId, data)` - Save draft to localStorage
+- `loadDraft(formId)` - Load existing draft
+- `clearDraft(formId)` - Delete draft
+- `extractFormData(form)` - Get form data as object
+- `restoreFormData(form, data)` - Populate form from draft
+- `showDraftNotification(form, draft)` - Display recovery banner
+
+**UI Components:**
+- **Draft notification banner**: Blue gradient banner with restore/delete buttons
+- **Auto-save indicator**: Fixed position indicator showing save status
+- **Time ago display**: Shows when draft was last saved
+
+**Storage Format:**
+```javascript
+{
+  data: {
+    Nombre: "Juan Pérez",
+    Email: "juan@example.com",
+    // ... other form fields
+  },
+  savedAt: 1700000000000,  // timestamp
+  version: "1.0"
+}
+```
+
+**Accessibility:**
+- role="status" for live announcements
+- aria-live="polite" for screen readers
+- Clear button labels with aria-label
+
+**Integration:**
+- Works seamlessly with form-validation.js
+- Clears draft on successful AJAX submission
+- Listens for `altorra:form-success` event
+- Uses AltorraFormValidation.showToast() if available
 
 **Usage:** contacto.html, publicar-propiedad.html
 
@@ -1080,12 +1147,13 @@ const zones = ALTORRA_CONFIG.ZONES;  // Array of neighborhoods
 
 **JavaScript Modules:**
 ```
-Total: 15 files, 8,222 lines, 315KB
+Total: 16 files, 8,850 lines, 345KB
   chatbot.js           3,717 lines  168KB  (largest) 🤖 v2.4
+  form-validation.js     760 lines   22KB   ⚡ AJAX
+  form-autosave.js       628 lines   18KB   ⭐ NEW
   smart-search.js        526 lines   23KB
-  exit-intent.js         488 lines   13KB  ⭐ NEW
+  exit-intent.js         488 lines   13KB   ⭐ NEW
   scripts.js             480 lines   20KB
-  form-validation.js     442 lines   13KB
   favoritos.js           433 lines   14KB
   comparador.js          426 lines   14KB
   listado-propiedades.js 422 lines   15KB
@@ -1114,7 +1182,7 @@ Total: ~1,000+ lines, 37KB
 ```
 Total: 58MB
   Core files (HTML/JS/CSS): ~2.5MB
-  JavaScript modules: 315KB (15 files)
+  JavaScript modules: 345KB (16 files)
   Images: 56MB (95 files)
   Property data: 9KB (219 lines)
 ```
