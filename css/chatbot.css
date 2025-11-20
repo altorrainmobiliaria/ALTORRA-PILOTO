@@ -13,6 +13,19 @@
   --chat-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
 }
 
+/* Contenedor principal del chatbot - DEBE ser fixed */
+#altorra-chatbot {
+  position: fixed !important;
+  bottom: 0;
+  right: 0;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+#altorra-chatbot > * {
+  pointer-events: auto;
+}
+
 /* Botón flotante del chatbot */
 .chatbot-toggle {
   position: fixed;

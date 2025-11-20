@@ -18,23 +18,25 @@
   let isOpen = false;
   let hasGreeted = false;
 
-  // Respuestas predefinidas
+  // Respuestas predefinidas mejoradas
   const RESPONSES = {
     greeting: [
-      '¡Hola! Soy el asistente virtual de Altorra Inmobiliaria. ¿En qué puedo ayudarte hoy?',
-      '¡Bienvenido a Altorra! Estoy aquí para ayudarte a encontrar tu propiedad ideal. ¿Qué buscas?'
+      '¡Hola! 👋 Soy el asistente virtual de Altorra Inmobiliaria. Puedo ayudarte a encontrar propiedades, resolver dudas sobre nuestros servicios o conectarte con un asesor. ¿Qué necesitas?',
+      '¡Bienvenido a Altorra! 🏠 Estoy aquí para ayudarte. Puedo mostrarte propiedades en venta, arriendo o alojamientos por días. ¿Qué te interesa?'
     ],
-    comprar: 'Tenemos excelentes propiedades en venta. ¿Qué tipo de propiedad te interesa? ¿Apartamento, casa, lote u oficina?',
-    arrendar: 'Contamos con propiedades en arriendo. ¿Buscas apartamento o casa? ¿En qué zona de Cartagena?',
-    alojamiento: 'Ofrecemos alojamientos por días ideales para vacaciones o estadías cortas. ¿Para cuántas personas necesitas?',
-    precio: '¿Cuál es tu presupuesto aproximado? Así puedo mostrarte las opciones que se ajusten.',
-    ubicacion: 'Tenemos propiedades en diferentes zonas de Cartagena: Bocagrande, Manga, Centro Histórico, y más. ¿Tienes preferencia por alguna zona?',
-    contacto: 'Puedes contactarnos por WhatsApp al +57 300 243 9810 o por correo a altorrainmobiliaria@gmail.com. También puedes usar nuestro formulario de contacto.',
-    servicios: 'Además de venta y arriendo, ofrecemos: avalúos, servicios jurídicos, administración de propiedades, y servicios contables. ¿Te interesa alguno?',
-    horario: 'Nuestro horario de atención es de Lunes a Sábado de 8:00 AM a 6:00 PM.',
-    gracias: '¡Con gusto! Si tienes más preguntas, aquí estoy. También puedes contactarnos directamente por WhatsApp para una atención personalizada.',
-    noEntiendo: 'Disculpa, no estoy seguro de entender tu consulta. ¿Podrías ser más específico? O si prefieres, te conecto con un asesor por WhatsApp.',
-    default: '¿Hay algo más en lo que pueda ayudarte?'
+    comprar: '🏡 Excelente elección para invertir. Tenemos propiedades en venta en las mejores zonas de Cartagena. ¿Qué tipo buscas: apartamento, casa, lote u oficina?',
+    arrendar: '🔑 Tenemos opciones de arriendo para todos los gustos. ¿Prefieres apartamento o casa? ¿Tienes alguna zona preferida en Cartagena?',
+    alojamiento: '🌴 Nuestros alojamientos por días son perfectos para vacaciones. ¿Cuántas personas serán y en qué fechas planeas tu estadía?',
+    precio: '💰 Entiendo que el presupuesto es importante. Dime tu rango aproximado y te muestro las mejores opciones. Por ejemplo: "hasta 300 millones" o "entre 1 y 2 millones mensuales".',
+    ubicacion: '📍 Cartagena tiene zonas increíbles:<br>• <b>Bocagrande</b> - Playa y exclusividad<br>• <b>Manga</b> - Tradicional y central<br>• <b>Centro Histórico</b> - Encanto colonial<br>• <b>Crespo</b> - Cerca al aeropuerto<br>¿Cuál te interesa?',
+    contacto: '📞 Contáctanos:<br>• <b>WhatsApp:</b> +57 300 243 9810<br>• <b>Email:</b> altorrainmobiliaria@gmail.com<br>• <b>Dirección:</b> Cartagena de Indias<br><br>¿Prefieres que te contactemos nosotros?',
+    servicios: '📋 Nuestros servicios incluyen:<br>• Compra y venta de inmuebles<br>• Arriendos<br>• Avalúos comerciales<br>• Asesoría jurídica<br>• Administración de propiedades<br>• Servicios contables<br><br>¿Te interesa alguno en particular?',
+    horario: '🕐 Horario de atención:<br><b>Lunes a Viernes:</b> 8:00 AM - 6:00 PM<br><b>Sábados:</b> 9:00 AM - 1:00 PM<br><br>Por WhatsApp respondemos más rápido.',
+    gracias: '¡Con mucho gusto! 😊 Recuerda que puedes contactarnos por WhatsApp para una atención más personalizada. ¡Éxitos con tu búsqueda!',
+    noEntiendo: 'Hmm, no estoy seguro de entender completamente tu consulta. 🤔<br><br>Te sugiero:<br>• Ser más específico (ej: "apartamento en Bocagrande")<br>• O mejor aún, habla con un asesor que puede ayudarte mejor:',
+    default: '¿Hay algo más en lo que pueda ayudarte? También puedo conectarte con un asesor por WhatsApp.',
+    sinResultados: 'No encontré propiedades con esos criterios exactos, pero tenemos otras opciones que podrían interesarte. ¿Quieres que te muestre o prefieres hablar con un asesor?',
+    ayuda: '¿Cómo puedo ayudarte?<br><br>Puedo:<br>• Mostrar propiedades en venta, arriendo o por días<br>• Filtrar por zona, precio o características<br>• Conectarte con un asesor<br>• Resolver dudas sobre servicios'
   };
 
   // Opciones rápidas iniciales
@@ -284,38 +286,55 @@
   function processMessage(message) {
     const msg = message.toLowerCase().trim();
 
-    // Detectar intención
-    if (msg.match(/hola|buenos|buenas|hey|hi/i)) {
+    // Detectar intención con patrones mejorados
+
+    // Saludos
+    if (msg.match(/^(hola|buenos|buenas|hey|hi|saludos|qué tal|que tal|ey)$/i) ||
+        msg.match(/^hola.{0,10}$/i)) {
       botReply(RESPONSES.greeting[Math.floor(Math.random() * RESPONSES.greeting.length)], QUICK_OPTIONS);
       return;
     }
 
-    if (msg.match(/gracias|genial|perfecto|excelente/i)) {
+    // Ayuda
+    if (msg.match(/ayuda|help|qué puedes|que puedes|cómo funciona|como funciona|opciones/i)) {
+      botReply(RESPONSES.ayuda, QUICK_OPTIONS);
+      return;
+    }
+
+    // Agradecimientos
+    if (msg.match(/gracias|genial|perfecto|excelente|ok|vale|bien|super|listo/i)) {
       botReply(RESPONSES.gracias);
       return;
     }
 
-    if (msg.match(/precio|costo|valor|cuánto|cuanto|presupuesto/i)) {
+    // Preguntas sobre precio (sin buscar propiedades)
+    if (msg.match(/^(precio|costo|valor|cuánto|cuanto|presupuesto)(\?)?$/i) ||
+        msg.match(/qué precios|que precios|rango de precios/i)) {
       botReply(RESPONSES.precio);
       return;
     }
 
-    if (msg.match(/contacto|teléfono|telefono|email|correo|llamar/i)) {
+    // Contacto
+    if (msg.match(/contacto|teléfono|telefono|email|correo|llamar|número|numero|dirección|direccion/i)) {
       botReply(RESPONSES.contacto);
       return;
     }
 
-    if (msg.match(/horario|hora|atienden|abierto/i)) {
+    // Horario
+    if (msg.match(/horario|hora|atienden|abierto|cuándo|cuando abren|disponibilidad/i)) {
       botReply(RESPONSES.horario);
       return;
     }
 
-    if (msg.match(/servicio|avalúo|avaluo|jurídico|juridico|legal|contable/i)) {
+    // Servicios
+    if (msg.match(/servicio|avalúo|avaluo|jurídico|juridico|legal|contable|qué hacen|que hacen|qué ofrecen|que ofrecen/i)) {
       botReply(RESPONSES.servicios);
       return;
     }
 
-    if (msg.match(/ubicación|ubicacion|zona|barrio|donde|dónde/i)) {
+    // Ubicación general
+    if (msg.match(/^(ubicación|ubicacion|zona|barrio|donde|dónde|sectores)(\?)?$/i) ||
+        msg.match(/qué zonas|que zonas|en qué parte|en que parte/i)) {
       botReply(RESPONSES.ubicacion);
       return;
     }
