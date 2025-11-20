@@ -1,0 +1,229 @@
+/* ========================================
+   ALTORRA - Calculadora de Financiamiento
+   ======================================== */
+
+.calculator-card {
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  border-radius: 14px;
+  padding: 20px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+}
+
+.calculator-card h3 {
+  margin: 0 0 16px 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  color: #0f172a;
+}
+
+.calculator-card h3::after {
+  content: "";
+  display: block;
+  width: 44px;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--gold, #d4af37);
+  margin-top: 8px;
+}
+
+/* Formulario de la calculadora */
+.calc-form {
+  display: grid;
+  gap: 14px;
+}
+
+.calc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.calc-field label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.calc-field input,
+.calc-field select {
+  padding: 10px 14px;
+  border: 1px solid rgba(17, 24, 39, 0.16);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  background: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.calc-field input:focus,
+.calc-field select:focus {
+  outline: none;
+  border-color: var(--gold, #d4af37);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+}
+
+.calc-field .input-with-prefix {
+  position: relative;
+}
+
+.calc-field .input-with-prefix input {
+  padding-left: 36px;
+}
+
+.calc-field .input-with-prefix::before {
+  content: "$";
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.calc-field .input-with-suffix {
+  position: relative;
+}
+
+.calc-field .input-with-suffix input {
+  padding-right: 36px;
+}
+
+.calc-field .input-with-suffix::after {
+  content: "%";
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: 600;
+  color: #6b7280;
+}
+
+/* Botón calcular */
+.calc-btn {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: linear-gradient(90deg, var(--gold, #d4af37), #ffb400);
+  color: #000;
+  box-shadow: 0 6px 16px rgba(212, 175, 55, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.calc-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(212, 175, 55, 0.4);
+}
+
+.calc-btn:active {
+  transform: translateY(0);
+}
+
+/* Resultados */
+.calc-results {
+  margin-top: 16px;
+  padding: 16px;
+  background: linear-gradient(135deg, #f8f9fa, #fff);
+  border-radius: 12px;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.calc-results.hidden {
+  display: none;
+}
+
+.calc-result-main {
+  text-align: center;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed rgba(17, 24, 39, 0.1);
+}
+
+.calc-result-main .label {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.calc-result-main .value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--gold, #d4af37);
+}
+
+.calc-result-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.calc-detail-item {
+  text-align: center;
+  padding: 8px;
+  background: #fff;
+  border-radius: 8px;
+}
+
+.calc-detail-item .label {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-bottom: 2px;
+}
+
+.calc-detail-item .value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* Nota informativa */
+.calc-note {
+  margin-top: 12px;
+  font-size: 0.75rem;
+  color: #6b7280;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* Presets de plazo */
+.calc-presets {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.calc-preset {
+  padding: 6px 12px;
+  border: 1px solid rgba(17, 24, 39, 0.12);
+  border-radius: 20px;
+  background: #f8f9fa;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.calc-preset:hover {
+  background: #fff;
+  border-color: var(--gold, #d4af37);
+}
+
+.calc-preset.active {
+  background: var(--gold, #d4af37);
+  color: #fff;
+  border-color: var(--gold, #d4af37);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .calc-result-details {
+    grid-template-columns: 1fr;
+  }
+
+  .calc-result-main .value {
+    font-size: 1.5rem;
+  }
+}
