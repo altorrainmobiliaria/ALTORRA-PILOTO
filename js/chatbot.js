@@ -21,7 +21,7 @@
   // Respuestas predefinidas mejoradas
   const RESPONSES = {
     greeting: [
-      '¡Hola! 👋 Soy el asistente virtual de Altorra Inmobiliaria. Puedo ayudarte a encontrar propiedades, resolver dudas sobre nuestros servicios o conectarte con un asesor. ¿Qué necesitas?',
+      '¡Hola! 👋 Soy el asistente virtual de ALTORRA Inmobiliaria. Puedo ayudarte a encontrar propiedades, resolver dudas sobre nuestros servicios o conectarte con un asesor. ¿Qué necesitas?',
       '¡Bienvenido a Altorra! 🏠 Estoy aquí para ayudarte. Puedo mostrarte propiedades en venta, arriendo o alojamientos por días. ¿Qué te interesa?'
     ],
     comprar: '🏡 Excelente elección para invertir. Tenemos propiedades en venta en las mejores zonas de Cartagena. ¿Qué tipo buscas: apartamento, casa, lote u oficina?',
