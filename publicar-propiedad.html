@@ -137,7 +137,7 @@
     .publish-form{
       display:flex;
       flex-direction:column;
-      gap:18px;
+      gap:20px;
       max-width:720px;
       width:100%;
       margin:0 auto;
@@ -147,6 +147,50 @@
       border:1px solid rgba(17,24,39,0.08);
       box-shadow:0 12px 32px rgba(17,24,39,0.06);
     }
+
+    /* Fieldsets y legends */
+    .publish-form fieldset {
+      border: 1px solid rgba(17,24,39,0.1);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 0;
+    }
+    .publish-form legend {
+      font-weight: 800;
+      font-size: 1.05rem;
+      color: var(--gold);
+      padding: 0 8px;
+    }
+
+    /* Screen reader only */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border-width: 0;
+    }
+
+    /* Required indicator */
+    .required-indicator {
+      color: #dc2626;
+      font-weight: 700;
+      margin-left: 2px;
+    }
+
+    /* Field help text */
+    .field-help {
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-weight: 400;
+      margin-top: 4px;
+      display: block;
+    }
+
     .publish-form label{
       display:flex;
       flex-direction:column;
@@ -264,7 +308,7 @@
   <!-- Contenido principal con el formulario -->
   <main class="publish-container" id="mainContent">
     <p class="lead">Completa el siguiente formulario y un asesor de Altorra se pondrá en contacto contigo para ayudarte a publicar tu inmueble.</p>
-    <form class="publish-form" id="publishForm" action="https://formsubmit.co/altorrainmobiliaria@gmail.com" method="POST" accept-charset="UTF-8">
+    <form class="publish-form" id="publishForm" action="https://formsubmit.co/altorrainmobiliaria@gmail.com" method="POST" accept-charset="UTF-8" aria-label="Formulario para publicar propiedad" novalidate>
       <!-- Configuración para FormSubmit -->
       <input type="hidden" name="_subject" value="Solicitud para publicar propiedad"/>
       <input type="hidden" name="_next" value="https://altorrainmobiliaria.github.io/gracias.html"/>
@@ -277,47 +321,154 @@
       <!-- Timestamp para validación -->
       <input type="hidden" name="_formtime" id="formtime" value="" />
 
-      <div class="grid two">
-        <label>Nombre completo
-          <input type="text" name="Nombre" autocomplete="name" maxlength="100" required />
+      <!-- Live region para anuncios de accesibilidad -->
+      <div role="status" aria-live="polite" aria-atomic="true" class="sr-only" id="formStatus"></div>
+
+      <fieldset>
+        <legend>Información personal</legend>
+        <div class="grid two">
+          <label for="publishNombre">
+            Nombre completo
+            <span class="required-indicator" aria-label="campo requerido">*</span>
+            <input
+              type="text"
+              id="publishNombre"
+              name="Nombre"
+              autocomplete="name"
+              maxlength="100"
+              required
+              aria-required="true"
+              aria-describedby="publishNombreHelp"
+            />
+            <span id="publishNombreHelp" class="field-help">Tu nombre completo como propietario</span>
+          </label>
+          <label for="publishEmail">
+            Correo electrónico
+            <span class="required-indicator" aria-label="campo requerido">*</span>
+            <input
+              type="email"
+              id="publishEmail"
+              name="Email"
+              autocomplete="email"
+              maxlength="150"
+              required
+              aria-required="true"
+              aria-describedby="publishEmailHelp"
+            />
+            <span id="publishEmailHelp" class="field-help">Te contactaremos a este correo</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Información de contacto</legend>
+        <div class="grid two">
+          <label for="publishTelefono">
+            Teléfono de contacto
+            <span class="required-indicator" aria-label="campo requerido">*</span>
+            <input
+              type="tel"
+              id="publishTelefono"
+              name="Teléfono"
+              autocomplete="tel"
+              maxlength="20"
+              required
+              aria-required="true"
+              aria-describedby="publishTelefonoHelp"
+            />
+            <span id="publishTelefonoHelp" class="field-help">Formato: +57 3XXXXXXXXX</span>
+          </label>
+          <label for="publishCiudad">
+            Ciudad
+            <span class="required-indicator" aria-label="campo requerido">*</span>
+            <input
+              type="text"
+              id="publishCiudad"
+              name="Ciudad"
+              maxlength="100"
+              required
+              aria-required="true"
+              aria-describedby="publishCiudadHelp"
+            />
+            <span id="publishCiudadHelp" class="field-help">Ciudad donde se ubica la propiedad</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Detalles de la propiedad</legend>
+        <div class="grid two">
+          <label for="publishOperacion">
+            Operación
+            <span class="required-indicator" aria-label="campo requerido">*</span>
+            <select
+              id="publishOperacion"
+              name="Operación"
+              required
+              aria-required="true"
+              aria-describedby="publishOperacionHelp"
+            >
+              <option value="">Selecciona una opción</option>
+              <option value="Venta">Venta</option>
+              <option value="Arriendo">Arriendo</option>
+              <option value="Por días">Por días</option>
+            </select>
+            <span id="publishOperacionHelp" class="field-help">¿Qué deseas hacer con la propiedad?</span>
+          </label>
+          <label for="publishTipo">
+            Tipo de propiedad
+            <span class="required-indicator" aria-label="campo requerido">*</span>
+            <select
+              id="publishTipo"
+              name="Tipo"
+              required
+              aria-required="true"
+              aria-describedby="publishTipoHelp"
+            >
+              <option value="">Selecciona una opción</option>
+              <option value="Apartamento">Apartamento</option>
+              <option value="Casa">Casa</option>
+              <option value="Oficina">Oficina</option>
+              <option value="Lote">Lote</option>
+              <option value="Otro">Otro</option>
+            </select>
+            <span id="publishTipoHelp" class="field-help">Tipo de inmueble</span>
+          </label>
+        </div>
+
+        <label for="publishPrecio">
+          Precio estimado (COP)
+          <input
+            type="number"
+            id="publishPrecio"
+            name="Precio"
+            min="0"
+            max="99999999999"
+            inputmode="numeric"
+            aria-describedby="publishPrecioHelp"
+          />
+          <span id="publishPrecioHelp" class="field-help">Valor aproximado en pesos colombianos (opcional)</span>
         </label>
-        <label>Correo electrónico
-          <input type="email" name="Email" autocomplete="email" maxlength="150" required />
+
+        <label for="publishDescripcion">
+          Descripción de la propiedad
+          <span class="required-indicator" aria-label="campo requerido">*</span>
+          <textarea
+            id="publishDescripcion"
+            name="Descripción"
+            placeholder="Cuéntanos: habitaciones, baños, m², parqueadero, amenidades, cercanías..."
+            maxlength="1500"
+            required
+            aria-required="true"
+            aria-describedby="publishDescripcionHelp"
+          ></textarea>
+          <span id="publishDescripcionHelp" class="field-help">Describe las características principales. Máximo 1500 caracteres</span>
         </label>
-      </div>
-      <div class="grid two">
-        <label>Teléfono de contacto
-          <input type="tel" name="Teléfono" autocomplete="tel" maxlength="20" required />
-        </label>
-        <label>Ciudad
-          <input type="text" name="Ciudad" maxlength="100" required />
-        </label>
-      </div>
-      <div class="grid two">
-        <label>Operación
-          <select name="Operación" required>
-            <option value="Venta">Venta</option>
-            <option value="Arriendo">Arriendo</option>
-            <option value="Por días">Por días</option>
-          </select>
-        </label>
-        <label>Tipo de propiedad
-          <select name="Tipo" required>
-            <option value="Apartamento">Apartamento</option>
-            <option value="Casa">Casa</option>
-            <option value="Oficina">Oficina</option>
-            <option value="Lote">Lote</option>
-            <option value="Otro">Otro</option>
-          </select>
-        </label>
-      </div>
-      <label>Precio estimado (COP)
-        <input type="number" name="Precio" min="0" max="99999999999" inputmode="numeric" />
-      </label>
-      <label>Descripción de la propiedad
-        <textarea name="Descripción" placeholder="Cuéntanos: habitaciones, baños, m², parqueadero, amenidades, cercanías..." maxlength="1500" required></textarea>
-      </label>
-      <button type="submit">Enviar solicitud</button>
+      </fieldset>
+
+      <button type="submit" aria-label="Enviar solicitud de publicación">
+        Enviar solicitud
+      </button>
     </form>
   </main>
   <!-- Contenedor para el pie de página -->

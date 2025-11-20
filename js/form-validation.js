@@ -238,17 +238,42 @@
     document.head.appendChild(style);
   }
 
+  // Announce to screen readers
+  function announceToScreenReader(message, form) {
+    const liveRegion = form.querySelector('[role="status"]') || form.querySelector('#formStatus');
+    if (liveRegion) {
+      liveRegion.textContent = message;
+      // Clear after a delay so it can be announced again if needed
+      setTimeout(() => {
+        liveRegion.textContent = '';
+      }, 3000);
+    }
+  }
+
   // Mostrar error
   function showError(input, message) {
     const parent = input.closest('label') || input.parentElement;
     parent.classList.remove('field-success');
     parent.classList.add('field-error');
-    
+
+    // Add aria-invalid
+    input.setAttribute('aria-invalid', 'true');
+
     let errorEl = parent.querySelector('.form-error');
     if (!errorEl) {
       errorEl = document.createElement('span');
       errorEl.className = 'form-error';
+      errorEl.id = `${input.id || input.name}-error`;
+      errorEl.setAttribute('role', 'alert');
       parent.appendChild(errorEl);
+
+      // Link error to input with aria-describedby
+      const currentDescribedBy = input.getAttribute('aria-describedby') || '';
+      const describedByIds = currentDescribedBy.split(' ').filter(Boolean);
+      if (!describedByIds.includes(errorEl.id)) {
+        describedByIds.push(errorEl.id);
+        input.setAttribute('aria-describedby', describedByIds.join(' '));
+      }
     }
     errorEl.textContent = message;
   }
@@ -257,14 +282,33 @@
   function clearError(input) {
     const parent = input.closest('label') || input.parentElement;
     parent.classList.remove('field-error');
+
+    // Remove aria-invalid
+    input.removeAttribute('aria-invalid');
+
     const errorEl = parent.querySelector('.form-error');
-    if (errorEl) errorEl.remove();
+    if (errorEl) {
+      // Remove error ID from aria-describedby
+      const errorId = errorEl.id;
+      const currentDescribedBy = input.getAttribute('aria-describedby') || '';
+      const describedByIds = currentDescribedBy.split(' ').filter(id => id !== errorId && id);
+      if (describedByIds.length > 0) {
+        input.setAttribute('aria-describedby', describedByIds.join(' '));
+      } else {
+        input.removeAttribute('aria-describedby');
+      }
+
+      errorEl.remove();
+    }
   }
 
   // Marcar como válido
   function markValid(input) {
     const parent = input.closest('label') || input.parentElement;
     parent.classList.add('field-success');
+
+    // Ensure aria-invalid is false
+    input.setAttribute('aria-invalid', 'false');
   }
 
   // Validar teléfono
@@ -456,6 +500,15 @@
         if (!validateForm(form)) {
           e.preventDefault();
 
+          // Count errors for screen reader announcement
+          const errorCount = form.querySelectorAll('.field-error').length;
+          const errorMessage = errorCount === 1
+            ? 'Hay 1 error en el formulario. Por favor corrígelo antes de enviar.'
+            : `Hay ${errorCount} errores en el formulario. Por favor corrígelos antes de enviar.`;
+
+          // Announce to screen readers
+          announceToScreenReader(errorMessage, form);
+
           // Scroll al primer error
           const firstError = form.querySelector('.field-error input, .field-error textarea, .field-error select');
           if (firstError) {
@@ -468,6 +521,7 @@
           if (!existingAlert) {
             const alert = document.createElement('div');
             alert.className = 'form-alert';
+            alert.setAttribute('role', 'alert');
             alert.style.cssText = 'padding:12px;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;color:#991b1b;margin-bottom:16px;font-weight:600';
             alert.textContent = '⚠️ Por favor corrige los errores antes de enviar';
             form.insertBefore(alert, form.firstChild);
@@ -475,6 +529,9 @@
           }
         } else {
           // Form is valid and passed security checks
+          // Announce success to screen readers
+          announceToScreenReader('Formulario válido. Enviando...', form);
+
           // Record this submission for rate limiting
           recordSubmission(formId);
         }
@@ -581,9 +638,14 @@
     checkHoneypot,
     checkRateLimit,
     checkFormTiming,
-    initFormTimestamp
+    initFormTimestamp,
+    // Accessibility features
+    announceToScreenReader,
+    showError,
+    clearError,
+    markValid
   };
 
-  console.log('✅ Form validation + security (honeypot, rate limit, timing) loaded');
+  console.log('✅ Form validation + security + accessibility (ARIA, fieldsets, live regions) loaded');
 
 })();
