@@ -147,8 +147,8 @@ header .nav-toggle{ color:var(--text) !important; }
   .form-block{
     order:4;
     max-width:100% !important;
-    width:100% !important;         /* <= AJUSTE: ocupar todo el ancho en móvil */
-    margin-inline:0 !important;    /* <= AJUSTE: sin márgenes laterales centrados */
+    width:100% !important;
+    margin-inline:0 !important;
   }
   .btn{font-size:.95rem}
   .actions .btn{width:100%; justify-content:center}
@@ -497,7 +497,7 @@ async function init(){
     if(specs.textContent) infoDiv.appendChild(specs);
     if(priceRow.textContent){
       infoDiv.appendChild(priceRow);
-      addFavoriteButton(); /* <-- aquí se inserta el botón justo después del precio */
+      addFavoriteButton();
     }
     if(desc.childNodes.length) infoDiv.appendChild(desc);
 
@@ -541,7 +541,7 @@ async function init(){
     container.appendChild(galleryDiv);
     container.appendChild(formBlock);
     container.appendChild(infoDiv);
-    container.appendChild(waRow); /* visible solo en móvil */
+    container.appendChild(waRow);
 
     /* ====== SECCIONES FINALES ====== */
     (function(){
@@ -553,16 +553,13 @@ async function init(){
       const fmtCOP = n => (n||n===0) ? ('$ ' + String(n).replace(/\B(?=(\d{3})+(?!\d))/g,'.')) : '';
       const kv = (k,v,small=false)=> (v!=null && v!=='') ? `<div class="kv${small?' small':''}"><span class="k">${k}</span><span class="v">${v}</span></div>` : '';
 
-      /* 1) Ficha técnica (limpia) */
+      /* 1) Ficha técnica */
       (function renderTech(){
         const b = document.createElement('section'); b.className='card-lite';
         let html = '<h3>Ficha técnica</h3><div class="tech-grid">';
         html += kv('Operación', (prop.operation==='arrendar'?'Arriendo':(prop.operation==='dias'?'Por días':'Venta')));
         html += kv('Ciudad', prop.city||'');
-
-        /* ====== NUEVO: BARRIO ====== */
         html += kv('Barrio', (prop.neighborhood || prop.barrio) || '', true);
-
         html += kv('Tipo', prop.type ? (prop.type.charAt(0).toUpperCase()+prop.type.slice(1)) : '');
         html += kv('Área construida', prop.sqm ? (prop.sqm+' m²') : '');
         html += kv('Área privada', prop.private_area ? (prop.private_area+' m²') : '', true);
@@ -624,10 +621,8 @@ async function init(){
       function placeForm(){
         const mapSection = document.querySelector('#extra-sections .map-wrap')?.closest('section');
         if (mq.matches && mapSection){
-          // Móvil: insertar el formulario justo antes del mapa
           mapSection.parentNode.insertBefore(formEl, mapSection);
         }else{
-          // Escritorio: restaurar el orden original (form antes de info)
           containerEl.insertBefore(formEl, infoDiv);
         }
       }
@@ -653,13 +648,10 @@ async function init(){
 }
 document.addEventListener('DOMContentLoaded', init);
   </script>
-  <!-- SEO JSON-LD -->
   <div style="display:none"><?php /* placeholder for GH Pages */ ?></div>
-  <!--#include file="snippets/inject-jsonld.html" -->
   <script src="js/utils.js"></script>
 <script src="js/analytics.js"></script>
 <script>
-  // Track cuando alguien ve una propiedad
   const urlParams = new URLSearchParams(window.location.search);
   const propId = urlParams.get('id');
   if (propId) {
@@ -671,7 +663,6 @@ document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 <script>
-/* Inject JSON-LD for SEO using loaded property 'prop' */
 (function(){
   try{
     if(!window.__PROP_JSON__) return;
@@ -708,4 +699,5 @@ document.addEventListener('DOMContentLoaded', init);
 })();
 </script>
   <script defer src="js/favoritos.js"></script>
+  <script src="js/comparador.js"></script>
 </html>
