@@ -8,11 +8,22 @@
 <meta name="description" content="Detalles de propiedad de Altorra Inmobiliaria" />
 <link rel="manifest" href="manifest.json" />
 <meta name="theme-color" content="#d4af37" />
-<meta property="og:title" content="Detalles de propiedad | Altorra" />
-<meta property="og:description" content="Descubre los detalles de esta propiedad disponible para comprar, arrendar o rentar por días." />
-<meta property="og:image" content="/img/uploads/comprar1.png" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://altorrainmobiliaria.github.io/detalle-propiedad.html" />
+<meta property="og:title" content="Detalles de propiedad | Altorra Inmobiliaria" />
+<meta property="og:description" content="Descubre los detalles de esta propiedad disponible para comprar, arrendar o rentar por días en Cartagena." />
+<meta property="og:image" content="https://altorrainmobiliaria.github.io/multimedia/hero-house.webp" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Detalles de propiedad | Altorra Inmobiliaria" />
+<meta name="twitter:description" content="Descubre los detalles de esta propiedad en Cartagena." />
+<meta name="twitter:image" content="https://altorrainmobiliaria.github.io/multimedia/hero-house.webp" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="style.css"/>
+<link rel="stylesheet" href="css/comparador.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700;800&display=swap" rel="stylesheet"/>
 
 <style>
@@ -133,8 +144,8 @@ header .nav-toggle{ color:var(--text) !important; }
   .form-block{
     order:4;
     max-width:100% !important;
-    width:100% !important;         /* <= AJUSTE: ocupar todo el ancho en móvil */
-    margin-inline:0 !important;    /* <= AJUSTE: sin márgenes laterales centrados */
+    width:100% !important;
+    margin-inline:0 !important;
   }
   .btn{font-size:.95rem}
   .actions .btn{width:100%; justify-content:center}
@@ -432,6 +443,49 @@ async function init(){
       });
 
       infoDiv.appendChild(favBtn);
+
+      // Botón de comparar
+      if (typeof window.AltorraComparador !== 'undefined') {
+        const compareBtn = document.createElement('button');
+        compareBtn.type = 'button';
+        compareBtn.className = 'btn btn-ghost';
+        compareBtn.style.cssText = `
+          display:inline-flex;align-items:center;gap:8px;
+          padding:12px 20px;border-radius:12px;font-weight:700;
+          border:2px solid rgba(17,24,39,0.15);background:#f8f9fa;color:var(--text);
+          cursor:pointer;transition:all .2s ease;margin-top:8px;margin-left:8px;
+        `;
+
+        const isInCompare = window.AltorraComparador.isIn(prop.id);
+        compareBtn.innerHTML = isInCompare
+          ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> En comparar'
+          : '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M9 3L5 6.99h3V14h2V6.99h3L9 3zm7 14.01V10h-2v7.01h-3L15 21l4-3.99h-3z"/></svg> Agregar a comparar';
+
+        compareBtn.addEventListener('click', () => {
+          const propData = {
+            id: prop.id, title: prop.title, price: prop.price, city: prop.city,
+            type: prop.type, beds: prop.beds, baths: prop.baths, sqm: prop.sqm,
+            garages: prop.garages, strata: prop.strata, admin_fee: prop.admin_fee,
+            year_built: prop.year_built, neighborhood: prop.neighborhood,
+            operation: prop.operation, features: prop.features,
+            image: prop.image || (Array.isArray(prop.images) && prop.images[0]) || ''
+          };
+
+          const added = window.AltorraComparador.toggle(propData);
+
+          if (window.AltorraComparador.isIn(prop.id)) {
+            compareBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> En comparar';
+            compareBtn.style.background = '#f0f9ff';
+            compareBtn.style.borderColor = '#3b82f6';
+          } else {
+            compareBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M9 3L5 6.99h3V14h2V6.99h3L9 3zm7 14.01V10h-2v7.01h-3L15 21l4-3.99h-3z"/></svg> Agregar a comparar';
+            compareBtn.style.background = '#f8f9fa';
+            compareBtn.style.borderColor = 'rgba(17,24,39,0.15)';
+          }
+        });
+
+        infoDiv.appendChild(compareBtn);
+      }
     }
 
     const desc=document.createElement('div'); desc.className='desc'; buildDescription(desc, prop.description||'');
@@ -440,7 +494,7 @@ async function init(){
     if(specs.textContent) infoDiv.appendChild(specs);
     if(priceRow.textContent){
       infoDiv.appendChild(priceRow);
-      addFavoriteButton(); /* <-- aquí se inserta el botón justo después del precio */
+      addFavoriteButton();
     }
     if(desc.childNodes.length) infoDiv.appendChild(desc);
 
@@ -484,7 +538,7 @@ async function init(){
     container.appendChild(galleryDiv);
     container.appendChild(formBlock);
     container.appendChild(infoDiv);
-    container.appendChild(waRow); /* visible solo en móvil */
+    container.appendChild(waRow);
 
     /* ====== SECCIONES FINALES ====== */
     (function(){
@@ -496,16 +550,13 @@ async function init(){
       const fmtCOP = n => (n||n===0) ? ('$ ' + String(n).replace(/\B(?=(\d{3})+(?!\d))/g,'.')) : '';
       const kv = (k,v,small=false)=> (v!=null && v!=='') ? `<div class="kv${small?' small':''}"><span class="k">${k}</span><span class="v">${v}</span></div>` : '';
 
-      /* 1) Ficha técnica (limpia) */
+      /* 1) Ficha técnica */
       (function renderTech(){
         const b = document.createElement('section'); b.className='card-lite';
         let html = '<h3>Ficha técnica</h3><div class="tech-grid">';
         html += kv('Operación', (prop.operation==='arrendar'?'Arriendo':(prop.operation==='dias'?'Por días':'Venta')));
         html += kv('Ciudad', prop.city||'');
-
-        /* ====== NUEVO: BARRIO ====== */
         html += kv('Barrio', (prop.neighborhood || prop.barrio) || '', true);
-
         html += kv('Tipo', prop.type ? (prop.type.charAt(0).toUpperCase()+prop.type.slice(1)) : '');
         html += kv('Área construida', prop.sqm ? (prop.sqm+' m²') : '');
         html += kv('Área privada', prop.private_area ? (prop.private_area+' m²') : '', true);
@@ -533,9 +584,7 @@ async function init(){
         root.appendChild(box);
       })();
 
-      /* 3) (Contacto del asesor) — ELIMINADO a solicitud */
-
-      /* 4) Mapa (Leaflet + OSM) */
+      /* 3) Mapa (Leaflet + OSM) */
       (function renderMap(){
         if(!prop.coords || prop.coords.lat==null || prop.coords.lng==null) return;
         const sec = document.createElement('section'); sec.className='card-lite';
@@ -569,10 +618,8 @@ async function init(){
       function placeForm(){
         const mapSection = document.querySelector('#extra-sections .map-wrap')?.closest('section');
         if (mq.matches && mapSection){
-          // Móvil: insertar el formulario justo antes del mapa
           mapSection.parentNode.insertBefore(formEl, mapSection);
         }else{
-          // Escritorio: restaurar el orden original (form antes de info)
           containerEl.insertBefore(formEl, infoDiv);
         }
       }
@@ -598,13 +645,10 @@ async function init(){
 }
 document.addEventListener('DOMContentLoaded', init);
   </script>
-  <!-- SEO JSON-LD -->
   <div style="display:none"><?php /* placeholder for GH Pages */ ?></div>
-  <!--#include file="snippets/inject-jsonld.html" -->
   <script src="js/utils.js"></script>
 <script src="js/analytics.js"></script>
 <script>
-  // Track cuando alguien ve una propiedad
   const urlParams = new URLSearchParams(window.location.search);
   const propId = urlParams.get('id');
   if (propId) {
@@ -616,7 +660,6 @@ document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 <script>
-/* Inject JSON-LD for SEO using loaded property 'prop' */
 (function(){
   try{
     if(!window.__PROP_JSON__) return;
@@ -653,4 +696,5 @@ document.addEventListener('DOMContentLoaded', init);
 })();
 </script>
   <script defer src="js/favoritos.js"></script>
+  <script src="js/comparador.js"></script>
 </html>
