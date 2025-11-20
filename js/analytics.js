@@ -15,7 +15,7 @@
     // Google Analytics 4
     ga4: {
       enabled: true,
-      measurementId: 'G-XXXXXXXXXX', // ⚠️ REEMPLAZAR con el ID real de GA4
+      measurementId: 'G-EHE7316MST', // ✅ ID real de GA4
       debug: false // Cambiar a true para debugging
     }
   };

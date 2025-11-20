@@ -28,7 +28,7 @@ Integrar Google Analytics 4 en el sitio de Altorra Inmobiliaria para rastrear m�
 4. **Obtener Measurement ID**
    - En la pantalla de detalles del flujo, copiar el **ID de medición**
    - Formato: `G-XXXXXXXXXX` (ej: `G-ABC123DEF4`)
-   - ⚠️ Guardar este ID, se usará en el siguiente paso
+   - ✅ **ID ACTUAL DEL SITIO**: `G-EHE7316MST` (YA CONFIGURADO)
 
 ---
 
@@ -40,28 +40,25 @@ Integrar Google Analytics 4 en el sitio de Altorra Inmobiliaria para rastrear m�
 **Línea**: 18
 
 ```javascript
-// ANTES (línea 18):
-measurementId: 'G-XXXXXXXXXX', // ⚠️ REEMPLAZAR con el ID real de GA4
-
-// DESPUÉS:
-measurementId: 'G-ABC123DEF4', // ✅ Tu ID real de GA4
+// ✅ YA CONFIGURADO (línea 18):
+measurementId: 'G-EHE7316MST', // ✅ ID real de GA4 del sitio
 ```
 
 ### 2.2 Agregar snippet de GA4 en TODAS las páginas HTML
 
 **Ubicación**: En el `<head>`, justo después de `<meta charset="utf-8"/>` y ANTES de cualquier otro script.
 
-**Snippet a agregar** (ver `/snippets/ga4-script.html`):
+**Snippet configurado** (ver `/snippets/ga4-script.html`):
 
 ```html
 <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-ABC123DEF4"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-EHE7316MST"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
 
-  gtag('config', 'G-ABC123DEF4', {
+  gtag('config', 'G-EHE7316MST', {
     'anonymize_ip': true,
     'allow_google_signals': false,
     'allow_ad_personalization_signals': false,
@@ -91,7 +88,7 @@ measurementId: 'G-ABC123DEF4', // ✅ Tu ID real de GA4
 - ✅ servicios-mantenimiento.html
 - ✅ servicios-mudanzas.html
 
-**⚠️ IMPORTANTE**: Reemplazar `G-ABC123DEF4` con tu Measurement ID real.
+**✅ ESTADO**: El Measurement ID `G-EHE7316MST` ya está configurado en todas las páginas.
 
 ---
 
@@ -105,7 +102,7 @@ measurementId: 'G-ABC123DEF4', // ✅ Tu ID real de GA4
    ```
    📊 Altorra Analytics inicializado
    ✅ Google Analytics 4 activo
-   ✅ GA4 configurado: G-ABC123DEF4
+   ✅ GA4 configurado: G-EHE7316MST
    ```
 
 4. Navegar por el sitio y verificar eventos en consola:
