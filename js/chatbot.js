@@ -1135,15 +1135,18 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
 
       if (role === 'propietario_venta') {
         const d = conversationContext.ownerPropertyForSale;
+        const parking = (d.parking || '').toLowerCase();
         response += `• ${d.type} en ${d.zone}<br>`;
         response += `• ${d.beds} hab, ${d.baths} baños, ${d.sqm} m²<br>`;
         response += `• Valor: ${formatPrice(d.price)}<br>`;
-        response += `• ${d.parking === 'sí' ? 'Con' : 'Sin'} parqueadero, ${d.condition}<br><br>`;
+        response += `• ${parking.startsWith('s') ? 'Con' : 'Sin'} parqueadero, ${d.condition || ''}<br><br>`;
       } else {
         const d = conversationContext.ownerPropertyForRent;
+        const furn = (d.furnished || '').toLowerCase();
+        const pets = (d.pets || '').toLowerCase();
         response += `• ${d.type} en ${d.zone}<br>`;
         response += `• ${d.beds} hab, Canon: ${formatPrice(d.canon)}<br>`;
-        response += `• ${d.furnished === 'sí' ? 'Amoblado' : 'Sin amoblar'}, Mascotas: ${d.pets}<br><br>`;
+        response += `• ${furn.startsWith('s') ? 'Amoblado' : 'Sin amoblar'}, Mascotas: ${pets.startsWith('s') ? 'Sí' : 'No'}<br><br>`;
       }
 
       response += `Un asesor te contactará pronto. También puedes escribirnos directamente:<br><br>`;
