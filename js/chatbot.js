@@ -7,7 +7,7 @@
 
   // Configuración
   const CONFIG = {
-    botName: 'Altorra IA',
+    botName: 'ALTORRA IA',
     whatsappNumber: '573002439810',
     typingDelay: 800,
     messageDelay: 400
