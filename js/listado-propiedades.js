@@ -58,15 +58,29 @@
     const card = document.createElement('article');
     card.className = 'card';
     card.setAttribute('role', 'listitem');
-    
-    const imgSrc = p.image ? 
+
+    const imgSrc = p.image ?
       (p.image.startsWith('http') || p.image.startsWith('/') ? p.image : '/' + p.image) :
       'https://i.postimg.cc/0yYb8Y6r/placeholder.png';
+
+    // Generar elementos de urgencia si el módulo está disponible
+    let urgencyBadges = '';
+    let urgencyIndicators = '';
+    if (window.AltorraUrgency) {
+      const urgency = window.AltorraUrgency.renderUrgencyElements(p, allProperties, {
+        showBadges: true,
+        showViews: true,
+        showInventory: true
+      });
+      urgencyBadges = urgency.badges;
+      urgencyIndicators = urgency.indicators;
+    }
 
     card.innerHTML = `
       <div class="media">
         <img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(p.title || 'Propiedad')}" loading="lazy" decoding="async"/>
         <div class="badges">
+          ${urgencyBadges}
           <span class="badge"><small>Ciudad</small>&nbsp;${escapeHtml(p.city)}</span>
           <span class="badge badge--dark">${capitalize(p.type)}</span>
           ${p.sqm ? `<span class="badge">${p.sqm} m²</span>` : ''}
@@ -80,6 +94,7 @@
         <h3>${escapeHtml(p.title)}</h3>
         <div class="price">${getPriceLabel(p)}</div>
         <div class="specs">${p.beds ? p.beds + 'H · ' : ''}${p.baths ? p.baths + 'B · ' : ''}${p.sqm ? p.sqm + ' m² · ' : ''}${escapeHtml(p.city)} · ${capitalize(p.type)}</div>
+        ${urgencyIndicators}
         <div class="cta">
           <a class="btn btn-primary" href="detalle-propiedad.html?id=${encodeURIComponent(p.id)}">Ver detalles</a>
           <a class="btn btn-ghost" href="${buildWhatsAppLink(p)}" target="_blank" rel="noopener">WhatsApp</a>
