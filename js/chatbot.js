@@ -965,6 +965,14 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
       return true;
     }
 
+    // Comandos de navegación/cancelación
+    if (matchesSynonym(text, 'back')) {
+      return true;
+    }
+    if (/cancelar|salir|terminar|no quiero (seguir|continuar)|volver.*inicio|men[uú].*principal/i.test(text)) {
+      return true;
+    }
+
     // Solicitudes de contacto con asesor (usando diccionario de sinónimos)
     if (matchesSynonym(text, 'contact')) {
       return true;
@@ -976,17 +984,36 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     }
 
     // Cambios explícitos de operación/modo (usando diccionario de sinónimos)
-    // Detectar cambio a comprar
-    if (matchesSynonym(text, 'buy') && /quiero|busco|necesito|me interesa|deseo/i.test(text)) {
-      return true;
+    // MEJORA: Detectar cambios incluso sin verbos de intención si el mensaje es corto y claro
+    const len = text.length;
+
+    // Detectar cambio a comprar - con o sin verbos de intención
+    if (matchesSynonym(text, 'buy')) {
+      // Si tiene verbo de intención O es mensaje corto/directo
+      if (/quiero|busco|necesito|me interesa|deseo/i.test(text) || len < 30) {
+        return true;
+      }
     }
-    // Detectar cambio a arrendar
-    if (matchesSynonym(text, 'rent') && /quiero|busco|necesito|me interesa|deseo/i.test(text)) {
-      return true;
+
+    // Detectar cambio a arrendar - con o sin verbos de intención
+    if (matchesSynonym(text, 'rent')) {
+      if (/quiero|busco|necesito|me interesa|deseo/i.test(text) || len < 30) {
+        return true;
+      }
     }
-    // Detectar cambio a alojamiento
-    if (matchesSynonym(text, 'stay') && /quiero|busco|necesito|me interesa|deseo/i.test(text)) {
-      return true;
+
+    // Detectar cambio a alojamiento - con o sin verbos de intención
+    if (matchesSynonym(text, 'stay')) {
+      if (/quiero|busco|necesito|me interesa|deseo/i.test(text) || len < 30) {
+        return true;
+      }
+    }
+
+    // Detectar cambio a propietario
+    if (matchesSynonym(text, 'owner')) {
+      if (/quiero|busco|necesito|tengo/i.test(text) || len < 30) {
+        return true;
+      }
     }
     // Comando directo de operación
     if (/^(comprar|arrendar|alquilar|alojamiento|hospedaje|por dias|por días)$/i.test(text)) {
@@ -1423,6 +1450,17 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
 
     const data = role === 'propietario_venta' ? conversationContext.ownerPropertyForSale : conversationContext.ownerPropertyForRent;
     const text = msg.toLowerCase().trim();
+
+    // MEJORA: Detectar respuestas ambiguas o que indican que el usuario no sabe/no importa
+    const isAmbiguous = /^(no s[eé]|no estoy seguro|no tengo claro|no lo s[eé]|no me acuerdo|no recuerdo|ninguna|cualquiera|no importa|me da igual|lo que sea|todas?|todos?)$/i.test(text);
+    const isSkipRequest = /^(saltar|pasar|omitir|siguiente|despu[eé]s lo digo)$/i.test(text);
+
+    if (isAmbiguous || isSkipRequest) {
+      // El usuario no puede/quiere responder - saltar este campo y continuar
+      conversationContext.lastQuestion = null;
+      saveContext();
+      return true; // Indicar que se procesó (aunque no se guardó valor)
+    }
 
     // Intentar parsear la respuesta según el campo
     switch (last) {
@@ -2527,10 +2565,36 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
       // Primero verificar si es una nueva intención global (cambio de tema)
       if (isNewGlobalIntent(msg)) {
         // El usuario quiere cambiar de tema - limpiar rol y lastQuestion
+        console.log('🔄 Nueva intención detectada, cambiando de flujo:', msg);
         conversationContext.role = null;
         conversationContext.lastQuestion = null;
+        conversationContext.consultationPhase = null;
         saveContext();
-        // Continuar procesando como mensaje nuevo (no aplicar al flujo de propietario)
+
+        // MEJORA: Procesar la nueva intención explícitamente
+        // Detectar qué intención es y llamar a handleOption
+        if (matchesSynonym(msg, 'buy')) {
+          resetConversation();
+          handleOption('comprar');
+          return;
+        } else if (matchesSynonym(msg, 'rent')) {
+          resetConversation();
+          handleOption('arrendar');
+          return;
+        } else if (matchesSynonym(msg, 'stay')) {
+          resetConversation();
+          handleOption('alojamiento');
+          return;
+        } else if (matchesSynonym(msg, 'owner')) {
+          resetConversation();
+          handleOption('propietario');
+          return;
+        } else if (matchesSynonym(msg, 'back')) {
+          resetConversation();
+          botReply('Listo, volvamos al inicio. ¿Qué deseas hacer ahora?', QUICK_OPTIONS);
+          return;
+        }
+        // Si no coincide con ninguna intención específica, continuar con procesamiento normal
       } else if (isSlotResponse(msg)) {
         // Es respuesta al slot - aplicar y continuar flujo
         applyOwnerAnswer(msg);
@@ -2554,9 +2618,34 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
 
       if (isNewIntent) {
         // El usuario quiere cambiar de tema - limpiar la pregunta pendiente
+        console.log('🔄 Nueva intención detectada en flujo de consultoría, cambiando:', msg);
         conversationContext.lastQuestion = null;
+        conversationContext.consultationPhase = null;
         saveContext();
-        // Continuar procesando como mensaje nuevo (no aplicar slot filling)
+
+        // MEJORA: Procesar la nueva intención explícitamente
+        if (matchesSynonym(msg, 'buy')) {
+          resetConversation();
+          handleOption('comprar');
+          return;
+        } else if (matchesSynonym(msg, 'rent')) {
+          resetConversation();
+          handleOption('arrendar');
+          return;
+        } else if (matchesSynonym(msg, 'stay')) {
+          resetConversation();
+          handleOption('alojamiento');
+          return;
+        } else if (matchesSynonym(msg, 'owner')) {
+          resetConversation();
+          handleOption('propietario');
+          return;
+        } else if (matchesSynonym(msg, 'back')) {
+          resetConversation();
+          botReply('Listo, volvamos al inicio. ¿Qué deseas hacer ahora?', QUICK_OPTIONS);
+          return;
+        }
+        // Si no coincide con intención específica, continuar con procesamiento normal
       } else if (isSlot) {
         // Parece una respuesta al slot - aplicar y continuar flujo
         updateContext(msg, criteria);
