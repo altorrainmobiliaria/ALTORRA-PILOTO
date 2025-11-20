@@ -23,7 +23,6 @@
 <meta name="twitter:image" content="https://altorrainmobiliaria.github.io/multimedia/hero-house.webp" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="style.css"/>
-<link rel="stylesheet" href="css/calculadora.css"/>
 <link rel="stylesheet" href="css/comparador.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700;800&display=swap" rel="stylesheet"/>
 
@@ -588,23 +587,7 @@ async function init(){
         root.appendChild(box);
       })();
 
-      /* 3) Calculadora de financiamiento (solo para propiedades en venta) */
-      (function renderCalculadora(){
-        if (prop.operation !== 'comprar') return; // Solo para venta
-        if (typeof window.AltorraCalculadora === 'undefined') return;
-
-        const calcContainer = document.createElement('div');
-        calcContainer.id = 'calculadora-container';
-        calcContainer.dataset.precio = prop.price || 0;
-        root.appendChild(calcContainer);
-
-        // Insertar calculadora con precio pre-cargado (70% del valor)
-        window.AltorraCalculadora.insert('calculadora-container', prop.price || 0);
-      })();
-
-      /* 3) (Contacto del asesor) — ELIMINADO a solicitud */
-
-      /* 4) Mapa (Leaflet + OSM) */
+      /* 3) Mapa (Leaflet + OSM) */
       (function renderMap(){
         if(!prop.coords || prop.coords.lat==null || prop.coords.lng==null) return;
         const sec = document.createElement('section'); sec.className='card-lite';
@@ -722,6 +705,5 @@ document.addEventListener('DOMContentLoaded', init);
 })();
 </script>
   <script defer src="js/favoritos.js"></script>
-  <script src="js/calculadora.js"></script>
   <script src="js/comparador.js"></script>
 </html>
