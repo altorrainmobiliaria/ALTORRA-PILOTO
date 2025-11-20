@@ -701,7 +701,44 @@
       if (form.id === 'quickSearch' || form.classList.contains('search-box')) return;
       if (form.hasAttribute('data-no-intercept')) return;
 
-      // Prevent default form submission (we'll handle via AJAX)
+      // IMPORTANTE: FormSubmit.co necesita POST tradicional, NO AJAX
+      // Si el action contiene formsubmit.co, dejar envío normal
+      const action = form.action || '';
+      if (action.includes('formsubmit.co')) {
+        console.log('📤 FormSubmit.co detected - using traditional POST');
+
+        // Validar pero no prevenir default
+        if (!validateForm(form)) {
+          e.preventDefault();
+          return;
+        }
+
+        // Agregar número de caso único
+        const caseNumber = 'CASO-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+
+        // Crear campo oculto para número de caso
+        let caseInput = form.querySelector('input[name="NumeroCaso"]');
+        if (!caseInput) {
+          caseInput = document.createElement('input');
+          caseInput.type = 'hidden';
+          caseInput.name = 'NumeroCaso';
+          form.appendChild(caseInput);
+        }
+        caseInput.value = caseNumber;
+
+        // Mostrar loading y dejar que se envíe normalmente
+        showLoading(form);
+
+        // Guardar número de caso para mostrarlo después (si vuelven)
+        try {
+          sessionStorage.setItem('lastCaseNumber', caseNumber);
+        } catch(e) {}
+
+        // NO prevenir default - dejar que el form se envíe normalmente
+        return;
+      }
+
+      // Para otros formularios (API custom), usar AJAX
       e.preventDefault();
 
       // Solo continuar si el formulario es válido
