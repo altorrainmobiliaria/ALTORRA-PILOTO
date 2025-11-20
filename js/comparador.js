@@ -49,6 +49,23 @@
       return false;
     }
 
+    // Verificar que el tipo de operación coincida
+    if (list.length > 0) {
+      const existingOperation = list[0].operation;
+      if (property.operation !== existingOperation) {
+        const operationNames = {
+          'comprar': 'Venta',
+          'arrendar': 'Arriendo',
+          'dias': 'Alojamiento',
+          'alojar': 'Alojamiento'
+        };
+        const currentType = operationNames[existingOperation] || existingOperation;
+        const newType = operationNames[property.operation] || property.operation;
+        alert(`Solo puedes comparar propiedades del mismo tipo.\n\nActualmente tienes propiedades de "${currentType}".\nEsta propiedad es de "${newType}".\n\nLimpia la comparación para agregar propiedades de otro tipo.`);
+        return false;
+      }
+    }
+
     // Guardar solo los datos necesarios
     list.push({
       id: property.id,
