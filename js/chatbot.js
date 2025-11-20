@@ -13,6 +13,70 @@
     messageDelay: 400
   };
 
+  // Diccionario de números en palabras
+  const WORD_NUMBERS = {
+    'una': 1, 'un': 1, 'uno': 1,
+    'dos': 2,
+    'tres': 3,
+    'cuatro': 4,
+    'cinco': 5,
+    'seis': 6
+  };
+
+  // Función para parsear presupuesto en múltiples formatos
+  function parseBudget(msg) {
+    const text = msg.toLowerCase();
+
+    // 1) "1.8 millones" / "2,5 millones" / "300 millones"
+    const millionsMatch = text.match(/(\d+[.,]?\d*)\s*(millon|millones|millón)/i);
+    if (millionsMatch) {
+      const num = parseFloat(millionsMatch[1].replace(',', '.'));
+      return num * 1000000;
+    }
+
+    // 2) Formato corto: "200m", "1.5m"
+    const shortMatch = text.match(/(\d+[.,]?\d*)\s*m(?!\w)/i);
+    if (shortMatch) {
+      const num = parseFloat(shortMatch[1].replace(',', '.'));
+      return num * 1000000;
+    }
+
+    // 3) "$1.800.000" / "1800000" / "2.300.000" (formato pesos colombianos)
+    const pesosMatch = text.match(/\$?\s*([\d\.]{6,})/);
+    if (pesosMatch) {
+      const raw = pesosMatch[1].replace(/\./g, '');
+      const value = parseInt(raw, 10);
+      if (!isNaN(value) && value >= 100000) return value;
+    }
+
+    // 4) "1800 mil" / "2500 mil"
+    const milMatch = text.match(/(\d+)\s*mil(?!\w)/i);
+    if (milMatch) {
+      const num = parseInt(milMatch[1]);
+      return num * 1000;
+    }
+
+    return null;
+  }
+
+  // Función para guardar contexto en sessionStorage
+  function saveContext() {
+    try {
+      sessionStorage.setItem('altorra-chatbot-context', JSON.stringify(conversationContext));
+    } catch(e) {}
+  }
+
+  // Función para cargar contexto desde sessionStorage
+  function loadContext() {
+    try {
+      const raw = sessionStorage.getItem('altorra-chatbot-context');
+      if (raw) {
+        const saved = JSON.parse(raw);
+        conversationContext = { ...conversationContext, ...saved };
+      }
+    } catch(e) {}
+  }
+
   // Estado del chatbot
   let properties = [];
   let isOpen = false;
@@ -160,42 +224,70 @@
     return points >= 3;
   }
 
+  // Función de puntuación para propiedades
+  function scoreProperty(p, ctx) {
+    let score = 0;
+
+    // Coincidencia de tipo (+3)
+    if (ctx.propertyType && p.type === ctx.propertyType) score += 3;
+
+    // Coincidencia de zona (+3)
+    if (ctx.zone && p.neighborhood) {
+      const neighborhood = p.neighborhood.toLowerCase();
+      if (neighborhood.includes(ctx.zone)) score += 3;
+    }
+
+    // Coincidencia de habitaciones (+2)
+    if (ctx.beds && p.beds >= ctx.beds) score += 2;
+    else if (ctx.beds && p.beds === ctx.beds - 1) score += 1; // Casi coincide
+
+    // Coincidencia de presupuesto (hasta +4)
+    if (ctx.budget && p.price) {
+      const diff = Math.abs(p.price - ctx.budget);
+      if (diff <= ctx.budget * 0.1) score += 4;      // Muy cerca (±10%)
+      else if (diff <= ctx.budget * 0.2) score += 2; // Aceptable (±20%)
+      else if (p.price <= ctx.budget * 1.15) score += 1; // Dentro del rango
+    }
+
+    // Bonus: propiedades destacadas
+    if (p.featured) score += 2;
+
+    // Bonus: propiedades con más fotos
+    if (p.images && p.images.length > 3) score += 1;
+
+    return score;
+  }
+
   // Función para hacer recomendaciones inteligentes basadas en el perfil
   function getSmartRecommendations() {
     const ctx = conversationContext;
     let results = [...properties];
 
-    // Filtrar por operación
+    // Solo filtrar por operación (lo imprescindible)
     if (ctx.interest) {
       results = results.filter(p => p.operation === ctx.interest);
     }
 
-    // Filtrar por tipo
-    if (ctx.propertyType && ctx.propertyType !== 'otra') {
-      results = results.filter(p => p.type === ctx.propertyType);
-    }
+    // Calcular puntuación para cada propiedad
+    results.forEach(p => {
+      p._score = scoreProperty(p, ctx);
+    });
 
-    // Filtrar por zona
-    if (ctx.zone && ctx.zone !== 'otra' && ctx.zone !== 'cualquiera') {
-      results = results.filter(p =>
-        (p.neighborhood && p.neighborhood.toLowerCase().includes(ctx.zone)) ||
-        (p.city && p.city.toLowerCase().includes(ctx.zone))
-      );
-    }
+    // Filtrar propiedades con alguna afinidad y ordenar por puntuación
+    results = results
+      .filter(p => p._score > 0)
+      .sort((a, b) => b._score - a._score);
 
-    // Filtrar por presupuesto
-    if (ctx.budget) {
-      results = results.filter(p => p.price <= ctx.budget * 1.15); // 15% tolerancia
-    }
-
-    // Filtrar por habitaciones
-    if (ctx.beds) {
-      results = results.filter(p => p.beds >= ctx.beds - 1); // Flexibilidad de 1
-    }
-
-    // Ordenar por relevancia (más cercano al presupuesto primero)
-    if (ctx.budget) {
-      results.sort((a, b) => Math.abs(a.price - ctx.budget) - Math.abs(b.price - ctx.budget));
+    // Si no hay resultados con puntuación, mostrar los mejores sin filtro estricto
+    if (results.length === 0) {
+      results = [...properties];
+      if (ctx.interest) {
+        results = results.filter(p => p.operation === ctx.interest);
+      }
+      // Ordenar por presupuesto si existe
+      if (ctx.budget) {
+        results.sort((a, b) => Math.abs(a.price - ctx.budget) - Math.abs(b.price - ctx.budget));
+      }
     }
 
     return results.slice(0, 3);
@@ -229,7 +321,30 @@
         intro += '<br><br>💡 <b>Tip:</b> Estas propiedades están cerca de colegios y zonas familiares.';
       }
 
-      intro += '<br><br>¿Te gustaría agendar una visita o necesitas más opciones?';
+      // Agregar opción de contacto con contexto completo
+      intro += '<br><br>¿Te gustaría agendar una visita?';
+
+      // Crear mensaje de WhatsApp con todo el contexto
+      const waSummary = encodeURIComponent(
+        `Hola Altorra, estoy interesado en una propiedad:\n` +
+        `• Operación: ${ctx.interest === 'comprar' ? 'Compra' : ctx.interest === 'arrendar' ? 'Arriendo' : ctx.interest || 'No definido'}\n` +
+        `• Tipo: ${ctx.propertyType || 'No definido'}\n` +
+        `• Zona: ${ctx.zone ? ctx.zone.charAt(0).toUpperCase() + ctx.zone.slice(1) : 'No definida'}\n` +
+        `• Presupuesto: ${ctx.budget ? formatPrice(ctx.budget) : 'No definido'}\n` +
+        `• Habitaciones: ${ctx.beds || 'No definido'}\n` +
+        `• Propósito: ${ctx.purpose === 'vivienda' ? 'Para vivir' : ctx.purpose === 'inversion' ? 'Inversión' : ctx.purpose || 'No definido'}`
+      );
+
+      intro += `
+        <br><br>
+        <a href="https://wa.me/${CONFIG.whatsappNumber}?text=${waSummary}"
+           target="_blank"
+           rel="noopener"
+           class="chat-whatsapp-link">
+          <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.789l4.94-1.293A11.96 11.96 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>
+          Hablar con un asesor (con mi perfil)
+        </a>
+      `;
     } else {
       intro += 'No encontré propiedades exactas con estos criterios, pero puedo ajustar la búsqueda.<br><br>';
       intro += '¿Qué prefieres:<br>';
@@ -562,6 +677,9 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     } else if (msg.match(/familia|hijos|niños|niñas/i)) {
       conversationContext.family = 'familia';
     }
+
+    // Guardar contexto en sessionStorage
+    saveContext();
   }
 
   // Opciones rápidas iniciales
@@ -1156,37 +1274,47 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
     // Detectar zona usando la función inteligente
     criteria.zone = detectZone(msg);
 
-    // Detectar número de habitaciones - mejorado
+    // Detectar número de habitaciones - con números
     const bedsMatch = msg.match(/(\d+)\s*(habitacion|habitaciones|cuarto|cuartos|alcoba|alcobas|dormitorio|dormitorios|hab|recamara|recamaras)/i);
     if (bedsMatch) {
       criteria.beds = parseInt(bedsMatch[1]);
     }
 
-    // Detectar número de baños
+    // Detectar número de habitaciones - con palabras (dos, tres, etc.)
+    if (!criteria.beds) {
+      const bedsWordMatch = msg.match(/(una|un|uno|dos|tres|cuatro|cinco|seis)\s+(habitacion|habitaciones|cuarto|cuartos|alcoba|alcobas|dormitorio|dormitorios|hab)/i);
+      if (bedsWordMatch) {
+        const word = bedsWordMatch[1].toLowerCase();
+        criteria.beds = WORD_NUMBERS[word] || null;
+      }
+    }
+
+    // Detectar número de baños - con números
     const bathsMatch = msg.match(/(\d+)\s*(baño|baños|bano|banos|sanitario|sanitarios)/i);
     if (bathsMatch) {
       criteria.baths = parseInt(bathsMatch[1]);
     }
 
-    // Detectar precio - mejorado con más formatos
-    let priceMatch = msg.match(/(\d+)\s*(millon|millón|millones)/i);
-    if (priceMatch) {
-      const price = parseInt(priceMatch[1]) * 1000000;
-      if (msg.match(/hasta|máximo|maximo|menos\s*de|no\s*más\s*de|tope|limite/i)) {
-        criteria.maxPrice = price;
-      } else if (msg.match(/desde|mínimo|minimo|más\s*de|mayor\s*a|a\s*partir/i)) {
-        criteria.minPrice = price;
-      } else {
-        // Sin indicador, asumir es el máximo con tolerancia
-        criteria.maxPrice = price * 1.2;
+    // Detectar número de baños - con palabras
+    if (!criteria.baths) {
+      const bathsWordMatch = msg.match(/(un|uno|dos|tres|cuatro)\s+(baño|baños|bano|banos)/i);
+      if (bathsWordMatch) {
+        const word = bathsWordMatch[1].toLowerCase();
+        criteria.baths = WORD_NUMBERS[word] || null;
       }
     }
 
-    // Detectar precios en formato corto (ej: "200m", "1.5m")
-    const shortPriceMatch = msg.match(/(\d+(?:\.\d+)?)\s*m(?:illones)?(?!\w)/i);
-    if (shortPriceMatch && !priceMatch) {
-      const price = parseFloat(shortPriceMatch[1]) * 1000000;
-      criteria.maxPrice = price * 1.2;
+    // Detectar precio usando parseBudget mejorado
+    const budget = parseBudget(msg);
+    if (budget) {
+      if (msg.match(/hasta|máximo|maximo|menos\s*de|no\s*más\s*de|no\s*mas\s*de|tope|limite/i)) {
+        criteria.maxPrice = budget;
+      } else if (msg.match(/desde|mínimo|minimo|más\s*de|mas\s*de|mayor\s*a|a\s*partir/i)) {
+        criteria.minPrice = budget;
+      } else {
+        // Sin indicador, asumir es el máximo con tolerancia
+        criteria.maxPrice = budget * 1.2;
+      }
     }
 
     return criteria;
@@ -1614,6 +1742,7 @@ En ALTORRA te ayudamos a negociar el mejor precio posible, respaldados por conoc
   function init() {
     createChatbotHTML();
     loadProperties();
+    loadContext(); // Cargar contexto guardado de sesiones anteriores
 
     // Event listeners
     document.getElementById('chatbot-toggle').addEventListener('click', toggleChat);
