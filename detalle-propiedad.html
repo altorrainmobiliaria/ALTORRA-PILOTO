@@ -8,11 +8,23 @@
 <meta name="description" content="Detalles de propiedad de Altorra Inmobiliaria" />
 <link rel="manifest" href="manifest.json" />
 <meta name="theme-color" content="#d4af37" />
-<meta property="og:title" content="Detalles de propiedad | Altorra" />
-<meta property="og:description" content="Descubre los detalles de esta propiedad disponible para comprar, arrendar o rentar por días." />
-<meta property="og:image" content="/img/uploads/comprar1.png" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://altorrainmobiliaria.github.io/detalle-propiedad.html" />
+<meta property="og:title" content="Detalles de propiedad | Altorra Inmobiliaria" />
+<meta property="og:description" content="Descubre los detalles de esta propiedad disponible para comprar, arrendar o rentar por días en Cartagena." />
+<meta property="og:image" content="https://altorrainmobiliaria.github.io/multimedia/hero-house.webp" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Detalles de propiedad | Altorra Inmobiliaria" />
+<meta name="twitter:description" content="Descubre los detalles de esta propiedad en Cartagena." />
+<meta name="twitter:image" content="https://altorrainmobiliaria.github.io/multimedia/hero-house.webp" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="style.css"/>
+<link rel="stylesheet" href="css/calculadora.css"/>
+<link rel="stylesheet" href="css/comparador.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700;800&display=swap" rel="stylesheet"/>
 
 <style>
@@ -432,6 +444,49 @@ async function init(){
       });
 
       infoDiv.appendChild(favBtn);
+
+      // Botón de comparar
+      if (typeof window.AltorraComparador !== 'undefined') {
+        const compareBtn = document.createElement('button');
+        compareBtn.type = 'button';
+        compareBtn.className = 'btn btn-ghost';
+        compareBtn.style.cssText = `
+          display:inline-flex;align-items:center;gap:8px;
+          padding:12px 20px;border-radius:12px;font-weight:700;
+          border:2px solid rgba(17,24,39,0.15);background:#f8f9fa;color:var(--text);
+          cursor:pointer;transition:all .2s ease;margin-top:8px;margin-left:8px;
+        `;
+
+        const isInCompare = window.AltorraComparador.isIn(prop.id);
+        compareBtn.innerHTML = isInCompare
+          ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> En comparar'
+          : '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M9 3L5 6.99h3V14h2V6.99h3L9 3zm7 14.01V10h-2v7.01h-3L15 21l4-3.99h-3z"/></svg> Agregar a comparar';
+
+        compareBtn.addEventListener('click', () => {
+          const propData = {
+            id: prop.id, title: prop.title, price: prop.price, city: prop.city,
+            type: prop.type, beds: prop.beds, baths: prop.baths, sqm: prop.sqm,
+            garages: prop.garages, strata: prop.strata, admin_fee: prop.admin_fee,
+            year_built: prop.year_built, neighborhood: prop.neighborhood,
+            operation: prop.operation, features: prop.features,
+            image: prop.image || (Array.isArray(prop.images) && prop.images[0]) || ''
+          };
+
+          const added = window.AltorraComparador.toggle(propData);
+
+          if (window.AltorraComparador.isIn(prop.id)) {
+            compareBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> En comparar';
+            compareBtn.style.background = '#f0f9ff';
+            compareBtn.style.borderColor = '#3b82f6';
+          } else {
+            compareBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M9 3L5 6.99h3V14h2V6.99h3L9 3zm7 14.01V10h-2v7.01h-3L15 21l4-3.99h-3z"/></svg> Agregar a comparar';
+            compareBtn.style.background = '#f8f9fa';
+            compareBtn.style.borderColor = 'rgba(17,24,39,0.15)';
+          }
+        });
+
+        infoDiv.appendChild(compareBtn);
+      }
     }
 
     const desc=document.createElement('div'); desc.className='desc'; buildDescription(desc, prop.description||'');
@@ -531,6 +586,20 @@ async function init(){
         const box = document.createElement('section'); box.className='card-lite';
         box.innerHTML = '<h3>Características</h3><div class="features">'+ list.map(ok).join('') +'</div>';
         root.appendChild(box);
+      })();
+
+      /* 3) Calculadora de financiamiento (solo para propiedades en venta) */
+      (function renderCalculadora(){
+        if (prop.operation !== 'comprar') return; // Solo para venta
+        if (typeof window.AltorraCalculadora === 'undefined') return;
+
+        const calcContainer = document.createElement('div');
+        calcContainer.id = 'calculadora-container';
+        calcContainer.dataset.precio = prop.price || 0;
+        root.appendChild(calcContainer);
+
+        // Insertar calculadora con precio pre-cargado (70% del valor)
+        window.AltorraCalculadora.insert('calculadora-container', prop.price || 0);
       })();
 
       /* 3) (Contacto del asesor) — ELIMINADO a solicitud */
@@ -653,4 +722,6 @@ document.addEventListener('DOMContentLoaded', init);
 })();
 </script>
   <script defer src="js/favoritos.js"></script>
+  <script src="js/calculadora.js"></script>
+  <script src="js/comparador.js"></script>
 </html>
