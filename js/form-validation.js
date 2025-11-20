@@ -546,12 +546,21 @@
           if (window.AltorraEmailService && window.AltorraEmailService.isConfigured()) {
             let sendPromise;
 
+            // SOLO EL FORMULARIO DE CONTACTO ESTÁ HABILITADO
             if (formId === 'contactForm' || form.closest('.page-contact')) {
               sendPromise = window.AltorraEmailService.processContactForm(form);
             } else if (formId === 'publishForm' || form.action.includes('publicar')) {
-              sendPromise = window.AltorraEmailService.processPublishForm(form);
+              // ⏸️ FORMULARIO DESHABILITADO - FALTA CREAR TEMPLATE
+              hideLoading(form);
+              showToast('⏸️ Este formulario está en configuración. Usa WhatsApp para contactarnos.', 'error');
+              console.warn('⚠️ Template "altorra_publicar" no existe en EmailJS');
+              return;
             } else {
-              sendPromise = window.AltorraEmailService.processDetailForm(form);
+              // ⏸️ FORMULARIO DESHABILITADO - FALTA CREAR TEMPLATE
+              hideLoading(form);
+              showToast('⏸️ Este formulario está en configuración. Usa WhatsApp para contactarnos.', 'error');
+              console.warn('⚠️ Template "altorra_detalle" no existe en EmailJS');
+              return;
             }
 
             sendPromise
