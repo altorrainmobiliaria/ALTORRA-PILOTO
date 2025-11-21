@@ -64,32 +64,36 @@ Necesitas crear 4 templates en EmailJS con estos nombres exactos:
 2. **Template Name:** `altorra_publicar`
 3. **Subject:** `🏠 Nueva propiedad para publicar - {{radicado}}`
 4. **Content:** Usa el mismo diseño HTML premium pero cambia las variables:
+
+⚠️ **IMPORTANTE**: Todas las variables deben estar en **minúscula**:
 ```
-{{radicado}}
-{{nombre}}
-{{email}}
-{{telefono}}
-{{operacion}}
-{{tipo}}
-{{precio}}
-{{descripcion}}
-{{fecha}}
+{{radicado}}   ← minúscula ✅
+{{nombre}}     ← minúscula ✅
+{{email}}      ← minúscula ✅
+{{telefono}}   ← minúscula ✅
+{{operacion}}  ← minúscula ✅
+{{tipo}}       ← minúscula ✅
+{{precio}}     ← minúscula ✅
+{{descripcion}}← minúscula ✅
+{{fecha}}      ← minúscula ✅
 ```
+
+❌ **NO uses mayúsculas**: `{{Nombre}}`, `{{Email}}`, `{{Telefono}}` → Causarán correos vacíos
 
 ### ⏳ Template 3: **altorra_detalle**
 **Cómo crearlo:**
 1. **Template Name:** `altorra_detalle`
 2. **Subject:** `💬 Consulta sobre propiedad - {{radicado}}`
-3. **Content:** Incluye estas variables:
+3. **Content:** Incluye estas variables en **minúscula**:
 ```
-{{radicado}}
-{{nombre}}
-{{email}}
-{{telefono}}
-{{mensaje}}
-{{propiedadId}}
-{{propiedadTitulo}}
-{{fecha}}
+{{radicado}}        ← minúscula ✅
+{{nombre}}          ← minúscula ✅
+{{email}}           ← minúscula ✅
+{{telefono}}        ← minúscula ✅
+{{mensaje}}         ← minúscula ✅
+{{propiedadId}}     ← camelCase (ID en mayúscula) ✅
+{{propiedadTitulo}} ← camelCase (Titulo con mayúscula) ✅
+{{fecha}}           ← minúscula ✅
 ```
 
 ### ⏳ Template 4: **altorra_confirmacion**
@@ -166,6 +170,42 @@ Abre la consola del navegador (F12) y busca estos mensajes:
 ### ❌ Error: "Has enviado muchos formularios"
 **Causa:** Rate limiting activado
 **Solución:** Ejecuta el script del PASO 4 en la consola
+
+### ❌ El correo llega pero con campos vacíos (⚠️ PROBLEMA MÁS COMÚN)
+**Causa:** Las variables del template NO coinciden con los parámetros enviados desde JavaScript
+
+**Síntomas:**
+- ✅ El envío dice "exitoso" en consola
+- ✅ El correo SÍ llega
+- ❌ Pero los campos (nombre, email, etc.) están **vacíos** o muestran literalmente `{{nombre}}`
+
+**Solución (99% de los casos):**
+
+1. Ve a https://dashboard.emailjs.com/ → Email Templates → `template_442jrws`
+2. Verifica que TODAS las variables estén en **minúscula**:
+
+```html
+✅ CORRECTO:
+{{nombre}}
+{{email}}
+{{telefono}}
+{{motivo}}
+{{mensaje}}
+
+❌ INCORRECTO:
+{{Nombre}}   ← Mayúscula inicial causa campos vacíos
+{{Email}}    ← Mayúscula inicial causa campos vacíos
+{{NOMBRE}}   ← Todo mayúsculas causa campos vacíos
+{{nombre }}  ← Espacio extra causa campos vacíos
+```
+
+3. Guarda el template
+4. Prueba de nuevo el formulario
+
+**Explicación técnica:**
+- JavaScript envía: `{nombre: "Juan", email: "juan@email.com"}`
+- Si el template usa `{{Nombre}}` → EmailJS no encuentra la variable `Nombre` (con mayúscula) → Campo vacío
+- Si el template usa `{{nombre}}` → EmailJS encuentra la variable → Campo lleno ✅
 
 ### ❌ No llegan los emails
 **Causas posibles:**
