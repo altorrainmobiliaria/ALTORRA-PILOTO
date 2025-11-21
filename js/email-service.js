@@ -14,6 +14,16 @@
   const TEMPLATE_PUBLICAR = "altorra_publicar";  // Template: publicar propiedad
   const TEMPLATE_DETALLE  = "altorra_detalle";   // Template: detalle propiedad
 
+  // ⚠️ IMPORTANTE - WHITELIST DE DOMINIOS EN EMAILJS:
+  // Para evitar errores de conexión (CORS/401), debes agregar estos dominios
+  // en EmailJS Dashboard → Account → Authorized Domains:
+  //   - https://altorrainmobiliaria.github.io
+  //   - https://altorrainmobiliaria.github.io/*
+  //   - https://*.github.io
+  //   - http://localhost (para pruebas locales)
+  //
+  // Sin el whitelist, EmailJS rechazará las solicitudes con error de conexión.
+
   // ===== GENERADOR DE RADICADOS =====
   // Formato: ALT-timestamp (ej: ALT-1732143856789)
   function generateRadicado() {
