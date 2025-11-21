@@ -164,10 +164,22 @@
   </div>
 
   <script>
-    // Ticket estético
+    // Obtener radicado real de la URL
     (function(){
       const t=document.getElementById('ticket');
-      if(t){ const n=String(Math.floor(Math.random()*9000)+1000).padStart(4,'0'); t.textContent='ALT-'+n; }
+      if(t){
+        // Leer parámetro 'radicado' de la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const radicado = urlParams.get('radicado');
+
+        // Mostrar radicado real o generar uno temporal si no existe
+        if(radicado){
+          t.textContent = radicado;
+        } else {
+          const n=String(Math.floor(Math.random()*9000)+1000).padStart(4,'0');
+          t.textContent='ALT-'+n;
+        }
+      }
     })();
     // Redirección (30s). Comenta si no la quieres.
     (function(){

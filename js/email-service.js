@@ -54,11 +54,9 @@
   // ===== INICIALIZAR EMAILJS =====
   function initEmailJS() {
     if (typeof emailjs === 'undefined') {
-      console.error('❌ EmailJS no está cargado');
       return false;
     }
     emailjs.init(PUBLIC_KEY);
-    console.log('✅ EmailJS inicializado correctamente');
     return true;
   }
 
@@ -99,19 +97,6 @@
         radicado: radicado
       };
 
-      // Debug mejorado - Verificar que todos los campos tienen datos
-      console.log('📤 Enviando formulario de contacto');
-      console.log('📋 Parámetros enviados a EmailJS:', templateParams);
-      console.log('✅ Verificación de datos:');
-      console.log('  - Nombre:', nombre ? '✓' : '✗ VACÍO');
-      console.log('  - Email:', email ? '✓' : '✗ VACÍO');
-      console.log('  - Teléfono:', telefono ? '✓' : '✗ VACÍO');
-      console.log('  - Motivo:', motivo ? '✓' : '✗ VACÍO');
-      console.log('  - Mensaje:', mensaje ? '✓' : '✗ VACÍO');
-      console.log('  - Radicado:', radicado);
-      console.log('⚠️ IMPORTANTE: Las variables del template EmailJS deben estar en minúscula:');
-      console.log('   {{nombre}}, {{email}}, {{telefono}}, {{motivo}}, {{mensaje}}, {{fecha}}, {{radicado}}');
-
       // Deshabilitar botón
       if (submitBtn) {
         submitBtn.disabled = true;
@@ -120,42 +105,24 @@
       setStatus("Enviando tu mensaje…", "info");
 
       // Enviar con EmailJS
-      console.log('🚀 Iniciando envío a EmailJS...');
-      console.log('   Service ID:', SERVICE_ID);
-      console.log('   Template ID:', TEMPLATE_CONTACTO);
-
       emailjs.send(SERVICE_ID, TEMPLATE_CONTACTO, templateParams)
         .then(function (response) {
-          console.log('✅ Email enviado exitosamente!');
-          console.log('   Status:', response.status);
-          console.log('   Text:', response.text);
-          console.log('📬 Revisa tu email: altorrainmobiliaria@gmail.com');
-          console.log('   Si los campos llegan vacíos, verifica que las variables del template estén en minúscula.');
           setStatus("Mensaje enviado correctamente.", "success");
 
-          // Redirigir a página de gracias
+          // Redirigir a página de gracias con el radicado
           setTimeout(function() {
-            window.location.href = "gracias.html";
+            window.location.href = "gracias.html?radicado=" + encodeURIComponent(radicado);
           }, 1000);
         })
         .catch(function (error) {
-          console.error("❌ Error al enviar email");
-          console.error("   Tipo de error:", error.name || 'Unknown');
-          console.error("   Mensaje:", error.text || error.message || 'Sin detalles');
-          console.error("   Status:", error.status || 'N/A');
-          console.error("   Detalles completos:", error);
-
           // Mensajes de error más específicos
           let errorMsg = "No fue posible enviar el mensaje. ";
           if (error.status === 401) {
             errorMsg += "Credenciales de EmailJS inválidas.";
-            console.error("💡 Solución: Verifica PUBLIC_KEY y SERVICE_ID en email-service.js");
           } else if (error.status === 404) {
             errorMsg += "Template no encontrado.";
-            console.error("💡 Solución: Verifica que el template_442jrws existe en EmailJS");
           } else if (error.text && error.text.includes('limit')) {
             errorMsg += "Límite de envíos alcanzado.";
-            console.error("💡 Solución: Verifica tu cuota en EmailJS dashboard");
           } else {
             errorMsg += "Intenta de nuevo en unos minutos.";
           }
@@ -209,8 +176,6 @@
         fecha:        fecha
       };
 
-      console.log('📤 Enviando formulario de publicar:', templateParams);
-
       if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.textContent = "Enviando...";
@@ -219,15 +184,13 @@
 
       emailjs.send(SERVICE_ID, TEMPLATE_PUBLICAR, templateParams)
         .then(function (response) {
-          console.log('✅ Email enviado exitosamente:', response);
           setStatus("Solicitud enviada correctamente.", "success");
 
           setTimeout(function() {
-            window.location.href = "gracias.html";
+            window.location.href = "gracias.html?radicado=" + encodeURIComponent(radicado);
           }, 1000);
         })
         .catch(function (error) {
-          console.error("❌ Error al enviar email:", error);
           setStatus("No fue posible enviar la solicitud. Intenta de nuevo.", "error");
 
           if (submitBtn) {
@@ -274,8 +237,6 @@
         fecha:            fecha
       };
 
-      console.log('📤 Enviando formulario de detalle:', templateParams);
-
       if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.textContent = "Enviando...";
@@ -284,15 +245,13 @@
 
       emailjs.send(SERVICE_ID, TEMPLATE_DETALLE, templateParams)
         .then(function (response) {
-          console.log('✅ Email enviado exitosamente:', response);
           setStatus("Consulta enviada correctamente.", "success");
 
           setTimeout(function() {
-            window.location.href = "gracias.html";
+            window.location.href = "gracias.html?radicado=" + encodeURIComponent(radicado);
           }, 1000);
         })
         .catch(function (error) {
-          console.error("❌ Error al enviar email:", error);
           setStatus("No fue posible enviar la consulta. Intenta de nuevo.", "error");
 
           if (submitBtn) {
@@ -306,7 +265,6 @@
   // ===== INICIALIZACIÓN =====
   document.addEventListener("DOMContentLoaded", function () {
     if (!initEmailJS()) {
-      console.error('❌ No se pudo inicializar EmailJS');
       return;
     }
 
